@@ -139,7 +139,7 @@ export function TrashIcon({
               transition: "background 0.15s, border 0.15s",
             }}
           >
-            <IconTrash color={hov || full ? "#ff3b30" : "var(--th-text-muted)"} />
+            <IconTrash color={hov || full ? "#ff3b30" : "#9CA3AF"} />
           </div>
           {full && (
             <div
@@ -151,7 +151,7 @@ export function TrashIcon({
                 height: 16,
                 borderRadius: 8,
                 background: "#ff3b30",
-                border: "1.5px solid var(--th-bg-base)",
+                border: "1.5px solid #F3F4F6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -170,7 +170,7 @@ export function TrashIcon({
           style={{
             fontFamily: "var(--th-font-mono)",
             fontSize: 10,
-            color: hov || full ? "#ff3b30" : "var(--th-text-secondary)",
+            color: hov || full ? "#ff3b30" : "#6B7280",
             transition: "color 0.15s",
             textShadow: "0 1px 3px rgba(0,0,0,0.5)",
           }}
@@ -190,8 +190,8 @@ export function TrashIcon({
             top: ctxMenu.y,
             zIndex: 9999,
             minWidth: 160,
-            background: "var(--th-bg-elevated)",
-            border: "1px solid var(--th-border)",
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
             borderRadius: 6,
             boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
             padding: "4px 0",
@@ -214,10 +214,10 @@ export function TrashIcon({
               cursor: "pointer",
               fontFamily: "var(--th-font-mono)",
               fontSize: 12,
-              color: "var(--th-text-primary)",
+              color: "#111827",
               textAlign: "left",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-hover)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F3F4F6"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

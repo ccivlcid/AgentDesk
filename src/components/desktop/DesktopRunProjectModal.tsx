@@ -102,7 +102,7 @@ export function RunProjectModal({
         position: "fixed",
         inset: 0,
         zIndex: 3200,
-        background: "var(--th-modal-overlay)",
+        background: "rgba(0,0,0,0.4)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -114,8 +114,8 @@ export function RunProjectModal({
       <div
         style={{
           width: "min(480px, 92vw)",
-          background: "var(--th-bg-elevated)",
-          border: "1px solid var(--th-border)",
+          background: "#FFFFFF",
+          border: "1px solid #E5E7EB",
           borderRadius: 12,
           boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
           overflow: "hidden",
@@ -127,8 +127,8 @@ export function RunProjectModal({
             alignItems: "center",
             gap: 10,
             padding: "12px 16px",
-            borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-bg-panel)",
+            borderBottom: "1px solid #E5E7EB",
+            background: "#FFFFFF",
           }}
         >
           <div style={{ display: "flex", gap: 6 }}>
@@ -149,7 +149,7 @@ export function RunProjectModal({
           <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "#22c55e", display: "inline-flex" }}>
             <IconPlay size={14} />
           </span>
-          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "#111827" }}>
             {t({ ko: "앱 실행", en: "Run App", ja: "アプリ実行", zh: "运行应用" })}
           </span>
         </div>
@@ -159,8 +159,8 @@ export function RunProjectModal({
             style={{
               padding: "12px 14px",
               borderRadius: 8,
-              background: "var(--th-bg-panel)",
-              border: "1px solid var(--th-border)",
+              background: "#FFFFFF",
+              border: "1px solid #E5E7EB",
             }}
           >
             <div
@@ -168,24 +168,24 @@ export function RunProjectModal({
                 ...mono,
                 fontSize: 13,
                 fontWeight: 700,
-                color: "var(--th-text-heading)",
+                color: "#111827",
                 marginBottom: 4,
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
               }}
             >
-              <span style={{ display: "inline-flex", color: "var(--th-text-muted)" }}>
+              <span style={{ display: "inline-flex", color: "#9CA3AF" }}>
                 <IconFolder size={16} />
               </span>
               {info.projectName}
             </div>
-            <div style={{ ...mono, fontSize: 10, color: "var(--th-text-secondary)", wordBreak: "break-all" }}>
+            <div style={{ ...mono, fontSize: 10, color: "#6B7280", wordBreak: "break-all" }}>
               {info.projectPath}
             </div>
           </div>
 
-          <div style={{ ...mono, fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.6 }}>
+          <div style={{ ...mono, fontSize: 11, color: "#6B7280", lineHeight: 1.6 }}>
             {t({
               ko: "AI 에이전트가 프로젝트 타입을 감지하고 자동으로 의존성을 설치한 뒤 실행합니다.",
               en: "An AI agent will detect the project type, install dependencies, and run the application automatically.",
@@ -195,7 +195,7 @@ export function RunProjectModal({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: "0.08em" }}>
+            <div style={{ ...mono, fontSize: 10, color: "#9CA3AF", letterSpacing: "0.08em" }}>
               {t({ ko: "실행할 에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}
             </div>
             {availableAgents.length === 0 ? (
@@ -232,16 +232,16 @@ export function RunProjectModal({
                       borderRadius: 6,
                       cursor: "pointer",
                       textAlign: "left",
-                      border: `1px solid ${selectedAgentId === a.id ? "#22c55e" : "var(--th-border)"}`,
+                      border: `1px solid ${selectedAgentId === a.id ? "#22c55e" : "#E5E7EB"}`,
                       background: selectedAgentId === a.id ? "rgba(34,197,94,0.08)" : "transparent",
                     }}
                   >
                     <span style={{ fontSize: 16 }}>{a.avatar_emoji}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ ...mono, fontSize: 11, fontWeight: 600, color: "var(--th-text-primary)" }}>
+                      <div style={{ ...mono, fontSize: 11, fontWeight: 600, color: "#111827" }}>
                         {a.name}
                       </div>
-                      <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)" }}>{a.role}</div>
+                      <div style={{ ...mono, fontSize: 9, color: "#9CA3AF" }}>{a.role}</div>
                     </div>
                     {selectedAgentId === a.id && (
                       <span style={{ color: "#22c55e", fontSize: 11, display: "inline-flex" }}>
@@ -263,9 +263,9 @@ export function RunProjectModal({
                 padding: "7px 16px",
                 borderRadius: 6,
                 cursor: "pointer",
-                border: "1px solid var(--th-border)",
+                border: "1px solid #E5E7EB",
                 background: "transparent",
-                color: "var(--th-text-secondary)",
+                color: "#6B7280",
               }}
             >
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}

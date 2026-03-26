@@ -83,8 +83,8 @@ export default function AppSwitcher() {
           alignItems: "center",
           gap: 24,
           padding: "24px 32px",
-          background: "var(--th-bg-surface)",
-          border: "1px solid var(--th-border)",
+          background: "#F9FAFB",
+          border: "1px solid #E5E7EB",
           borderRadius: 16,
           boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
         }}
@@ -103,8 +103,8 @@ export default function AppSwitcher() {
                 gap: 8,
                 padding: "12px 16px",
                 borderRadius: 12,
-                border: `2px solid ${isSelected ? "var(--th-accent)" : "transparent"}`,
-                background: isSelected ? "var(--th-accent-glow)" : "transparent",
+                border: `2px solid ${isSelected ? "#3B82F6" : "transparent"}`,
+                background: isSelected ? "#EBF5FF" : "transparent",
                 transform: isSelected ? "scale(1.05)" : "scale(1)",
                 transition: "border 0.12s, background 0.12s, transform 0.12s",
                 opacity: isMinimized ? 0.6 : 1,
@@ -118,13 +118,13 @@ export default function AppSwitcher() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "var(--th-bg-secondary)",
-                  color: "var(--th-text-primary)",
+                  background: "#F9FAFB",
+                  color: "#111827",
                 }}
               >
-                {Icon ? Icon("var(--th-text-primary)") : <span style={{ fontSize: 20 }}>▦</span>}
+                {Icon ? Icon("#111827") : <span style={{ fontSize: 20 }}>▦</span>}
               </div>
-              <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+              <span style={{ fontFamily: mono, fontSize: 11, color: "#6B7280", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
                 {WINDOW_LABELS[w] ?? w}
               </span>
             </div>

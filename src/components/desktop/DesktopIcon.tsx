@@ -257,7 +257,7 @@ export default function DesktopIcon({
               width: 18,
               height: 18,
               borderRadius: "50%",
-              background: "var(--th-danger, #ff3b30)",
+              background: "#DC2626",
               border: "2px solid rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
@@ -285,7 +285,7 @@ export default function DesktopIcon({
               minWidth: 16,
               height: 16,
               borderRadius: 8,
-              background: "var(--th-danger, #ff3b30)",
+              background: "#DC2626",
               border: "2px solid rgba(0,0,0,0.6)",
               display: "flex",
               alignItems: "center",
@@ -311,7 +311,7 @@ export default function DesktopIcon({
             height: 56,
             background: dropTarget ? "rgba(245,158,11,0.30)" : iconBg,
             border: dropTarget
-              ? "2px solid var(--th-accent)"
+              ? "2px solid #3B82F6"
               : isSelected
                 ? "2px solid rgba(0,122,255,0.85)"
                 : iconBorder,
@@ -322,7 +322,7 @@ export default function DesktopIcon({
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
             boxShadow: dropTarget
-              ? `0 0 0 3px var(--th-accent)44`
+              ? `0 0 0 3px #3B82F644`
               : isSelected
                 ? `0 0 0 3px rgba(0,122,255,0.25), ${iconShadow}`
                 : iconShadow,
@@ -375,7 +375,7 @@ export default function DesktopIcon({
               WebkitBackdropFilter: "blur(12px)",
               borderRadius: 4,
               padding: "2px 6px",
-              border: "1px solid var(--th-accent, #f59e0b)",
+              border: "1px solid #3B82F6",
               outline: "none",
               lineHeight: 1.25,
             }}

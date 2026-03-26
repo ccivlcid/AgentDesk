@@ -74,9 +74,9 @@ export default function SnapFillSuggestion() {
       <div
         style={{
           pointerEvents: "auto",
-          background: "var(--th-panel-bg)",
+          background: "#FFFFFF",
           backdropFilter: "blur(20px)",
-          border: "1px solid var(--th-accent)",
+          border: "1px solid #3B82F6",
           borderRadius: 12,
           padding: "12px 16px",
           display: "flex",
@@ -89,7 +89,7 @@ export default function SnapFillSuggestion() {
         <div style={{
           fontSize: 9,
           fontFamily: "var(--th-font-mono)",
-          color: "var(--th-text-muted)",
+          color: "#9CA3AF",
           letterSpacing: "0.08em",
           marginBottom: 2,
         }}>
@@ -107,16 +107,16 @@ export default function SnapFillSuggestion() {
                 gap: 8,
                 padding: "6px 10px",
                 background: "none",
-                border: "1px solid var(--th-border)",
+                border: "1px solid #E5E7EB",
                 borderRadius: 6,
                 cursor: "pointer",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 12,
-                color: "var(--th-text-primary)",
+                color: "#111827",
                 textAlign: "left",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{info.emoji}</span>
@@ -133,7 +133,7 @@ export default function SnapFillSuggestion() {
             cursor: "pointer",
             fontFamily: "var(--th-font-mono)",
             fontSize: 10,
-            color: "var(--th-text-muted)",
+            color: "#9CA3AF",
             textAlign: "center",
           }}
         >

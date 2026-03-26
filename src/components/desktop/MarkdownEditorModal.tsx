@@ -111,8 +111,8 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
         style={{
           width: "min(820px, 96vw)",
           height: "min(640px, 90vh)",
-          background: "var(--th-bg-surface)",
-          border: "1px solid var(--th-border)",
+          background: "#F9FAFB",
+          border: "1px solid #E5E7EB",
           borderRadius: 12,
           display: "flex",
           flexDirection: "column",
@@ -129,19 +129,19 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 12,
             padding: "10px 16px",
-            borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-glass-bg)",
+            borderBottom: "1px solid #E5E7EB",
+            background: "#FFFFFF",
             flexShrink: 0,
           }}
         >
           <TrafficLights onClose={onClose} />
-          <span style={{ fontSize: 12, color: "var(--th-text-muted)", flex: 1, textAlign: "center" }}>
+          <span style={{ fontSize: 12, color: "#9CA3AF", flex: 1, textAlign: "center" }}>
             {title.trim()
               ? `${title.trim()}.md`
               : t({ ko: "새 마크다운 문서", en: "New Markdown Document", ja: "新規Markdownドキュメント", zh: "新建 Markdown 文档" })}
           </span>
           {defaultProjectName && (
-            <span style={{ fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", padding: "2px 8px", borderRadius: 4, border: "1px solid var(--th-border)" }}>
+            <span style={{ fontSize: 10, color: "#9CA3AF", background: "#FFFFFF", padding: "2px 8px", borderRadius: 4, border: "1px solid #E5E7EB" }}>
               📁 {defaultProjectName}
             </span>
           )}
@@ -151,7 +151,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
         <div
           style={{
             padding: "12px 16px 8px",
-            borderBottom: "1px solid var(--th-border)",
+            borderBottom: "1px solid #E5E7EB",
             flexShrink: 0,
           }}
         >
@@ -169,8 +169,8 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               fontFamily: mono,
               fontSize: 18,
               fontWeight: 700,
-              color: "var(--th-text-heading)",
-              caretColor: "var(--th-accent)",
+              color: "#111827",
+              caretColor: "#3B82F6",
             }}
           />
         </div>
@@ -182,9 +182,9 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 4,
             padding: "6px 14px",
-            borderBottom: "1px solid var(--th-border)",
+            borderBottom: "1px solid #E5E7EB",
             flexShrink: 0,
-            background: "var(--th-bg-primary)",
+            background: "#F3F4F6",
           }}
         >
           {/* 마크다운 삽입 버튼들 */}
@@ -218,23 +218,23 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               }}
               style={{
                 background: "none",
-                border: "1px solid var(--th-border)",
+                border: "1px solid #E5E7EB",
                 borderRadius: 4,
                 padding: "2px 7px",
                 fontFamily: mono,
                 fontSize: 11,
                 fontWeight: 700,
-                color: "var(--th-text-secondary)",
+                color: "#6B7280",
                 cursor: "pointer",
                 transition: "all 0.1s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#3B82F6";
+                (e.currentTarget as HTMLButtonElement).style.color = "#3B82F6";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-secondary)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#E5E7EB";
+                (e.currentTarget as HTMLButtonElement).style.color = "#6B7280";
               }}
             >
               {label}
@@ -249,12 +249,12 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             onClick={() => setPreview((v) => !v)}
             style={{
               background: preview ? "rgba(245,158,11,0.12)" : "none",
-              border: `1px solid ${preview ? "var(--th-accent)" : "var(--th-border)"}`,
+              border: `1px solid ${preview ? "#3B82F6" : "#E5E7EB"}`,
               borderRadius: 4,
               padding: "2px 10px",
               fontFamily: mono,
               fontSize: 11,
-              color: preview ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: preview ? "#3B82F6" : "#9CA3AF",
               cursor: "pointer",
             }}
           >
@@ -272,11 +272,11 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
                 height: "100%",
                 overflowY: "auto",
                 padding: "20px 24px",
-                color: "var(--th-text-primary)",
+                color: "#111827",
                 fontSize: 14,
                 lineHeight: 1.75,
               }}
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) || `<p style="color:var(--th-text-muted); font-style:italic">${t({ ko: "미리볼 내용이 없습니다", en: "Nothing to preview", ja: "プレビューなし", zh: "暂无预览内容" })}</p>` }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) || `<p style="color:#9CA3AF; font-style:italic">${t({ ko: "미리볼 내용이 없습니다", en: "Nothing to preview", ja: "プレビューなし", zh: "暂无预览内容" })}</p>` }}
             />
           ) : (
             <textarea
@@ -292,7 +292,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               style={{
                 width: "100%",
                 height: "100%",
-                background: "var(--th-bg-primary)",
+                background: "#F3F4F6",
                 border: "none",
                 outline: "none",
                 resize: "none",
@@ -300,8 +300,8 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
                 fontFamily: mono,
                 fontSize: 13,
                 lineHeight: 1.75,
-                color: "var(--th-text-primary)",
-                caretColor: "var(--th-accent)",
+                color: "#111827",
+                caretColor: "#3B82F6",
                 boxSizing: "border-box",
               }}
             />
@@ -315,15 +315,15 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 12,
             padding: "8px 16px",
-            borderTop: "1px solid var(--th-border)",
-            background: "var(--th-glass-bg)",
+            borderTop: "1px solid #E5E7EB",
+            background: "#FFFFFF",
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
+          <span style={{ fontSize: 10, color: "#9CA3AF" }}>
             {t({ ko: `${lineCount}줄 · ${wordCount}단어`, en: `${lineCount} lines · ${wordCount} words`, ja: `${lineCount}行 · ${wordCount}語`, zh: `${lineCount}行 · ${wordCount}字` })}
           </span>
-          <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
+          <span style={{ fontSize: 10, color: "#9CA3AF" }}>
             {t({ ko: "⌘S 저장", en: "⌘S save", ja: "⌘S 保存", zh: "⌘S 保存" })}
           </span>
           <div style={{ flex: 1 }} />
@@ -339,7 +339,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             </span>
           )}
           {savedToDesktop && (
-            <span style={{ fontSize: 10, color: "var(--th-accent)" }}>
+            <span style={{ fontSize: 10, color: "#3B82F6" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <polyline points="20 6 9 17 4 12" />
@@ -354,12 +354,12 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             onClick={onClose}
             style={{
               background: "none",
-              border: "1px solid var(--th-border)",
+              border: "1px solid #E5E7EB",
               borderRadius: 6,
               padding: "4px 14px",
               fontFamily: mono,
               fontSize: 11,
-              color: "var(--th-text-secondary)",
+              color: "#6B7280",
               cursor: "pointer",
             }}
           >
@@ -371,14 +371,14 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             onClick={handleSaveToDesktop}
             disabled={!content.trim() && !title.trim()}
             style={{
-              background: content.trim() || title.trim() ? "var(--th-bg-elevated)" : "var(--th-bg-elevated)",
-              border: `1px solid ${content.trim() || title.trim() ? "var(--th-accent)" : "var(--th-border)"}`,
+              background: content.trim() || title.trim() ? "#FFFFFF" : "#FFFFFF",
+              border: `1px solid ${content.trim() || title.trim() ? "#3B82F6" : "#E5E7EB"}`,
               borderRadius: 6,
               padding: "4px 14px",
               fontFamily: mono,
               fontSize: 11,
               fontWeight: 600,
-              color: content.trim() || title.trim() ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: content.trim() || title.trim() ? "#3B82F6" : "#9CA3AF",
               cursor: content.trim() || title.trim() ? "pointer" : "not-allowed",
               opacity: content.trim() || title.trim() ? 1 : 0.5,
               display: "flex",
@@ -397,14 +397,14 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             onClick={handleDownload}
             disabled={!content.trim() && !title.trim()}
             style={{
-              background: content.trim() || title.trim() ? "var(--th-accent)" : "var(--th-bg-elevated)",
+              background: content.trim() || title.trim() ? "#3B82F6" : "#FFFFFF",
               border: "none",
               borderRadius: 6,
               padding: "4px 16px",
               fontFamily: mono,
               fontSize: 11,
               fontWeight: 700,
-              color: content.trim() || title.trim() ? "var(--th-accent-text)" : "var(--th-text-muted)",
+              color: content.trim() || title.trim() ? "#FFFFFF" : "#9CA3AF",
               cursor: content.trim() || title.trim() ? "pointer" : "not-allowed",
               opacity: content.trim() || title.trim() ? 1 : 0.5,
             }}

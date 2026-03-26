@@ -1,15 +1,15 @@
 import type { TaskStatus } from "../../../types";
 
 export const STATUS_COLORS: Record<TaskStatus, string> = {
-  inbox:         "var(--th-text-muted)",
-  planned:       "var(--th-info, #60a5fa)",
-  collaborating: "var(--th-accent, #f59e0b)",
+  inbox:         "#9CA3AF",
+  planned:       "#3B82F6",
+  collaborating: "#3B82F6",
   in_progress:   "var(--th-success, #22c55e)",
-  review:        "var(--th-accent, #f59e0b)",
-  done:          "var(--th-text-muted)",
-  pending:       "var(--th-text-secondary)",
-  failed:        "var(--th-danger, #ef4444)",
-  cancelled:     "var(--th-danger, #ef4444)",
+  review:        "#3B82F6",
+  done:          "#9CA3AF",
+  pending:       "#6B7280",
+  failed:        "#DC2626",
+  cancelled:     "#DC2626",
 };
 
 export const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -26,9 +26,9 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
 
 export const AGENT_STATUS_COLOR: Record<string, string> = {
   working: "var(--th-success, #22c55e)",
-  idle:    "var(--th-text-muted)",
-  break:   "var(--th-accent, #f59e0b)",
-  offline: "var(--th-danger, #ef4444)",
+  idle:    "#9CA3AF",
+  break:   "#3B82F6",
+  offline: "#DC2626",
 };
 
 export const FILE_ICONS: Record<string, string> = {

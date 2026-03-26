@@ -15,7 +15,7 @@ export function ResultPane({ report, task }: { report: TaskReportDetail | null; 
   const { t } = useI18n();
 
   if (!content) {
-    return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "결과 없음", en: "No result content", ja: "結果なし", zh: "无结果内容" })}</div>;
+    return <div style={{ color: "#9CA3AF", fontSize: 12 }}>{t({ ko: "결과 없음", en: "No result content", ja: "結果なし", zh: "无结果内容" })}</div>;
   }
 
   return (
@@ -23,7 +23,7 @@ export function ResultPane({ report, task }: { report: TaskReportDetail | null; 
       style={{
         fontSize: 11,
         lineHeight: 1.6,
-        color: "var(--th-text-primary)",
+        color: "#111827",
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         margin: 0,
@@ -37,13 +37,13 @@ export function ResultPane({ report, task }: { report: TaskReportDetail | null; 
 
 export function LogsPane({ logs }: { logs: Array<{ kind: string; message: string; created_at: number }> }) {
   const { t } = useI18n();
-  if (logs.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "로그 없음", en: "No logs", ja: "ログなし", zh: "无日志" })}</div>;
+  if (logs.length === 0) return <div style={{ color: "#9CA3AF", fontSize: 12 }}>{t({ ko: "로그 없음", en: "No logs", ja: "ログなし", zh: "无日志" })}</div>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {logs.map((log, i) => (
-        <div key={i} style={{ display: "flex", gap: 10, fontSize: 10, color: "var(--th-text-secondary)" }}>
-          <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 90 }}>{fmtTime(log.created_at)}</span>
-          <span style={{ color: log.kind === "error" ? "var(--th-danger, #ef4444)" : "var(--th-text-muted)", flexShrink: 0, width: 60 }}>[{log.kind}]</span>
+        <div key={i} style={{ display: "flex", gap: 10, fontSize: 10, color: "#6B7280" }}>
+          <span style={{ color: "#9CA3AF", flexShrink: 0, width: 90 }}>{fmtTime(log.created_at)}</span>
+          <span style={{ color: log.kind === "error" ? "#DC2626" : "#9CA3AF", flexShrink: 0, width: 60 }}>[{log.kind}]</span>
           <span style={{ flex: 1, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{log.message}</span>
         </div>
       ))}
@@ -53,12 +53,12 @@ export function LogsPane({ logs }: { logs: Array<{ kind: string; message: string
 
 export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title: string; status: string; agent_name: string; completed_at: number | null }> }) {
   const { t } = useI18n();
-  if (subtasks.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "서브태스크 없음", en: "No subtasks", ja: "サブタスクなし", zh: "无子任务" })}</div>;
+  if (subtasks.length === 0) return <div style={{ color: "#9CA3AF", fontSize: 12 }}>{t({ ko: "서브태스크 없음", en: "No subtasks", ja: "サブタスクなし", zh: "无子任务" })}</div>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {subtasks.map((st) => (
-        <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, padding: "6px 0", borderBottom: "1px solid var(--th-border)" }}>
-          <span style={{ fontSize: 9, color: st.status === "done" ? "var(--th-success, #22c55e)" : "var(--th-text-muted)", display: "inline-flex", alignItems: "center" }}>
+        <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, padding: "6px 0", borderBottom: "1px solid #E5E7EB" }}>
+          <span style={{ fontSize: 9, color: st.status === "done" ? "var(--th-success, #22c55e)" : "#9CA3AF", display: "inline-flex", alignItems: "center" }}>
             {st.status === "done" ? (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <polyline points="20 6 9 17 4 12" />
@@ -69,8 +69,8 @@ export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title
               </svg>
             )}
           </span>
-          <span style={{ flex: 1, color: st.status === "done" ? "var(--th-text-muted)" : "var(--th-text-primary)" }}>{st.title}</span>
-          <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{st.agent_name}</span>
+          <span style={{ flex: 1, color: st.status === "done" ? "#9CA3AF" : "#111827" }}>{st.title}</span>
+          <span style={{ fontSize: 10, color: "#9CA3AF" }}>{st.agent_name}</span>
         </div>
       ))}
     </div>
@@ -79,9 +79,9 @@ export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title
 
 export function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-      <span style={{ color: "var(--th-text-muted)" }}>{label}:</span>
-      <span style={{ color: "var(--th-text-primary)" }}>{value}</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+      <span style={{ color: "#9CA3AF" }}>{label}:</span>
+      <span style={{ color: "#111827" }}>{value}</span>
     </div>
   );
 }
@@ -103,7 +103,7 @@ export function DonePreview({
 
   if (loading) {
     return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12 }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF", fontSize: 12 }}>
         <span style={{ animation: "pulse 1s infinite" }}>{t({ ko: "리포트 로딩중...", en: "loading report...", ja: "レポート読み込み中...", zh: "加载报告..." })}</span>
       </div>
     );
@@ -117,7 +117,7 @@ export function DonePreview({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: 0, padding: "0 16px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 0, padding: "0 16px", borderBottom: "1px solid #E5E7EB", background: "#FFFFFF", flexShrink: 0 }}>
         {RTABS.map((tab) => (
           <button
             key={tab.id}
@@ -128,10 +128,10 @@ export function DonePreview({
               fontSize: 10,
               fontFamily: "var(--th-font-mono)",
               fontWeight: reportTab === tab.id ? 600 : 400,
-              color: reportTab === tab.id ? "var(--th-accent)" : "var(--th-text-secondary)",
+              color: reportTab === tab.id ? "#3B82F6" : "#6B7280",
               background: "none",
               border: "none",
-              borderBottom: reportTab === tab.id ? "2px solid var(--th-accent)" : "2px solid transparent",
+              borderBottom: reportTab === tab.id ? "2px solid #3B82F6" : "2px solid transparent",
               cursor: "pointer",
               marginBottom: -1,
             }}
@@ -176,21 +176,21 @@ export function RunningPreview({ task }: { task: Task }) {
         </span>
       </div>
       {task.description && (
-        <div style={{ fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {task.description}
         </div>
       )}
       {task.last_output_at && (
-        <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
+        <div style={{ fontSize: 10, color: "#9CA3AF" }}>
           {t({ ko: "마지막 출력:", en: "Last output:", ja: "最終出力:", zh: "最后输出:" })} {timeAgo(task.last_output_at)}
         </div>
       )}
       {task.subtask_total != null && task.subtask_total > 0 && (
         <div>
-          <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 6 }}>
+          <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6 }}>
             {t({ ko: "서브태스크:", en: "Subtasks:", ja: "サブタスク:", zh: "子任务:" })} {task.subtask_done ?? 0} / {task.subtask_total}
           </div>
-          <div style={{ height: 4, borderRadius: 2, background: "var(--th-bg-elevated)", overflow: "hidden" }}>
+          <div style={{ height: 4, borderRadius: 2, background: "#FFFFFF", overflow: "hidden" }}>
             <div style={{
               height: "100%",
               borderRadius: 2,
@@ -209,7 +209,7 @@ export function PendingPreview({ task }: { task: Task }) {
   return (
     <div style={{ flex: 1, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
       {task.description && (
-        <div style={{ fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           {task.description}
         </div>
       )}
@@ -220,7 +220,7 @@ export function PendingPreview({ task }: { task: Task }) {
         {task.context_hint && <MetaChip label="Hint" value={task.context_hint} />}
       </div>
       {task.execution_error_summary && (
-        <div style={{ padding: "10px 12px", borderRadius: 6, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", fontSize: 11, color: "var(--th-danger-text, #f85149)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ padding: "10px 12px", borderRadius: 6, background: "#FEF2F2", border: "1px solid #FECACA", fontSize: 11, color: "#DC2626", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
           <span style={{ display: "inline-flex", flexShrink: 0, marginTop: 1 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />

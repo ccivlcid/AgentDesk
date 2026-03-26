@@ -220,10 +220,10 @@ export function DesktopOverlays({
             style={{
               width: 120,
               padding: "3px 7px",
-              background: "var(--th-bg-surface)",
-              border: "1.5px solid var(--th-accent)",
+              background: "#F9FAFB",
+              border: "1.5px solid #3B82F6",
               borderRadius: 5,
-              color: "var(--th-text-primary)",
+              color: "#111827",
               fontFamily: "var(--th-font-mono)",
               fontSize: 12,
               textAlign: "center",

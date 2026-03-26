@@ -12,7 +12,7 @@ function StatPill({ icon, value, color }: { icon: React.ReactNode; value: string
 }
 
 export function Divider() {
-  return <span style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 10px", flexShrink: 0 }} />;
+  return <span style={{ width: 1, height: 12, background: "#E5E7EB", margin: "0 10px", flexShrink: 0 }} />;
 }
 
 function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; onConfirm: () => void }) {
@@ -22,20 +22,20 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
   if (confirming) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 10, color: "var(--th-danger-text, #f85149)", fontFamily: "var(--th-font-mono)" }}>
+        <span style={{ fontSize: 10, color: "#DC2626", fontFamily: "var(--th-font-mono)" }}>
           &ldquo;{projectName}&rdquo; {t({ ko: "삭제?", en: "Delete?", ja: "削除?", zh: "删除?" })}
         </span>
         <button
           type="button"
           onClick={onConfirm}
-          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger, #ef4444)", border: "none", color: "#fff", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}
+          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "#DC2626", border: "none", color: "#fff", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}
         >
           {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
+          style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#9CA3AF", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
         >
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
@@ -47,7 +47,7 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", color: "var(--th-danger-text, #f85149)", cursor: "pointer", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}
+      style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626", cursor: "pointer", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}
     >
       🗑 {t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" })}
     </button>
@@ -72,18 +72,18 @@ export function DetailsTab({ project, taskCount, agentCount, onDelete }: { proje
   return (
     <div style={{ overflowY: "auto", flex: 1, padding: "12px 0" }}>
       {rows.map(({ label, value, multiline }) => (
-        <div key={label} style={{ display: "flex", gap: 12, padding: "8px 16px", borderBottom: "1px solid var(--th-border)" }}>
-          <span style={{ fontSize: 11, color: "var(--th-text-muted)", width: 90, flexShrink: 0, fontWeight: 500 }}>{label}</span>
-          <span style={{ fontSize: 11, color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: multiline ? undefined : "ellipsis", whiteSpace: multiline ? "normal" : "nowrap", wordBreak: multiline ? "break-word" : undefined }}>
+        <div key={label} style={{ display: "flex", gap: 12, padding: "8px 16px", borderBottom: "1px solid #E5E7EB" }}>
+          <span style={{ fontSize: 11, color: "#9CA3AF", width: 90, flexShrink: 0, fontWeight: 500 }}>{label}</span>
+          <span style={{ fontSize: 11, color: "#111827", flex: 1, overflow: "hidden", textOverflow: multiline ? undefined : "ellipsis", whiteSpace: multiline ? "normal" : "nowrap", wordBreak: multiline ? "break-word" : undefined }}>
             {value?.toString() ?? "—"}
           </span>
         </div>
       ))}
 
-      <div style={{ margin: "20px 16px 12px", padding: "14px 16px", borderRadius: 8, border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", background: "var(--th-danger-bg, rgba(239,68,68,0.06))" }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--th-danger-text, #f85149)", marginBottom: 8 }}>{t({ ko: "위험 구역", en: "Danger Zone", ja: "危険ゾーン", zh: "危险区域" })}</div>
+      <div style={{ margin: "20px 16px 12px", padding: "14px 16px", borderRadius: 8, border: "1px solid #FECACA", background: "#FEF2F2" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "#DC2626", marginBottom: 8 }}>{t({ ko: "위험 구역", en: "Danger Zone", ja: "危険ゾーン", zh: "危险区域" })}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
+          <span style={{ fontSize: 11, color: "#9CA3AF" }}>
             {t({ ko: "이 프로젝트를 삭제합니다. 되돌릴 수 없습니다.", en: "This action permanently deletes the project.", ja: "このプロジェクトを削除します。元に戻せません。", zh: "此操作将永久删除该项目。" })}
           </span>
           <DeleteProjectButton projectName={project.name} onConfirm={onDelete} />

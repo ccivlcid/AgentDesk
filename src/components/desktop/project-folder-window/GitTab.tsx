@@ -84,20 +84,20 @@ export function GitTab({ project }: { project: Project }) {
   const s: React.CSSProperties = { fontFamily: mono };
   const inputStyle: React.CSSProperties = {
     ...s, fontSize: 11, padding: "6px 10px",
-    background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
-    borderRadius: 6, color: "var(--th-text-primary)", outline: "none", width: "100%",
+    background: "#FFFFFF", border: "1px solid #E5E7EB",
+    borderRadius: 6, color: "#111827", outline: "none", width: "100%",
   };
 
   if (step === "cloning") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
-        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "#111827" }}>
           {t({ ko: "클론 중...", en: "Cloning...", ja: "クローン中...", zh: "正在克隆..." })}
         </div>
-        <div style={{ width: 280, height: 6, borderRadius: 3, background: "var(--th-border)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: "var(--th-accent)", transition: "width 0.4s ease", borderRadius: 3 }} />
+        <div style={{ width: 280, height: 6, borderRadius: 3, background: "#E5E7EB", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${progress}%`, background: "#3B82F6", transition: "width 0.4s ease", borderRadius: 3 }} />
         </div>
-        <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{progress}%</div>
+        <div style={{ ...s, fontSize: 10, color: "#9CA3AF" }}>{progress}%</div>
       </div>
     );
   }
@@ -111,11 +111,11 @@ export function GitTab({ project }: { project: Project }) {
             <path d="M13 22L19 28L31 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "#111827" }}>
           {t({ ko: "완료!", en: "Done!", ja: "完了!", zh: "完成!" })}
         </div>
-        <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{project.project_path}</div>
-        <button onClick={() => { setStep("idle"); setProgress(0); }} style={{ ...s, fontSize: 11, padding: "5px 16px", borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
+        <div style={{ ...s, fontSize: 10, color: "#9CA3AF" }}>{project.project_path}</div>
+        <button onClick={() => { setStep("idle"); setProgress(0); }} style={{ ...s, fontSize: 11, padding: "5px 16px", borderRadius: 6, border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer" }}>
           {t({ ko: "다시 가져오기", en: "Import again", ja: "再インポート", zh: "重新导入" })}
         </button>
       </div>
@@ -124,7 +124,7 @@ export function GitTab({ project }: { project: Project }) {
 
   return (
     <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16, height: "100%", overflowY: "auto" }}>
-      <div style={{ ...s, fontSize: 11, color: "var(--th-text-muted)", padding: "8px 12px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 6 }}>
+      <div style={{ ...s, fontSize: 11, color: "#9CA3AF", padding: "8px 12px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 6 }}>
         {t({
           ko: `저장소를 이 프로젝트 경로(${project.project_path})로 클론합니다.`,
           en: `Clone a repository into this project path (${project.project_path}).`,
@@ -134,7 +134,7 @@ export function GitTab({ project }: { project: Project }) {
       </div>
 
       {step === "error" && (
-        <div style={{ ...s, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", borderRadius: 6 }}>
+        <div style={{ ...s, fontSize: 11, color: "#DC2626", padding: "8px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 6 }}>
           {errorMsg}
         </div>
       )}
@@ -143,9 +143,9 @@ export function GitTab({ project }: { project: Project }) {
         {(["github", "gitlab"] as GitProvider[]).map((p) => {
           const active = provider === p;
           const isGh = p === "github";
-          const color      = isGh ? "var(--th-text-heading)" : "#fc6d26";
-          const activeBg   = isGh ? "var(--th-hover-overlay-subtle)" : "rgba(252,109,38,0.1)";
-          const activeBorder = isGh ? "var(--th-border-strong)" : "rgba(252,109,38,0.5)";
+          const color      = isGh ? "#111827" : "#fc6d26";
+          const activeBg   = isGh ? "rgba(0,0,0,0.03)" : "rgba(252,109,38,0.1)";
+          const activeBorder = isGh ? "#D1D5DB" : "rgba(252,109,38,0.5)";
           return (
             <button
               key={p}
@@ -154,9 +154,9 @@ export function GitTab({ project }: { project: Project }) {
               style={{
                 ...s, fontSize: 11, fontWeight: active ? 700 : 500,
                 padding: "6px 16px", borderRadius: 6,
-                border: `1px solid ${active ? activeBorder : "var(--th-border)"}`,
+                border: `1px solid ${active ? activeBorder : "#E5E7EB"}`,
                 background: active ? activeBg : "transparent",
-                color: active ? color : "var(--th-text-muted)",
+                color: active ? color : "#9CA3AF",
                 cursor: "pointer", transition: "all 0.12s",
               }}
             >
@@ -169,20 +169,20 @@ export function GitTab({ project }: { project: Project }) {
       {provider === "github" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {t({ ko: "저장소 URL", en: "Repository URL", ja: "リポジトリURL", zh: "仓库 URL" })}
             </div>
             <input value={ghUrl} onChange={(e) => setGhUrl(e.target.value)} placeholder="https://github.com/owner/repo" style={inputStyle} />
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 2 }}>
-              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Personal Access Token <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
               </div>
               <input value={ghToken} onChange={(e) => setGhToken(e.target.value)} type="password" placeholder="ghp_..." style={inputStyle} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {t({ ko: "브랜치", en: "Branch", ja: "ブランチ", zh: "分支" })} <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
               </div>
               <input value={ghBranch} onChange={(e) => setGhBranch(e.target.value)} placeholder="main" style={inputStyle} />
@@ -194,23 +194,23 @@ export function GitTab({ project }: { project: Project }) {
       {provider === "gitlab" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {t({ ko: "저장소 URL", en: "Repository URL", ja: "リポジトリURL", zh: "仓库 URL" })}
             </div>
             <input value={glUrl} onChange={(e) => setGlUrl(e.target.value)} placeholder="https://gitlab.com/username/repo" style={inputStyle} />
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 2 }}>
-              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Personal Access Token
               </div>
               <input value={glToken} onChange={(e) => setGlToken(e.target.value)} type="password" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" style={inputStyle} />
-              <div style={{ ...s, fontSize: 9, color: "var(--th-text-muted)", marginTop: 4, opacity: 0.7 }}>
+              <div style={{ ...s, fontSize: 9, color: "#9CA3AF", marginTop: 4, opacity: 0.7 }}>
                 {t({ ko: "read_repository 스코프 필요", en: "Requires read_repository scope", ja: "read_repositoryスコープが必要", zh: "需要 read_repository 权限" })}
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <div style={{ ...s, fontSize: 10, color: "#9CA3AF", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {t({ ko: "브랜치", en: "Branch", ja: "ブランチ", zh: "分支" })} <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
               </div>
               <input value={glBranch} onChange={(e) => setGlBranch(e.target.value)} placeholder="main" style={inputStyle} />
@@ -225,8 +225,8 @@ export function GitTab({ project }: { project: Project }) {
         disabled={!canClone}
         style={{
           ...s, fontSize: 12, fontWeight: 700, padding: "9px 0", borderRadius: 6, border: "none",
-          background: canClone ? "var(--th-accent)" : "rgba(245,158,11,0.2)",
-          color: canClone ? "#000" : "var(--th-text-muted)",
+          background: canClone ? "#3B82F6" : "rgba(245,158,11,0.2)",
+          color: canClone ? "#000" : "#9CA3AF",
           cursor: canClone ? "pointer" : "not-allowed",
           marginTop: 4,
         }}

@@ -26,7 +26,7 @@ export function UserGuideSidebar({
       display: "flex", flexDirection: "column",
       background: "#F9FAFB",
     }}>
-      <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
+      <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
           <svg viewBox="0 0 16 16" fill="none" stroke="#9CA3AF" strokeWidth={1.5}
             width={10} height={10}
