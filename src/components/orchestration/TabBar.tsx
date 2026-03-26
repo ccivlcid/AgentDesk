@@ -8,11 +8,11 @@ interface TabBarProps {
   onTabChange: (tab: OrchestraTab) => void;
 }
 
-const TABS: Array<{ id: OrchestraTab; label: string; icon: (c: string) => React.ReactNode }> = [
-  { id: "timeline", label: "TIMELINE", icon: timelineIcon },
-  { id: "logs", label: "LOGS", icon: logsIcon },
-  { id: "agents", label: "AGENTS", icon: agentsIcon },
-  { id: "room", label: "ROOM", icon: roomIcon },
+const TABS: Array<{ id: OrchestraTab; label: string; sigil: string; icon: (c: string) => React.ReactNode }> = [
+  { id: "timeline", label: "TIMELINE", sigil: "//", icon: timelineIcon },
+  { id: "logs", label: "LOGS", sigil: "$", icon: logsIcon },
+  { id: "agents", label: "AGENTS", sigil: "@", icon: agentsIcon },
+  { id: "room", label: "ROOM", sigil: "#", icon: roomIcon },
 ];
 
 export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
@@ -30,16 +30,18 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
   }, [onTabChange]);
 
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 0,
-      borderTop: "1px solid var(--th-border)",
-      background: "var(--th-bg-secondary)",
-      padding: "0",
-      flexShrink: 0,
-    }}>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap" as const,
+        gap: 8,
+        borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+        background: "#FFFFFF",
+        padding: "12px 16px 8px",
+        fontFamily: mono,
+        flexShrink: 0,
+      }}
+    >
       {TABS.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -49,25 +51,39 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
             onClick={() => onTabChange(tab.id)}
             style={{
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
-              gap: 3,
-              padding: "8px 24px 6px",
-              background: "transparent",
-              border: "none",
-              borderTop: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
-              cursor: "pointer",
-              color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: "10.5px",
+              fontWeight: isActive ? 800 : 600,
               fontFamily: mono,
-              fontSize: 10,
-              fontWeight: isActive ? 700 : 500,
-              letterSpacing: 0.8,
-              transition: "color 0.15s, border-color 0.15s",
+              letterSpacing: "0.1em",
+              background: isActive ? "#F3F4F6" : "transparent",
+              color: isActive ? "#111827" : "#6B7280",
+              border: "1px solid",
+              borderColor: isActive ? "rgba(0, 0, 0, 0.05)" : "transparent",
+              cursor: "pointer",
+              transition: "all 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
+              borderRadius: 12,
               outline: "none",
             }}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "#374151";
+                e.currentTarget.style.background = "#F9FAFB";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "#6B7280";
+                e.currentTarget.style.background = "transparent";
+              }
+            }}
           >
-            {tab.icon(isActive ? "var(--th-accent)" : "var(--th-text-muted)")}
-            {tab.label}
+            <span style={{ opacity: isActive ? 1 : 0.6, display: "flex", alignItems: "center" }}>
+              {tab.icon(isActive ? "#111827" : "#9CA3AF")}
+            </span>
+            <span style={{ textTransform: "uppercase" as const }}>{tab.label}</span>
           </button>
         );
       })}
@@ -77,7 +93,7 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
 
 function timelineIcon(color: string) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" />
       <rect x="14" y="3" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
@@ -88,7 +104,7 @@ function timelineIcon(color: string) {
 
 function logsIcon(color: string) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -99,7 +115,7 @@ function logsIcon(color: string) {
 
 function agentsIcon(color: string) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -110,7 +126,7 @@ function agentsIcon(color: string) {
 
 function roomIcon(color: string) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );

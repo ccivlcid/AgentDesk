@@ -26,36 +26,45 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   }, [projectId]);
 
   return (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100%", overflow: "hidden", gap: 16 }}>
       {/* Left: Communication Feed */}
       <div style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        borderRight: "1px solid var(--th-border)",
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 16,
+        overflow: "hidden",
       }}>
         <div style={{
-          padding: "10px 16px",
-          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 20px",
+          borderBottom: "1px solid #E5E7EB",
           fontFamily: mono,
           fontSize: 11,
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
+          background: "#F9FAFB",
         }}>
-          <span style={{ color: "var(--th-text-code)", fontWeight: 600 }}>COMM_CHANNEL://TEAM_ROOM</span>
+          <div style={{ padding: 4, background: "#EBF5FF", borderRadius: 8, color: "#3B82F6", display: "flex", alignItems: "center" }}>
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <span style={{ color: "#374151", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Team Room</span>
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
-            background: "var(--th-text-code)",
+            background: "#059669",
           }} />
           <div style={{ flex: 1 }} />
-          <span style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
+          <span style={{ color: "#9CA3AF", fontSize: 10, fontWeight: 600 }}>
             PEERS: {String(agents.length).padStart(2, "0")}
           </span>
         </div>
 
         {/* Feed content */}
-        <div style={{ flex: 1, overflow: "auto", padding: 16 }}>
+        <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
           {/* Team board entries from file */}
           {boardEntries.length > 0 && boardEntries.map((entry, i) => (
             <CommMessage key={`board-${i}`} entry={entry} agents={agents} />
@@ -63,29 +72,30 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
 
           {/* Active tasks as live status (fallback when no board entries) */}
           {boardEntries.length === 0 && activeTasks.length === 0 && (
-            <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)", textAlign: "center", paddingTop: 32 }}>
+            <div style={{ fontFamily: mono, fontSize: 12, color: "#9CA3AF", textAlign: "center", paddingTop: 40 }}>
               No active orchestration. Start a kickoff to see team communication.
             </div>
           )}
           {boardEntries.length === 0 && activeTasks.map((task) => {
             const agent = agents.find((a) => a.id === task.assigned_agent_id);
             return (
-              <div key={task.id} style={{ marginBottom: 12 }}>
-                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4 }}>
-                  <span style={{ color: "var(--th-accent)", fontWeight: 600 }}>
+              <div key={task.id} style={{ marginBottom: 14 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600 }}>
+                  <span style={{ color: "#3B82F6", fontWeight: 800 }}>
                     {agent?.name.toUpperCase().replace(/\s+/g, "_") ?? "SYSTEM"}
                   </span>
                   {" "}@{task.status === "review" ? "Peer-Review" : "Status"}
                 </div>
                 <div style={{
-                  fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
-                  background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-                  padding: "10px 14px",
+                  fontFamily: mono, fontSize: 12, color: "#111827",
+                  background: "#F9FAFB", border: "1px solid #E5E7EB",
+                  borderRadius: 14,
+                  padding: "12px 16px",
                 }}>
                   {task.title}
                   {task.status === "in_progress" && (
-                    <div style={{ height: 3, background: "var(--th-border)", width: "100%", marginTop: 8 }}>
-                      <div style={{ height: 3, background: "var(--th-accent)", width: `${getTaskProgress(task)}%` }} />
+                    <div style={{ height: 4, background: "#E5E7EB", width: "100%", marginTop: 10, borderRadius: 2 }}>
+                      <div style={{ height: 4, background: "#3B82F6", width: `${getTaskProgress(task)}%`, borderRadius: 2 }} />
                     </div>
                   )}
                 </div>
@@ -99,73 +109,96 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
           display: "flex",
           alignItems: "center",
           gap: 8,
-          padding: "8px 12px",
-          borderTop: "1px solid var(--th-border)",
-          background: "var(--th-bg-secondary)",
+          padding: "10px 16px",
+          borderTop: "1px solid #E5E7EB",
+          background: "#F9FAFB",
         }}>
-          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-accent)" }}>{">"}_</span>
+          <span style={{ fontFamily: mono, fontSize: 12, color: "#3B82F6", fontWeight: 700 }}>{">"}_</span>
           <input
             type="text"
-            placeholder="ENTER COMMAND OR MESSAGE..."
+            placeholder="Enter command or message..."
             style={{
               flex: 1, background: "transparent", border: "none", outline: "none",
-              fontFamily: mono, fontSize: 11, color: "var(--th-text-primary)",
+              fontFamily: mono, fontSize: 11, color: "#111827",
             }}
           />
-          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", border: "1px solid var(--th-border)", padding: "2px 6px" }}>
-            ESC: CANCEL
+          <span style={{
+            fontFamily: mono, fontSize: 9, fontWeight: 600, color: "#9CA3AF",
+            border: "1px solid #E5E7EB", padding: "3px 8px", borderRadius: 6,
+          }}>
+            ESC
           </span>
-          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-accent)", border: "1px solid var(--th-accent)", padding: "2px 6px" }}>
-            ENTER: SEND
+          <span style={{
+            fontFamily: mono, fontSize: 9, fontWeight: 700, color: "#FFFFFF",
+            background: "#3B82F6", padding: "3px 8px", borderRadius: 6,
+          }}>
+            ENTER
           </span>
         </div>
       </div>
 
       {/* Right: Reasoning Tree */}
       <div style={{
-        width: 320,
+        width: 300,
         display: "flex",
         flexDirection: "column",
         overflow: "auto",
         flexShrink: 0,
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        borderRadius: 16,
       }}>
         <div style={{
-          padding: "10px 16px",
-          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 20px",
+          borderBottom: "1px solid #E5E7EB",
           fontFamily: mono,
           fontSize: 11,
-          color: "var(--th-accent)",
-          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "#F9FAFB",
         }}>
-          LOGIC_VIEW://REASONING_TREE
+          <div style={{ padding: 4, background: "#FEF3C7", borderRadius: 8, color: "#D97706", display: "flex", alignItems: "center" }}>
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <span style={{ color: "#374151", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+            Logic View
+          </span>
         </div>
 
-        <div style={{ padding: 16 }}>
+        <div style={{ padding: 20 }}>
           {/* Mission objective */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: 0.5, marginBottom: 6 }}>
-              MISSION_OBJECTIVE
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+              Mission Objective
             </div>
             <div style={{
-              background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-              padding: "10px 14px",
+              background: "#F9FAFB", border: "1px solid #E5E7EB",
+              borderRadius: 14,
+              padding: "12px 16px",
             }}>
-              <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
+              <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 800, color: "#111827" }}>
                 {project?.name?.toUpperCase().replace(/\s+/g, "_") ?? "NO_PROJECT"}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}>
                   STATUS: {activeTasks.length > 0 ? "ACTIVE" : "IDLE"}
                 </span>
-                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-accent)" }}>
-                  PROGRESS: {tasks.length > 0 ? `${Math.round((doneTasks.length / tasks.length) * 100)}%` : "0%"}
+                <span style={{ fontFamily: mono, fontSize: 10, color: "#3B82F6", fontWeight: 700 }}>
+                  {tasks.length > 0 ? `${Math.round((doneTasks.length / tasks.length) * 100)}%` : "0%"}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Step progress tree */}
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+              Tasks
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {tasks.slice(0, 8).map((task) => (
                 <StepTreeNode key={task.id} task={task} agents={agents} />
@@ -181,7 +214,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   );
 }
 
-/* ── Communication Message with type-based styling ── */
+/* -- Communication Message with type-based styling -- */
 
 function detectMessageType(entry: TeamBoardEntry): "system" | "success" | "blocker" | "instruction" | "status" | "review" {
   const sub = entry.subject.toLowerCase();
@@ -195,12 +228,12 @@ function detectMessageType(entry: TeamBoardEntry): "system" | "success" | "block
 }
 
 const MESSAGE_STYLES: Record<string, { labelColor: string; borderColor: string; bgTint: string; label: string | null }> = {
-  system: { labelColor: "#60a5fa", borderColor: "rgba(96,165,250,0.3)", bgTint: "rgba(96,165,250,0.05)", label: "SYSTEM_EVT" },
-  success: { labelColor: "var(--th-text-code)", borderColor: "rgba(34,197,94,0.3)", bgTint: "rgba(34,197,94,0.05)", label: "SUCCESS" },
-  blocker: { labelColor: "#ef4444", borderColor: "rgba(239,68,68,0.4)", bgTint: "rgba(239,68,68,0.08)", label: "BLOCKER" },
-  instruction: { labelColor: "#ef4444", borderColor: "var(--th-border)", bgTint: "transparent", label: null },
-  status: { labelColor: "var(--th-accent)", borderColor: "var(--th-border)", bgTint: "transparent", label: null },
-  review: { labelColor: "#60a5fa", borderColor: "rgba(96,165,250,0.3)", bgTint: "transparent", label: null },
+  system: { labelColor: "#3B82F6", borderColor: "#BFDBFE", bgTint: "#EBF5FF", label: "SYSTEM" },
+  success: { labelColor: "#059669", borderColor: "#A7F3D0", bgTint: "#ECFDF5", label: "SUCCESS" },
+  blocker: { labelColor: "#DC2626", borderColor: "#FECACA", bgTint: "#FEF2F2", label: "BLOCKER" },
+  instruction: { labelColor: "#D97706", borderColor: "#E5E7EB", bgTint: "#FFFFFF", label: null },
+  status: { labelColor: "#3B82F6", borderColor: "#E5E7EB", bgTint: "#FFFFFF", label: null },
+  review: { labelColor: "#7C3AED", borderColor: "#DDD6FE", bgTint: "#F5F3FF", label: null },
 };
 
 function CommMessage({ entry, agents }: { entry: TeamBoardEntry; agents: Agent[] }) {
@@ -209,20 +242,20 @@ function CommMessage({ entry, agents }: { entry: TeamBoardEntry; agents: Agent[]
   const isPM = agents.some((a) => a.role === "team_leader" && a.name.toLowerCase() === entry.sender.toLowerCase());
 
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 14 }}>
       {/* Type label */}
       {style.label && (
         <div style={{
-          fontFamily: mono, fontSize: 9, fontWeight: 600,
-          color: style.labelColor, letterSpacing: 0.5, marginBottom: 4,
+          fontFamily: mono, fontSize: 9, fontWeight: 800,
+          color: style.labelColor, letterSpacing: "0.05em", marginBottom: 4,
         }}>
           [{style.label}]
         </div>
       )}
 
       {/* Sender line */}
-      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4 }}>
-        <span style={{ color: isPM ? "#ef4444" : style.labelColor, fontWeight: 600 }}>
+      <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600 }}>
+        <span style={{ color: isPM ? "#DC2626" : style.labelColor, fontWeight: 800 }}>
           {entry.sender.toUpperCase().replace(/\s+/g, "_")}
         </span>
         {" "}
@@ -230,21 +263,22 @@ function CommMessage({ entry, agents }: { entry: TeamBoardEntry; agents: Agent[]
           <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
         </svg>
         {" "}
-        <span style={{ color: "var(--th-text-secondary)" }}>{entry.target.toUpperCase()}</span>
-        <span style={{ color: "var(--th-text-muted)", marginLeft: 8, fontSize: 9 }}>{entry.timestamp}</span>
+        <span style={{ color: "#6B7280" }}>{entry.target.toUpperCase()}</span>
+        <span style={{ color: "#D1D5DB", marginLeft: 8, fontSize: 9 }}>{entry.timestamp}</span>
       </div>
 
       {/* Message body */}
       <div style={{
-        fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
-        background: style.bgTint !== "transparent" ? style.bgTint : "var(--th-bg-surface)",
+        fontFamily: mono, fontSize: 12, color: "#111827",
+        background: style.bgTint,
         border: `1px solid ${style.borderColor}`,
-        padding: "10px 14px",
+        borderRadius: 14,
+        padding: "12px 16px",
       }}>
-        <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 11, color: style.labelColor }}>
+        <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 11, color: style.labelColor }}>
           {entry.subject}
         </div>
-        <div style={{ whiteSpace: "pre-wrap", fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.5 }}>
+        <div style={{ whiteSpace: "pre-wrap", fontSize: 11, color: "#6B7280", lineHeight: 1.6 }}>
           {entry.body.length > 300 ? `${entry.body.slice(0, 297)}...` : entry.body}
         </div>
       </div>
@@ -252,7 +286,7 @@ function CommMessage({ entry, agents }: { entry: TeamBoardEntry; agents: Agent[]
   );
 }
 
-/* ── Step progress tree node ── */
+/* -- Step progress tree node -- */
 
 function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
   const isDone = task.status === "done";
@@ -261,31 +295,32 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
   const isFailed = task.status === "failed" || task.execution_state === "failed";
   const agent = agents.find((a) => a.id === task.assigned_agent_id);
 
-  const color = isDone ? "var(--th-text-code)"
-    : isFailed ? "#ef4444"
-    : isReview ? "#60a5fa"
-    : isRunning ? "var(--th-accent)"
-    : "var(--th-text-muted)";
+  const color = isDone ? "#059669"
+    : isFailed ? "#DC2626"
+    : isReview ? "#7C3AED"
+    : isRunning ? "#3B82F6"
+    : "#D1D5DB";
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ color, width: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {isDone ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
           ) : isFailed ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           ) : isRunning ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6" /></svg>
           ) : isReview ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /><path d="M12 6v6" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /><path d="M12 6v6" /></svg>
           ) : (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /></svg>
           )}
         </span>
         <span style={{
           fontFamily: mono, fontSize: 11, flex: 1,
-          color: isDone ? "var(--th-text-secondary)" : "var(--th-text-primary)",
+          color: isDone ? "#9CA3AF" : "#111827",
+          fontWeight: isRunning ? 600 : 400,
           textDecoration: isDone ? "line-through" : "none",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
@@ -295,14 +330,14 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
 
       {/* Sub-info for running tasks */}
       {isRunning && (
-        <div style={{ marginLeft: 22, marginTop: 2 }}>
+        <div style={{ marginLeft: 22, marginTop: 4 }}>
           {agent && (
-            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", fontWeight: 600 }}>
               {agent.name.split(" ")[0]?.toLowerCase()}
             </span>
           )}
-          <div style={{ height: 2, background: "var(--th-border)", width: "80%", marginTop: 3 }}>
-            <div style={{ height: 2, background: "var(--th-accent)", width: `${getTaskProgress(task)}%`, transition: "width 0.3s" }} />
+          <div style={{ height: 3, background: "#E5E7EB", width: "80%", marginTop: 4, borderRadius: 2 }}>
+            <div style={{ height: 3, background: "#3B82F6", width: `${getTaskProgress(task)}%`, transition: "width 0.3s", borderRadius: 2 }} />
           </div>
         </div>
       )}
@@ -310,7 +345,7 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
   );
 }
 
-/* ── Active Dependencies ── */
+/* -- Active Dependencies -- */
 
 interface Dependency {
   name: string;
@@ -344,45 +379,53 @@ function ActiveDependencies({ tasks }: { tasks: Task[] }) {
 
   if (deps.length === 0) return null;
 
-  const statusColors: Record<string, string> = {
-    READY: "var(--th-text-code)",
-    CONFLICT: "#ef4444",
-    LOCKED: "var(--th-accent)",
-    WAITING: "#60a5fa",
+  const statusColors: Record<string, { text: string; bg: string; border: string }> = {
+    READY: { text: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
+    CONFLICT: { text: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+    LOCKED: { text: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
+    WAITING: { text: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
   };
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: 0.5, marginBottom: 8 }}>
-        ACTIVE_DEPENDENCIES
+      <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+        Active Dependencies
       </div>
       <div style={{
-        background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-        padding: "8px 10px",
+        background: "#F9FAFB", border: "1px solid #E5E7EB",
+        borderRadius: 14,
+        padding: "10px 14px",
       }}>
-        {deps.map((dep, i) => (
-          <div key={i} style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "3px 0",
-            fontFamily: mono,
-            fontSize: 10,
-          }}>
-            <span style={{ color: "var(--th-text-secondary)" }}>
-              <span style={{ color: "var(--th-text-muted)", marginRight: 4 }}>{dep.type}:</span>
-              {dep.name}
-            </span>
-            <span style={{
-              color: statusColors[dep.status] ?? "var(--th-text-muted)",
-              fontWeight: 600,
-              fontSize: 9,
-              letterSpacing: 0.5,
+        {deps.map((dep, i) => {
+          const sc = statusColors[dep.status] ?? { text: "#9CA3AF", bg: "#F9FAFB", border: "#E5E7EB" };
+          return (
+            <div key={i} style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "5px 0",
+              fontFamily: mono,
+              fontSize: 10,
             }}>
-              {dep.status}
-            </span>
-          </div>
-        ))}
+              <span style={{ color: "#6B7280" }}>
+                <span style={{ color: "#9CA3AF", marginRight: 4, fontWeight: 600 }}>{dep.type}:</span>
+                {dep.name}
+              </span>
+              <span style={{
+                color: sc.text,
+                fontWeight: 800,
+                fontSize: 9,
+                background: sc.bg,
+                border: `1px solid ${sc.border}`,
+                borderRadius: 6,
+                padding: "1px 6px",
+                letterSpacing: "0.05em",
+              }}>
+                {dep.status}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ export default function OrchestrationWindow() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "var(--th-bg-primary)",
+        background: "#F3F4F6",
         fontFamily: mono,
         overflow: "hidden",
       }}>
@@ -70,6 +70,9 @@ export default function OrchestrationWindow() {
           project={currentProject}
         />
 
+        {/* Tab Bar (top, settings-style) */}
+        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
         {/* Main content: Stage Rail + Tab Content */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {/* Stage Rail (left sidebar) */}
@@ -77,7 +80,16 @@ export default function OrchestrationWindow() {
 
           {/* Tab Content */}
           <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            <div style={{ flex: 1, overflow: "auto" }}>
+            <div style={{ flex: 1, overflow: "auto", padding: "24px 20px" }}>
+              <div style={{
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                borderRadius: 24,
+                padding: "24px 24px",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
+                minHeight: "100%",
+              }}>
               {activeTab === "timeline" && (
                 <TimelineTab
                   tasks={projectTasks}
@@ -107,12 +119,10 @@ export default function OrchestrationWindow() {
                   projectId={currentProjectId ?? undefined}
                 />
               )}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Bottom Tab Bar */}
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
     </AppWindow>
   );

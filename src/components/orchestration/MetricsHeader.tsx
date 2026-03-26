@@ -30,40 +30,61 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
     <div style={{
       display: "flex",
       alignItems: "center",
-      gap: 24,
-      padding: "6px 16px",
-      borderBottom: "1px solid var(--th-border)",
-      background: "var(--th-bg-secondary)",
+      gap: 16,
+      padding: "10px 20px",
+      borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+      background: "#FFFFFF",
       fontSize: 11,
       fontFamily: mono,
-      color: "var(--th-text-secondary)",
+      color: "#6B7280",
       flexShrink: 0,
     }}>
-      <span style={{ color: "var(--th-text-primary)", fontWeight: 600, fontSize: 12, letterSpacing: 1 }}>
-        ORCHESTRATOR_OS
-      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ padding: 4, background: "#EBF5FF", borderRadius: 8, color: "#3B82F6", display: "flex", alignItems: "center" }}>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
+        <span style={{ color: "#111827", fontWeight: 800, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+          Orchestrator
+        </span>
+      </div>
 
-      <MetricBadge label="TOKENS" value={cost ? fmtTokens(cost.totalTokens) : "—"} color={cost ? "var(--th-text-code)" : "var(--th-text-secondary)"} />
-      <MetricBadge label="BUDGET" value={cost ? fmtUsd(cost.totalUsd) : "—"} color={cost ? "var(--th-accent)" : "var(--th-text-secondary)"} />
+      <MetricBadge label="TOKENS" value={cost ? fmtTokens(cost.totalTokens) : "--"} color={cost ? "#111827" : "#9CA3AF"} />
+      <MetricBadge label="BUDGET" value={cost ? fmtUsd(cost.totalUsd) : "--"} color={cost ? "#3B82F6" : "#9CA3AF"} />
       <MetricBadge
         label="AGENTS"
         value={`${workingCount} Active / ${idleCount} Idle`}
-        color={workingCount > 0 ? "var(--th-accent)" : "var(--th-text-muted)"}
+        color={workingCount > 0 ? "#059669" : "#9CA3AF"}
       />
 
       <div style={{ flex: 1 }} />
 
       {failedCount > 0 && (
         <span style={{
-          color: "#ef4444",
-          fontWeight: 600,
-          fontSize: 11,
+          fontSize: 10,
+          fontWeight: 800,
+          color: "#DC2626",
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          borderRadius: 8,
+          padding: "3px 10px",
+          letterSpacing: "0.05em",
         }}>
           {failedCount} FAILED
         </span>
       )}
       {inProgressCount > 0 && (
-        <span style={{ color: "var(--th-accent)", fontSize: 11 }}>
+        <span style={{
+          fontSize: 10,
+          fontWeight: 800,
+          color: "#059669",
+          background: "#ECFDF5",
+          border: "1px solid #A7F3D0",
+          borderRadius: 8,
+          padding: "3px 10px",
+          letterSpacing: "0.05em",
+        }}>
           {inProgressCount} RUNNING
         </span>
       )}
@@ -74,8 +95,8 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
 function MetricBadge({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <span style={{ color: "var(--th-text-muted)", fontSize: 10, letterSpacing: 0.5 }}>{label}</span>
-      <span style={{ color, fontWeight: 500 }}>{value}</span>
+      <span style={{ color: "#9CA3AF", fontSize: 10, fontWeight: 600, letterSpacing: "0.05em" }}>{label}</span>
+      <span style={{ color, fontWeight: 700, fontSize: 11 }}>{value}</span>
     </span>
   );
 }
