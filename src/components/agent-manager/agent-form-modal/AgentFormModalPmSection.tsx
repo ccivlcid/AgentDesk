@@ -104,12 +104,12 @@ export function AgentFormModalPmSection({
                   borderRadius: 6,
                   ...(active
                     ? {
-                        background: "var(--th-accent-glow)",
+                        background: "#EBF5FF",
                         color: "#3B82F6",
-                        borderColor: "var(--th-border-accent)",
+                        borderColor: "#BFDBFE",
                       }
                     : {
-                        borderColor: "var(--th-input-border)",
+                        borderColor: "#E5E7EB",
                         color: "#9CA3AF",
                       }),
                 }}
