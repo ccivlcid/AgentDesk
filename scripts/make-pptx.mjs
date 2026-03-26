@@ -175,7 +175,7 @@ function bulletRow(icon, text, color = TXT) {
   });
 
   const layers = [
-    { label: "Frontend Layer", color: ACC4, items: ["React 19 + Vite", "Zustand Store", "Tailwind CSS", "@xyflow/react"] },
+    { label: "Frontend Layer", color: ACC4, items: ["React 19 + Vite", "Zustand Store", "Tailwind CSS", "WebSocket"] },
     { label: "Backend Layer", color: ACC2, items: ["Node.js + Express", "WebSocket Hub", "Task Execution Engine", "Workflow Scheduler"] },
     { label: "Data Layer", color: ACC3, items: ["SQLite (better-sqlite3)", "Versioned Migrations", "File Storage", "Pino Logger"] },
     { label: "Integration Layer", color: ACC, items: ["OpenAI / Local LLM", "Synapse (Notion/Figma)", "Discord / Slack", "Electron (optional)"] },
@@ -517,7 +517,7 @@ function bulletRow(icon, text, color = TXT) {
     fontFace: FONT_BODY, fontSize: 20, color: MUT, align: "center",
   });
 
-  const pills = ["React 19", "Node.js", "SQLite", "@xyflow/react", "Remotion", "Electron"];
+  const pills = ["React 19", "Node.js", "SQLite", "WebSocket", "Remotion", "Electron"];
   const pillColors = [ACC2, ACC3, ACC, ACC4, "E11D48", MUT];
   pills.forEach((label, i) => {
     const col = i % 3;

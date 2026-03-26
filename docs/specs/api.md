@@ -346,7 +346,7 @@ Used for saving and loading agent composition canvases (Workflow → Composition
 }
 ```
 
-`nodes` and `edges` are serialized directly as `@xyflow/react` Node/Edge arrays. Stored in DB as `nodes_json` and `edges_json` columns.
+`nodes` and `edges` are serialized as Node/Edge arrays. Stored in DB as `nodes_json` and `edges_json` columns.
 
 ### GET Response
 

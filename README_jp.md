@@ -189,7 +189,6 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
 |---------|------|
 | フロントエンド | React 19 + TypeScript + Vite + Tailwind CSS |
 | 状態管理 | Zustand |
-| フロー図 | `@xyflow/react` v12 |
 | バックエンド | Node.js + Express + tsx |
 | データベース | SQLite (`better-sqlite3`) + バージョン管理マイグレーション |
 | リアルタイム | WebSocket |

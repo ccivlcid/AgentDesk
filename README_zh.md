@@ -188,7 +188,6 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 |----|------|
 | 前端 | React 19 + TypeScript + Vite + Tailwind CSS |
 | 状态管理 | Zustand |
-| 流程图 | `@xyflow/react` v12 |
 | 后端 | Node.js + Express + tsx |
 | 数据库 | SQLite (`better-sqlite3`) + 版本化迁移 |
 | 实时通信 | WebSocket |

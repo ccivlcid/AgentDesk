@@ -521,7 +521,6 @@ When adding a new field to the task schema:
 |------|------------|
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
 | State management | Zustand |
-| Flow diagrams | `@xyflow/react` v12 |
 | Backend | Node.js + Express + tsx (TypeScript direct execution) |
 | DB | SQLite (`better-sqlite3`) + versioned migrations |
 | Logging | pino |

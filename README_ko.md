@@ -211,7 +211,6 @@ pnpm dev
 | 백엔드 | Node.js · Express · tsx |
 | 데이터베이스 | SQLite (`better-sqlite3`) · 버전 관리 마이그레이션 |
 | 실시간 | WebSocket |
-| 플로우 다이어그램 | `@xyflow/react` |
 | 테스팅 | Vitest · Playwright |
 | 데스크톱 | Electron (선택) |
 

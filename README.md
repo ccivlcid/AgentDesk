@@ -238,7 +238,6 @@ Open **http://localhost:8800** — requires Node.js 22+, pnpm 10+.
 | Backend | Node.js · Express · tsx |
 | Database | SQLite (`better-sqlite3`) · versioned migrations |
 | Real-time | WebSocket |
-| Flow diagrams | `@xyflow/react` |
 | Testing | Vitest · Playwright |
 | Desktop | Electron (optional) |
 

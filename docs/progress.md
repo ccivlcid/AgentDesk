@@ -27,7 +27,7 @@
 | 3 | App Runner (프로젝트 자동 실행) | ~1,248 | 완전 제거 완료 |
 | 4 | Wallpaper Picker (배경화면) | ~475 | 완전 제거 완료 |
 | 5 | Dashboard (메트릭 대시보드) | ~680 | 완전 제거 완료 |
-| 6 | Workflow Builder (@xyflow/react 플로우 에디터) | ~7,994 | 완전 제거 완료 |
+| 6 | Workflow Builder (플로우 에디터) | ~7,994 | 완전 제거 완료 |
 | 7 | Telegram Messenger | — | 완전 제거 완료 |
 | 8 | Chat 시스템 (Direct/Group/Announcement/Directive) | ~35,000 | 완전 제거 완료 |
 | 9 | Messenger 통합 (Discord/Slack/WhatsApp/Google Chat/Signal/iMessage) | ~34,000 | 완전 제거 완료 |
