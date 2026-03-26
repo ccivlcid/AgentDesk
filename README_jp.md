@@ -251,7 +251,7 @@ pnpm dev                  # フロントエンド(8800) + APIサーバー(8790)
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DBスキーマ ER + 状態機械 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 全画面・モーダル仕様 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS変数 + コンポーネントスタイルルール |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 (v1.6.4) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 (v1.6.5) |
 | [`docs/progress.md`](docs/progress.md) | 開発進捗ログ |
 
 ---

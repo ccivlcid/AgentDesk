@@ -2,7 +2,8 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.6.4` (local snapshot, 2026-03-24).
+Current baseline target: `v1.6.5` (local snapshot, 2026-03-26).
+> **v1.6.5 changes:** Added `GET /api/projects/:id/team-board` (team communication board from `docs/team-board.md`), `GET /api/projects/:id/tasks/:taskId/report-md` (PM review report from `docs/tasks/{taskId}-report.md`).
 > **v1.6.4 changes:** Added `POST /api/projects/delete-directory` — recursively delete a project directory on disk when allowed by `PROJECT_PATH_ALLOWED_ROOTS` and no `projects` row references the path (trash empty / permanent erase).
 > **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
 > **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
@@ -157,6 +158,8 @@ Channel configuration is stored in `CompanySettings.messengerChannels` as `Messe
 | POST | `/api/projects/:id/add-tasks` | Add tasks to an existing project via abbreviated PM planning flow |
 | POST | `/api/projects/:id/resume` | Resume next planned task |
 | POST | `/api/projects/:id/clarification-reply` | Reply to kickoff clarification |
+| GET | `/api/projects/:id/team-board` | Read team communication board (`docs/team-board.md`) |
+| GET | `/api/projects/:id/tasks/:taskId/report-md` | Read task PM review report (`docs/tasks/{taskId}-report.md`) |
 | POST | `/api/projects/auto-assign-agents` | AI auto-assign agents to project roles |
 | GET | `/api/github/status` | GitHub integration status |
 | GET | `/api/github/repos` | Repositories |
@@ -174,6 +177,25 @@ Channel configuration is stored in `CompanySettings.messengerChannels` as `Messe
   "by_agent": [
     { "agent_id": "uuid", "agent_name": "string", "cost_usd": 0.012 }
   ]
+}
+```
+
+`GET /api/projects/:id/team-board` response shape:
+```json
+{
+  "ok": true,
+  "content": "# Team Board\n---\n...",
+  "entries": [
+    { "timestamp": "2026-03-26 14:30", "sender": "PM", "target": "ALL", "subject": "Review: task title", "body": "APPROVE — ..." }
+  ]
+}
+```
+
+`GET /api/projects/:id/tasks/:taskId/report-md` response shape:
+```json
+{
+  "ok": true,
+  "content": "# Task Report: ...\n\n## PM Review\n### Round 1\n..."
 }
 ```
 

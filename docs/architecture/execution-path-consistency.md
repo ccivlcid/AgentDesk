@@ -1,7 +1,7 @@
 # Execution Path Consistency — P1 분석 및 수정 계획
 
 > **목적:** 태스크 실행 경로와 PM 리뷰 경로 간 불일치 분석, 오케스트레이션 화면 연동을 위한 수정 계획
-> **우선순위:** P1 (Critical) — 단, PM 프로바이더 라우팅(§2-1)은 이미 해소됨
+> **우선순위:** P1 (Critical) — **전체 완료 (10/10 phases)**
 > **관련 화면:** Orchestration Window (모든 탭)
 > **Updated:** 2026-03-26
 >
@@ -15,6 +15,8 @@
 >   §0-4에 Agent Form Modal + `patch-body.ts` 자동 정리 로직 추가,
 >   `cli_model` 폴백 체인(`settings.providerModelConfig`) 반영.
 >   우선순위: Phase 2를 순위 5로 상향, Phase 6이 Phase 2에 의존함을 명시.
+> - 2026-03-26: **전체 구현 완료.** Stage A (Phase 1-D/1-A/1-B/1-C), Stage B (Phase 2/3/4/6),
+>   Stage C (Phase 5/7) 모두 구현. 커밋: `88546cc`→`babc086`.
 
 ---
 
@@ -1172,18 +1174,18 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 ## 5. 수정 우선순위
 
-| 순서 | Phase | 작업량 | 백엔드 | 영향 탭 | 의존성 | 비고 |
-|------|-------|--------|--------|---------|--------|------|
-| 1 | 1-D. 코드 정리 (규칙 위반 수정) | 소 | 없음 | All | 없음 | |
-| 2 | 1-A. 프로그레스 바 매핑 | 소 | 없음 | Timeline, Agents, Room | 없음 | |
-| 3 | 1-B. Fitness 실데이터 | 소 | 없음 | Agents | 없음 | 기존 API 재사용 |
-| 4 | 1-C. TOKENS/BUDGET 연동 | 소 | 없음 | Header | 없음 | |
-| 5 | **2. 프로바이더 해석 통합** | **중** | **O** | **(기반)** | **없음** | **3경로 → `resolveProviderForAgent()` 단일 함수. Phase 6 전제** |
-| 6 | 3. PM 파싱 강건화 + 로그 구조화 | 중 | O | Logs, Room | 없음 | UNKNOWN 핸들링 추가. 체감 효과 큼 |
-| 7 | 4. PM 리뷰 컨텍스트 보강 | 중 | O | (간접) | Phase 3 | |
-| 8 | 6. 언어/max-turns(CLI)/maxTokens(API) 일관성 | 소 | O | (간접) | **Phase 2** | `resolveProviderForAgent()` 기반 모드 분기 |
-| 9 | 5. 태스크 완료 데이터 UI 연결 | 소~중 | 소 | Timeline Inspector | 없음 | 기존 데이터 노출 |
-| 10 | 7. 공유 .md 기반 팀 소통 | 대 | O | Room, Logs, Timeline Inspector | Phase 3 | |
+| 순서 | Phase | 작업량 | 상태 | 비고 |
+|------|-------|--------|------|------|
+| 1 | 1-D. 코드 정리 | 소 | **Done** | SVG 전환, unused props 제거 |
+| 2 | 1-A. 프로그레스 바 매핑 | 소 | **Done** | `getTaskProgress()` utility |
+| 3 | 1-B. Fitness 실데이터 | 소 | **Done** | `getAgentsPerformance()` API |
+| 4 | 1-C. TOKENS/BUDGET 연동 | 소 | **Done** | `getProjectCostSummary()` API |
+| 5 | 2. 프로바이더 해석 통합 | 중 | **Done** | `resolveProviderForAgent()` 단일 함수 |
+| 6 | 3. PM 파싱 강건화 + 로그 구조화 | 중 | **Done** | `parseReviewDecision()` tri-state + structured JSON |
+| 7 | 4. PM 리뷰 컨텍스트 보강 | 중 | **Done** | Execution logs + previous revisions |
+| 8 | 6. 언어/max-turns 일관성 | 소 | **Done** | CLI maxTurns=3 for oneshot |
+| 9 | 5. 태스크 완료 데이터 UI 연결 | 소~중 | **Done** | Task Inspector in TimelineTab |
+| 10 | 7. 공유 .md 기반 팀 소통 | 대 | **Done** | team-board.md + task-report.md |
 
 ---
 

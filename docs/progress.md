@@ -207,9 +207,9 @@
 
 | Priority | Item | Status |
 |----------|------|--------|
-| **P0** | **Orchestration Timeline Phase 2-5** | Phase 1 완료. Phase 2: Timeline 실데이터 연동 (Agent Lanes + Task Inspector), Phase 3: Logs 실데이터 (에러 우선 모드 + 에이전트 필터), Phase 4: Agents 실데이터 (팀 테이블 + fitness), Phase 5: Room 실데이터 (Communication Feed + Reasoning Tree) |
-| P1 | Execution path consistency (task vs chat vs runtime) | Not Started — same agent behaves differently per entry point |
-| P1 | Document drift prevention | Not Started — migration IDs, API coverage already drifting across docs |
+| ~~**P0**~~ | ~~**Orchestration Timeline Phase 2-5**~~ | **Done** — real progress bars (`execution_state`), fitness data, TOKENS/BUDGET API, Task Inspector (click-to-expand), team-board.md feed in RoomTab, execution events in LogsTab |
+| ~~P1~~ | ~~Execution path consistency~~ | **Done** — 10/10 phases: `resolveProviderForAgent()` unification, PM review parsing + structured logs, context expansion, max-turns fix, Task Inspector, shared .md team communication |
+| ~~P1~~ | ~~Document drift prevention~~ | **Done** — `lint:docs` 19/19 pass, API v1.6.5, all version refs synced |
 | P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |
 | P2 | `any` types / double-casts cleanup | Phase 1-2 done, remaining ~1,200 cases |
 

@@ -14,7 +14,7 @@
 | [FEATURES.md](FEATURES.md) | **All features** — 23 categories, code-based complete inventory |
 | [GLOSSARY.md](GLOSSARY.md) | System terminology — DB/UI mapping, state machines, domain concepts |
 | [schema-erd.md](architecture/schema-erd.md) | DB schema ER diagram, tables, indexes |
-| [api.md](specs/api.md) | REST API spec (v1.6.4) |
+| [api.md](specs/api.md) | REST API spec (v1.6.5) |
 | [progress.md](progress.md) | Current state — what's done, what's pending |
 
 ## Architecture

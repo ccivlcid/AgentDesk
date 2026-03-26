@@ -250,7 +250,7 @@ pnpm dev                  # 前端(8800) + API服务器(8790)
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | 数据库 ER 图与状态机 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 完整界面和模态框规范 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS变量 + 组件样式规则 |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API 规范 (v1.6.4) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API 规范 (v1.6.5) |
 | [`docs/progress.md`](docs/progress.md) | 开发进度日志 |
 
 ---
