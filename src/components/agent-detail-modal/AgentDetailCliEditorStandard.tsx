@@ -53,7 +53,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
       </select>
       {requiresOAuthAccount &&
         (oauthLoading ? (
-          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "계정 로딩...",
               en: "Loading accounts...",
@@ -75,7 +75,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
             ))}
           </select>
         ) : (
-          <span className="text-[10px] text-amber-300">
+          <span className="text-[10px] text-blue-500">
             {t({
               ko: "활성 OAuth 계정 없음",
               en: "No active OAuth account",
@@ -85,7 +85,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
           </span>
         ))}
       {requiresApiProvider && (
-        <span className="text-[10px] text-amber-300">
+        <span className="text-[10px] text-blue-500">
           {t({
             ko: "⚙️ 설정 > API 탭에서 모델을 배정하세요",
             en: "⚙️ Assign models in Settings > API tab",
@@ -96,7 +96,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
       )}
       {supportsCliModelOverride &&
         (cliModelsLoading ? (
-          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "모델 로딩...",
               en: "Loading models...",
@@ -130,7 +130,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
             </select>
           </>
         ) : (
-          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "모델 목록이 없습니다",
               en: "No model list available",
@@ -147,10 +147,10 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         }}
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50"
         style={{
-          borderRadius: 0,
-          background: "rgba(251,191,36,0.15)",
-          color: "var(--th-accent)",
-          border: "1px solid rgba(251,191,36,0.35)",
+          borderRadius: 8,
+          background: "#EBF5FF",
+          color: "#3B82F6",
+          border: "1px solid #BFDBFE",
         }}
       >
         {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
@@ -160,10 +160,10 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         onClick={handleCancelCliEdit}
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
         style={{
-          borderRadius: 0,
-          border: "1px solid var(--th-border)",
+          borderRadius: 8,
+          border: "1px solid #E5E7EB",
           background: "transparent",
-          color: "var(--th-text-secondary)",
+          color: "#6B7280",
         }}
       >
         {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}

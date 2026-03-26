@@ -49,8 +49,8 @@ export default function AgentDetailModal({
       style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(3px)", zIndex: 1100 }}
     >
       <div
-        className="w-[calc(100vw-1.5rem)] max-w-[480px] max-h-[85vh] overflow-hidden rounded border shadow-2xl"
-        style={{ background: "var(--th-bg-elevated)", borderColor: "var(--th-border-strong)" }}
+        className="w-[calc(100vw-1.5rem)] max-w-[480px] max-h-[85vh] overflow-hidden border shadow-2xl"
+        style={{ background: "#FFFFFF", borderColor: "#D1D5DB", borderRadius: 18 }}
       >
         <AgentDetailModalProfileHeader
           onClose={onClose}

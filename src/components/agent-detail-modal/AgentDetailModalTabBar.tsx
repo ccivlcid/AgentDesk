@@ -35,7 +35,7 @@ export function AgentDetailModalTabBar({
   ];
 
   return (
-    <div className="flex" style={{ borderBottom: "1px solid var(--th-border)" }}>
+    <div className="flex" style={{ borderBottom: "1px solid #E5E7EB" }}>
       {items.map((tabItem) => (
         <button
           key={tabItem.key}
@@ -44,8 +44,8 @@ export function AgentDetailModalTabBar({
           className="flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors"
           style={{
             fontFamily: "var(--th-font-mono)",
-            color: tab === tabItem.key ? "var(--th-accent)" : "var(--th-text-muted)",
-            borderBottom: `2px solid ${tab === tabItem.key ? "var(--th-accent)" : "transparent"}`,
+            color: tab === tabItem.key ? "#3B82F6" : "#9CA3AF",
+            borderBottom: `2px solid ${tab === tabItem.key ? "#3B82F6" : "transparent"}`,
             background: "transparent",
           }}
         >

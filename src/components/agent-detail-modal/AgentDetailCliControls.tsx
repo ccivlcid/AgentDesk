@@ -15,7 +15,7 @@ export function AgentDetailCliControls({ agent, t, cli }: AgentDetailCliControls
   const { editingCli, selectedCli } = cli;
 
   return (
-    <div className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
+    <div className="text-xs font-mono mt-0.5" style={{ color: "#9CA3AF" }}>
       {editingCli ? (
         selectedCli === "codex" ? (
           <AgentDetailCliEditorCodex t={t} cli={cli} />
