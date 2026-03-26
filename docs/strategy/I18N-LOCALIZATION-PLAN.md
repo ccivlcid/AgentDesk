@@ -125,7 +125,6 @@ In other words, **UI translations** and **content translations** must be handled
 
 ## Remaining Work
 
-- Migrate local constant files like `src/components/office-view/cli-locale.ts` to the common catalog
 - Reduce `if (lang === "ko")` branching logic in the server to key-based calls
 - Add a lint rule or search script to detect inline multilingual object usage
 - Add a translation key missing detection script

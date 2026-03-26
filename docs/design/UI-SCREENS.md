@@ -68,7 +68,6 @@ Always pinned to the top. Acts as the macOS Menu Bar.
 
 **App Menu Items:**
 - About AgentDesk (version)
-- Keyboard Shortcuts → Open KeyboardShortcutsGuide
 - Mission Control (`Ctrl ↑`) → MissionControl overview
 - Export Data...
 
@@ -170,8 +169,7 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 | OAuth | `settings/OAuthTab.tsx` | OAuth device flow account connection |
 | CLI | `settings/CliTab.tsx` | CLI status, path, usage details |
 | Data | `settings/DataTab.tsx` | DB backup and reset |
-| Project Types | `settings/CategoriesTab.tsx` | Project category management |
-| Agents | `TeamPageView.tsx` → `AgentManager` | Agent and department management |
+| Agents | `windows/AgentManagerWindow.tsx` | Agent and department management |
 
 ---
 
@@ -333,8 +331,7 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 | # | Component | Trigger |
 |---|-----------|---------|
 | 7-30 | `CommandPalette` | `Ctrl+Shift+K` |
-| 7-31 | `KeyboardShortcutsGuide` | `?` key |
-| 7-32 | `NotificationCenter` | Menu bar 🔔 |
+| 7-31 | `NotificationCenter` | Menu bar bell icon |
 | 7-33 | `ConfirmDialog` | On delete or warning |
 
 ---
@@ -560,21 +557,6 @@ src/
 ---
 
 ## New Modals / Panels (v1.3.0)
-
-### AgentPerformanceDashboard — Library → Performance Tab
-
-**File:** `src/components/performance/AgentPerformanceDashboard.tsx`
-
-| Item | Value |
-|------|-------|
-| Location | Library window → Performance tab |
-| Filters | Project dropdown, days selector (7/14/30/60/90) |
-| Sort buttons | Total / Done / Rate / Speed |
-| Summary bar | Total agents, total tasks, completed tasks, overall success rate |
-| Agent card | Emoji avatar, name, success rate badge (green ≥80% / amber ≥50% / red <50%), task counts grid, daily sparkline (SVG polyline) |
-| Status bar | Stacked horizontal bar (done=green, review=amber, in_progress=blue, cancelled=muted) |
-| Sparkline | SVG 60×28px, `polyline` + circles for data points |
-| API call | `GET /api/agents/performance?project_id=&days=` |
 
 ---
 

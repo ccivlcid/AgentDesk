@@ -94,21 +94,18 @@ Recommended prefix examples:
 
 The workpacks below are divided based on **distinct file groupings**.
 
-### Workpack A. Office / CLI / Usage UI
+### Workpack A. CLI / Usage UI
 
 Goal:
 
-- Remove hardcoded strings in `office-view` and `cli` related code
+- Remove hardcoded strings in CLI related code
 
 Priority targets:
 
-- [src/components/office-view/cli-locale.ts](/mnt/c/PythonProjects/AgentDesk/src/components/office-view/cli-locale.ts)
-- `src/components/office-view/**`
 - `src/components/windows/*CLI*`
 
 Key prefix:
 
-- `office.*`
 - `cli.*`
 
 Completion criteria:

@@ -149,7 +149,6 @@ These completely bypass the type system and are the most dangerous pattern.
 | File | Count | Pattern |
 |------|-------|---------|
 | `server/modules/workflow.ts` | ~5 | Large object `as unknown as WorkflowCoreExports & ...` |
-| `server/modules/workflow/workflow-scheduler.ts` | ~3 | `.all(now) as unknown as ScheduleRow[]` |
 | `server/modules/routes/core/tasks/execution-run.ts` | ~3 | `agent as unknown as AgentRow` |
 | `server/modules/figma/context-fetcher.ts` | ~2 | `.get(taskId) as unknown as FigmaTaskRow` |
 | `server/modules/routes/core/webhooks.ts` | ~2 | `.all() as unknown as WebhookRow[]` |

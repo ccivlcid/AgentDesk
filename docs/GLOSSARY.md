@@ -257,7 +257,6 @@ Supported external messenger channel types (`MessengerChannelType` in `src/types
 | **WebSocket Hub**      | `server/ws/hub.ts`                              | Real-time broadcast: cli_output, task_update, agent_status, etc.                                      |
 | **Pino Logger**        | `server/lib/logger.ts`                          | Structured logging (no console.log in server code)                                                    |
 | **Cron Parser**        | `server/modules/workflow/cron-utils.ts`         | 5-field cron expression parser (no external deps)                                                     |
-| **Workflow Scheduler** | `server/modules/workflow/workflow-scheduler.ts` | 60-second tick daemon for scheduled workflows                                                         |
 | **Pipeline Gates**     | `pipeline_gates`                                | Quality checkpoints: auto or manual approval                                                          |
 | **Deferred Runtime**   | `server/modules/deferred-runtime.ts`            | Lazy-initialized runtime modules loaded on first use (avoids startup cost)                            |
 

@@ -111,7 +111,7 @@ kickoff.ts, projects.ts 등 시스템성 호출에서 사용
 에이전트 프로바이더는 두 곳에서 설정 가능:
 
 ```
-[Agent Form Modal]     AgentFormModalProviderBlocks → 에이전트별 프로바이더 직접 설정
+[Agent Form Modal]     AgentFormModal → 에이전트별 프로바이더 직접 설정
                        → PATCH /api/agents/:id → cli_provider, api_provider_id, api_model 등 DB 저장
                        → 이후 태스크 실행/PM 리뷰에서 이 에이전트의 설정을 직접 읽어 사용
 

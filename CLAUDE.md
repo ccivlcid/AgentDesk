@@ -349,7 +349,6 @@ src/
 │   │                               LibraryWindow, SettingsWindow,
 │   │                               AgentManagerWindow, FolderWindow, CliWindow (Agent CLI)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
-│   ├── performance/             ← AgentPerformanceDashboard (Library → Performance tab)
 │   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
@@ -456,7 +455,6 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 ```
 
 ### App window keyboard shortcuts
-After updating the shortcut map in `Desktop.tsx`, also add the entry to `KeyboardShortcutsGuide.tsx`.
 Current shortcuts:
 
 | Shortcut | Action |

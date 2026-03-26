@@ -123,8 +123,8 @@
 **Emoji → SVG Fixes (Rule 0-1):**
 - Fixed 14 files, ~40+ violations replaced with inline SVG:
   - `settings/constants.tsx`, `TaskBoardKanban.tsx`, `HeartbeatBody.tsx`, `utils.ts`
-  - `LlmGuideModal.tsx`, `HeartbeatGuideModal.tsx`, `CommandPaletteResults.tsx`, `CliUsagePanel.tsx`
-  - `MemoryMemorySection.tsx`, `TeamPageView.tsx`, `ScreenGuidePanel.tsx`, `ExportModal.tsx`
+  - `LlmGuideModal.tsx`, `CommandPaletteResults.tsx`
+  - `MemoryMemorySection.tsx`, `ExportModal.tsx`
   - `SkillsLibrary.tsx`, `AnomalySection.tsx`
 - Previously fixed by other sessions: `TrafficLights.tsx`, `CalloutBox.tsx`, `GenerateTab.tsx`, `GalleryTab.tsx`
 
