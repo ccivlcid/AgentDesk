@@ -158,7 +158,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
             flexShrink: 0,
             background: "transparent",
             border: "1px solid #E5E7EB",
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "2px 8px",
             fontFamily: mono,
             fontSize: "12px",

@@ -56,7 +56,7 @@ export default function HeaderModalChrome({
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               width: 28, height: 28,
               border: "1px solid #E5E7EB", background: "transparent",
-              borderRadius: 0, fontFamily: mono, fontSize: "12px",
+              borderRadius: 8, fontFamily: mono, fontSize: "12px",
               color: "var(--th-text-muted)", cursor: "pointer",
             }}
             className="hover:!text-[#111827] hover:!border-[#D1D5DB] hover:!bg-[#F3F4F6]"

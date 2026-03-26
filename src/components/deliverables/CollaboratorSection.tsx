@@ -42,7 +42,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (error) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", background: "var(--th-bg-surface)", color: "rgb(253,164,175)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", background: "var(--th-bg-surface)", color: "rgb(253,164,175)" }}>
         {t({ ko: "협업 정보를 불러올 수 없습니다", en: "Failed to load collaboration info", ja: "コラボ情報を取得できません", zh: "无法加载协作信息" })}
       </div>
     );
@@ -50,7 +50,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (collaborators === null) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "협업 정보 로딩중...", en: "Loading collaborators...", ja: "コラボ情報を読み込み中...", zh: "加载协作信息..." })}
       </div>
     );
@@ -87,7 +87,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
   };
 
   return (
-    <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}>
+    <div className="overflow-hidden" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}>
       <button
         type="button"
         onClick={onToggleSection}
@@ -125,7 +125,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
                     <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{name || "-"}</span>
                     {dept && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{dept}</span>}
                     {role && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {role}</span>}
-                    <span className={`ml-auto inline-flex items-center border px-1.5 py-0.5 text-[9px] font-medium font-mono ${statusCls(collab.status)}`} style={{ borderRadius: 0 }}>
+                    <span className={`ml-auto inline-flex items-center border px-1.5 py-0.5 text-[9px] font-medium font-mono ${statusCls(collab.status)}`} style={{ borderRadius: 8 }}>
                       {statusLabel(collab.status)}
                     </span>
                   </div>

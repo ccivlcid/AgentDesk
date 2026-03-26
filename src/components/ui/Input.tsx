@@ -6,7 +6,7 @@ const INPUT_INLINE: React.CSSProperties = {
   padding: "6px 10px",
   background: "var(--th-bg-elevated)",
   border: "1px solid #E5E7EB",
-  borderRadius: 0,
+  borderRadius: 8,
   color: "var(--th-text-primary)",
   fontFamily: mono,
   fontSize: "12px",

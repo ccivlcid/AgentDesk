@@ -81,12 +81,12 @@ export default function MemoryGrid({
             className={`relative p-4 transition-all group ${
               !entry.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
           >
             {/* Top: icon + title/desc + learned avatars */}
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                   {CATEGORY_ICONS[entry.category] || "\uD83D\uDCDD"}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -98,14 +98,14 @@ export default function MemoryGrid({
               </div>
 
               {learnedProviders.length > 0 && (
-                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
+                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 8, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
                   {learnedProviders.map((provider) => {
                     const agent = learnedRepresentatives.get(provider) ?? null;
                     return (
                       <span
                         key={`${entry.id}-${provider}`}
                         className="inline-flex h-5 w-6 items-center justify-center gap-0.5 border border-emerald-500/20"
-                        style={{ borderRadius: 0, background: "rgba(15,17,23,0.7)" }}
+                        style={{ borderRadius: 8, background: "rgba(15,17,23,0.7)" }}
                         title={`${memoryProviderLabel(provider)}${agent ? ` \u00B7 ${agent.name}` : ""}`}
                       >
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
@@ -123,7 +123,7 @@ export default function MemoryGrid({
 
             {/* Bottom: category badge + priority + Learn/Copy */}
             <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 0 }}>
+              <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 8 }}>
                 {CATEGORY_ICONS[entry.category]} {categoryLabel(entry.category, t)}
               </span>
               <div className="flex items-center gap-2 shrink-0">
@@ -138,7 +138,7 @@ export default function MemoryGrid({
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
                         : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
                     }`}
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: 8 }}
                     title={
                       learnedProviders.length > 0
                         ? t({
@@ -162,7 +162,7 @@ export default function MemoryGrid({
                   <button
                     onClick={() => handleCopy(entry)}
                     className="px-2 py-1 text-[10px] font-mono transition-all"
-                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
                     title={entry.content.slice(0, 80)}
                   >
                     {copiedEntryId === entry.id
@@ -182,7 +182,7 @@ export default function MemoryGrid({
                     ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                     : ""
                 }`}
-                style={entry.enabled ? { borderRadius: 0 } : { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
+                style={entry.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
                 title={entry.enabled
                   ? t({ ko: "\uBE44\uD65C\uC131\uD654", en: "Disable", ja: "\u7121\u52B9\u5316", zh: "\u7981\u7528" })
                   : t({ ko: "\uD65C\uC131\uD654", en: "Enable", ja: "\u6709\u52B9\u5316", zh: "\u542F\u7528" })}
@@ -194,14 +194,14 @@ export default function MemoryGrid({
               <button
                 onClick={() => onEdit(entry)}
                 className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
               >
                 {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
               </button>
               <button
                 onClick={() => onDelete(entry.id)}
                 className="px-1.5 py-0.5 text-[10px] bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 font-mono transition-all"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 8 }}
               >
                 {t({ ko: "\uC0AD\uC81C", en: "Del", ja: "\u524A\u9664", zh: "\u5220" })}
               </button>

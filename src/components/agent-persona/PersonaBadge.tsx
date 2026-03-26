@@ -17,7 +17,7 @@ export function PersonaBadge({ personaId, size = "sm" }: PersonaBadgeProps) {
       className={`inline-flex items-center font-mono font-semibold uppercase ${px} ${fontSize}`}
       style={{
         border: `1px solid ${persona.color}50`,
-        borderRadius: 0,
+        borderRadius: 8,
         background: `${persona.color}12`,
         color: persona.color,
         letterSpacing: "0.04em",

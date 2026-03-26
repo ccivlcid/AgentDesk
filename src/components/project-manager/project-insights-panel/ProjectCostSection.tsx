@@ -21,7 +21,7 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
   }, [projectId]);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "비용 요약", en: "Cost Summary", ja: "コスト概要", zh: "成本摘要" })}
       </h4>

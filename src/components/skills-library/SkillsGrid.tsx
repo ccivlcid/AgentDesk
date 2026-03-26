@@ -69,13 +69,13 @@ export default function SkillsGrid({
             <div
               key={`${skill.rank}-${detailId}`}
               className="relative p-4 transition-all group"
-              style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
               onMouseEnter={() => onHoverEnter(skill)}
               onMouseLeave={onHoverLeave}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                     {badge.icon ? <span>{badge.icon}</span> : <span className={badge.color}>#{skill.rank}</span>}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -91,7 +91,7 @@ export default function SkillsGrid({
                   );
                   if (learnedAgents.length === 0) return null;
                   return (
-                    <div className="flex shrink-0 flex-wrap gap-0.5 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)", maxWidth: 72 }}>
+                    <div className="flex shrink-0 flex-wrap gap-0.5 p-1" style={{ borderRadius: 8, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)", maxWidth: 72 }}>
                       {learnedAgents.slice(0, 6).map((agent) => (
                         <span
                           key={`${detailKey}-${agent.id}`}
@@ -113,7 +113,7 @@ export default function SkillsGrid({
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 0 }}>
+                <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 8 }}>
                   {CATEGORY_ICONS[skill.category]} {categoryLabel(skill.category, t)}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
@@ -129,7 +129,7 @@ export default function SkillsGrid({
                           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
                           : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
                       }`}
-                      style={{ borderRadius: 0 }}
+                      style={{ borderRadius: 8 }}
                       title={
                         learnedProviders.length > 0
                           ? t({
@@ -153,7 +153,7 @@ export default function SkillsGrid({
                     <button
                       onClick={() => onCopy(skill)}
                       className="px-2 py-1 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
+                      style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.2)" }}
                       title={`npx skills add ${skill.repo}`}
                     >
                       {copiedSkill === skill.name
@@ -168,7 +168,7 @@ export default function SkillsGrid({
                 <div
                   ref={tooltipRef}
                   className="absolute z-50 left-0 right-0 top-full mt-2 p-4 shadow-2xl shadow-black/40 animate-in fade-in slide-in-from-top-1 duration-200"
-                  style={{ borderRadius: 0, border: "1px solid #D1D5DB", background: "var(--th-bg-elevated)" }}
+                  style={{ borderRadius: 8, border: "1px solid #D1D5DB", background: "var(--th-bg-elevated)" }}
                   onMouseEnter={() => {
                     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
                     setHoveredSkill(detailKey);
@@ -249,7 +249,7 @@ export default function SkillsGrid({
                               <span
                                 key={platform.name}
                                 className="text-[10px] px-2 py-0.5 border font-mono"
-                                style={{ borderRadius: 0, background: "var(--th-bg-primary)", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
+                                style={{ borderRadius: 8, background: "var(--th-bg-primary)", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
                               >
                                 {platform.name} <span style={{ color: "rgb(167,243,208)" }}>{platform.installs}</span>
                               </span>
@@ -270,7 +270,7 @@ export default function SkillsGrid({
                                     ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
                                     : "text-red-400 bg-red-500/10 border-red-500/30"
                               }`}
-                              style={{ borderRadius: 0 }}
+                              style={{ borderRadius: 8 }}
                             >
                               {audit.name}: {localizeAuditStatus(audit.status, t)}
                             </span>
@@ -278,7 +278,7 @@ export default function SkillsGrid({
                         </div>
                       )}
 
-                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "var(--th-text-muted)", background: "var(--th-terminal-bg)", borderRadius: 0 }}>
+                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "var(--th-text-muted)", background: "var(--th-terminal-bg)", borderRadius: 8 }}>
                         $ {detail.installCommand}
                       </div>
                     </div>

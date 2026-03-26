@@ -69,7 +69,7 @@ export default function FloatingWindow({
         maxHeight: "calc(100vh - 100px)",
         border: "1px solid #E5E7EB",
         background: "var(--th-bg-surface)",
-        borderRadius: 0,
+        borderRadius: 8,
       }}
     >
       {/* Title bar */}
@@ -108,7 +108,7 @@ export default function FloatingWindow({
         {disableClose && (
           <div
             className="text-[11px] font-mono px-2 py-0.5"
-            style={{ border: "1px solid rgba(251,191,36,0.35)", color: "var(--th-accent)", background: "rgba(251,191,36,0.08)" }}
+            style={{ border: "1px solid rgba(59,130,246,0.25)", color: "var(--th-accent)", background: "rgba(59,130,246,0.05)" }}
           >
             {closeBtnLabel}
           </div>

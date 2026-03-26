@@ -71,7 +71,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
   ].filter((item) => (stats.counts[item.key] ?? 0) > 0);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "프로젝트 진행률", en: "Project Progress", ja: "プロジェクト進捗", zh: "项目进度" })}
       </h4>
@@ -84,7 +84,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
           {stats.donePct}%
         </span>
       </div>
-      <div className="mb-4 h-2.5 w-full overflow-hidden" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+      <div className="mb-4 h-2.5 w-full overflow-hidden" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
         <div
           className={`h-full transition-all duration-700 ${stats.donePct >= 80 ? "bg-emerald-500" : stats.donePct >= 40 ? "bg-amber-400" : "bg-[#3b82f6]"}`}
           style={{ width: `${stats.donePct}%` }}
@@ -93,8 +93,8 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
 
       <div className="mb-4 flex flex-wrap gap-2">
         {statusItems.map((item) => (
-          <div key={item.key} className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
-            <span className={`h-2 w-2 ${item.color}`} style={{ borderRadius: 0 }} />
+          <div key={item.key} className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: 8, background: "var(--th-bg-elevated)" }}>
+            <span className={`h-2 w-2 ${item.color}`} style={{ borderRadius: 8 }} />
             <span className={`text-[11px] font-mono font-medium ${item.textColor}`}>{stats.counts[item.key]}</span>
             <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{item.label}</span>
           </div>
@@ -112,7 +112,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
               return (
                 <div key={agent.name} className="flex items-center gap-2">
                   <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{agent.name}</span>
-                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 8, background: "var(--th-bg-primary)" }}>
                     <div className="h-full bg-cyan-500/70" style={{ width: `${agentPct}%` }} />
                   </div>
                   <span className="w-8 text-right text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{agent.done}/{agent.total}</span>
@@ -134,7 +134,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
               return (
                 <div key={dept.name} className="flex items-center gap-2">
                   <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{dept.name}</span>
-                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 8, background: "var(--th-bg-primary)" }}>
                     <div className="h-full bg-violet-500/70" style={{ width: `${deptPct}%` }} />
                   </div>
                   <span className="w-8 text-right text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{dept.done}/{dept.total}</span>

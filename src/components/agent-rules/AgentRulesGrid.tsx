@@ -81,12 +81,12 @@ export default function AgentRulesGrid({
             className={`relative p-4 transition-all group ${
               !rule.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
           >
             {/* Top: icon + title/desc + learned avatars — same as SkillsGrid */}
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                   {CATEGORY_ICONS[rule.category] || <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -98,14 +98,14 @@ export default function AgentRulesGrid({
               </div>
 
               {learnedProviders.length > 0 && (
-                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
+                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 8, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
                   {learnedProviders.map((provider) => {
                     const agent = learnedRepresentatives.get(provider) ?? null;
                     return (
                       <span
                         key={`${rule.id}-${provider}`}
                         className="inline-flex h-5 w-6 items-center justify-center gap-0.5 border border-emerald-500/20"
-                        style={{ borderRadius: 0, background: "rgba(15,17,23,0.7)" }}
+                        style={{ borderRadius: 8, background: "rgba(15,17,23,0.7)" }}
                         title={`${ruleLearnedProviderLabel(provider)}${agent ? ` \u00B7 ${agent.name}` : ""}`}
                       >
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
@@ -123,7 +123,7 @@ export default function AgentRulesGrid({
 
             {/* Bottom: category badge + priority + Learn/Copy — same layout as SkillsGrid */}
             <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 0 }}>
+              <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 8 }}>
                 {CATEGORY_ICONS[rule.category]} {categoryLabel(rule.category, t)}
               </span>
               <div className="flex items-center gap-2 shrink-0">
@@ -138,7 +138,7 @@ export default function AgentRulesGrid({
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
                         : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
                     }`}
-                    style={{ borderRadius: 0 }}
+                    style={{ borderRadius: 8 }}
                     title={
                       learnedProviders.length > 0
                         ? t({
@@ -162,7 +162,7 @@ export default function AgentRulesGrid({
                   <button
                     onClick={() => handleCopy(rule)}
                     className="px-2 py-1 text-[10px] font-mono transition-all"
-                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
                     title={rule.rule_content.slice(0, 80)}
                   >
                     {copiedRuleId === rule.id
@@ -182,7 +182,7 @@ export default function AgentRulesGrid({
                     ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                     : ""
                 }`}
-                style={rule.enabled ? { borderRadius: 0 } : { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
+                style={rule.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
                 title={rule.enabled
                   ? t({ ko: "비활성화", en: "Disable", ja: "無効化", zh: "禁用" })
                   : t({ ko: "활성화", en: "Enable", ja: "有効化", zh: "启用" })}
@@ -194,14 +194,14 @@ export default function AgentRulesGrid({
               <button
                 onClick={() => onEdit(rule)}
                 className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
               >
                 {t({ ko: "수정", en: "Edit", ja: "編集", zh: "编辑" })}
               </button>
               <button
                 onClick={() => onDelete(rule.id)}
                 className="px-1.5 py-0.5 text-[10px] bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 font-mono transition-all"
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 8 }}
               >
                 {t({ ko: "삭제", en: "Del", ja: "削除", zh: "删" })}
               </button>

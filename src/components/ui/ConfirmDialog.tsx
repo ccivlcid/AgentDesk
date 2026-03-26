@@ -187,7 +187,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           style={{
             background: "transparent",
             border: "1px solid #D1D5DB",
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "4px 14px",
             fontFamily: mono,
             fontSize: "11px",
@@ -207,7 +207,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           onClick={() => onClose(true)}
           style={{
             ...confirmStyle,
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "4px 14px",
             fontFamily: mono,
             fontSize: "11px",

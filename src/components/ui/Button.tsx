@@ -61,7 +61,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`inline-flex items-center justify-center whitespace-nowrap transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${HOVER_CLASS[variant]} ${className}`}
         style={{
-          borderRadius: 0,
+          borderRadius: 8,
           fontFamily: mono,
           fontSize: "11px",
           letterSpacing: "0.04em",

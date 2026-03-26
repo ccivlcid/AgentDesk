@@ -136,7 +136,7 @@ export default function RuleLearningModal({
           {learningRule.title} &middot; {categoryLabel(learningRule.category, t)}
         </div>
           {/* Rule content preview — terminal style */}
-          <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
+          <div className="px-3 py-2" style={{ borderRadius: 8, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
               {t({ ko: "룰 내용", en: "Rule content", ja: "ルール内容", zh: "规则内容" })}
             </div>
@@ -199,7 +199,7 @@ export default function RuleLearningModal({
                     !hasAgent ? "cursor-not-allowed opacity-60" : ""
                   }`}
                   style={{
-                    borderRadius: 0,
+                    borderRadius: 8,
                     border: `1px solid ${!hasAgent ? "rgba(51,65,85,0.8)" : isSelected ? "rgba(52,211,153,0.5)" : "rgba(51,65,85,0.7)"}`,
                     background: !hasAgent ? "rgba(30,41,59,0.4)" : isSelected ? "rgba(52,211,153,0.1)" : "rgba(30,41,59,0.6)",
                   }}
@@ -249,10 +249,10 @@ export default function RuleLearningModal({
                       <div
                         className="text-[11px] px-2 py-0.5 font-mono"
                         style={{
-                          borderRadius: 0,
-                          border: `1px solid ${isAlreadyLearned ? "rgba(52,211,153,0.5)" : isSelected ? "rgba(251,191,36,0.5)" : "rgba(71,85,105,1)"}`,
+                          borderRadius: 8,
+                          border: `1px solid ${isAlreadyLearned ? "rgba(52,211,153,0.5)" : isSelected ? "rgba(59,130,246,0.3)" : "rgba(71,85,105,1)"}`,
                           color: isAlreadyLearned ? "rgb(110,231,183)" : isSelected ? "var(--th-accent)" : "var(--th-text-muted)",
-                          background: isAlreadyLearned ? "rgba(52,211,153,0.15)" : isSelected ? "rgba(251,191,36,0.1)" : "rgba(51,65,85,0.4)",
+                          background: isAlreadyLearned ? "rgba(52,211,153,0.15)" : isSelected ? "rgba(59,130,246,0.06)" : "rgba(51,65,85,0.4)",
                         }}
                       >
                         {isAlreadyLearned
@@ -273,7 +273,7 @@ export default function RuleLearningModal({
                             learnInProgress || isUnlearning ? "cursor-not-allowed" : ""
                           }`}
                           style={{
-                            borderRadius: 0,
+                            borderRadius: 8,
                             border: `1px solid ${learnInProgress || isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
                             color: learnInProgress || isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
                             background: learnInProgress || isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
@@ -306,7 +306,7 @@ export default function RuleLearningModal({
                     key={`squad-${agent.id}`}
                     className="relative overflow-hidden p-3 text-left transition-all"
                     style={{
-                      borderRadius: 0,
+                      borderRadius: 8,
                       border: `1px solid ${isProviderSelected ? "rgba(52,211,153,0.5)" : "rgba(51,65,85,0.7)"}`,
                       background: isProviderSelected ? "rgba(52,211,153,0.1)" : "rgba(30,41,59,0.6)",
                     }}
@@ -347,7 +347,7 @@ export default function RuleLearningModal({
                         disabled={learnInProgress}
                         className={`shrink-0 px-1.5 py-0.5 text-[10px] font-mono transition-all ${learnInProgress ? "cursor-not-allowed" : ""}`}
                         style={{
-                          borderRadius: 0,
+                          borderRadius: 8,
                           border: `1px solid ${learnInProgress ? "rgba(51,65,85,1)" : "rgba(71,85,105,1)"}`,
                           color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                           background: "transparent",
@@ -374,7 +374,7 @@ export default function RuleLearningModal({
               disabled={learnInProgress}
               className={`w-full p-2.5 text-xs font-mono transition-all ${learnInProgress ? "cursor-not-allowed" : ""}`}
               style={{
-                borderRadius: 0,
+                borderRadius: 8,
                 border: `1px dashed ${learnInProgress ? "rgba(51,65,85,1)" : "rgba(71,85,105,1)"}`,
                 color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
@@ -384,7 +384,7 @@ export default function RuleLearningModal({
             </button>
 
             {showAgentPicker && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}>
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}>
                 <div className="px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <input
                     type="text"
@@ -439,7 +439,7 @@ export default function RuleLearningModal({
           </div>
 
           {/* Job status */}
-          <div className="p-3" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+          <div className="p-3" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 {t({ ko: "작업 상태", en: "Job status", ja: "ジョブ状態", zh: "任务状态" })}:{" "}
@@ -474,7 +474,7 @@ export default function RuleLearningModal({
             {learnJob?.error && <div className="mt-2 text-[11px] text-rose-300">{learnJob.error}</div>}
 
             {learnJob && (
-              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
+              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
                 <div style={{ color: "var(--th-text-muted)" }}>$ {learnJob.command}</div>
                 {learnJob.logTail.length > 0 ? (
                   learnJob.logTail.slice(-10).map((line, idx) => <div key={`${learnJob.id}-log-${idx}`}>{line}</div>)
@@ -493,7 +493,7 @@ export default function RuleLearningModal({
               disabled={learnInProgress}
               className={`px-3 py-1.5 text-xs font-mono transition-all ${learnInProgress ? "cursor-not-allowed" : ""}`}
               style={{
-                borderRadius: 0,
+                borderRadius: 8,
                 border: `1px solid ${learnInProgress ? "rgba(51,65,85,1)" : "var(--th-border)"}`,
                 color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
@@ -513,7 +513,7 @@ export default function RuleLearningModal({
                 selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "cursor-not-allowed" : ""
               }`}
               style={{
-                borderRadius: 0,
+                borderRadius: 8,
                 border: `1px solid ${selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "rgba(51,65,85,1)" : "rgba(52,211,153,0.5)"}`,
                 color: selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "var(--th-text-muted)" : "rgb(167,243,208)",
                 background: selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "transparent" : "rgba(52,211,153,0.2)",

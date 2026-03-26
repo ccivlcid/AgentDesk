@@ -113,11 +113,11 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
   }
 
   const inputCls = "w-full px-2 py-1 text-xs font-mono outline-none";
-  const inputStyle = { borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" };
+  const inputStyle = { borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" };
   const selectStyle = { ...inputStyle, cursor: "pointer" as const };
 
   return (
-    <div className="min-w-0 p-4 space-y-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4 space-y-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" })}
       </h4>
@@ -137,7 +137,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                 type="button"
                 onClick={() => { setShowNewObj((v) => !v); setNewObjTitle(""); }}
                 className="text-[11px] font-mono px-2 py-0.5"
-                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+                style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
               >
                 {showNewObj ? "✕" : "+ " + t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -153,7 +153,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   className={inputCls}
                   style={{ ...inputStyle, flex: 1 }}
                 />
-                <button type="submit" disabled={!newObjTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer" }}>
+                <button type="submit" disabled={!newObjTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer" }}>
                   {t({ ko: "등록", en: "Add", ja: "登録", zh: "添加" })}
                 </button>
               </form>
@@ -183,10 +183,10 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                         </div>
                       </div>
                       <div className="flex gap-1 justify-end">
-                        <button type="button" onClick={() => setEditObjId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => setEditObjId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 8 }}>
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
-                        <button type="button" onClick={() => void saveObj()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => void saveObj()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer", borderRadius: 8 }}>
                           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                       </div>
@@ -208,10 +208,10 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                       {isKo ? meta.label_ko : meta.label_en}
                     </span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button type="button" onClick={() => startEditObj(obj)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                      <button type="button" onClick={() => startEditObj(obj)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 8 }}>
                         {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
-                      <button type="button" onClick={() => void deleteObj(obj.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 0 }}>✕</button>
+                      <button type="button" onClick={() => void deleteObj(obj.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 8 }}>✕</button>
                     </div>
                   </div>
                 );
@@ -228,7 +228,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                 type="button"
                 onClick={() => { setShowNewGate((v) => !v); setNewGateTitle(""); }}
                 className="text-[11px] font-mono px-2 py-0.5"
-                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+                style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
               >
                 {showNewGate ? "✕" : "+ " + t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -244,7 +244,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   className={inputCls}
                   style={{ ...inputStyle, flex: 1 }}
                 />
-                <button type="submit" disabled={!newGateTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer" }}>
+                <button type="submit" disabled={!newGateTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer" }}>
                   {t({ ko: "등록", en: "Add", ja: "登録", zh: "添加" })}
                 </button>
               </form>
@@ -269,10 +269,10 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                       </select>
                       <input value={editGateCriteria} onChange={(e) => setEditGateCriteria(e.target.value)} placeholder={t({ ko: "통과 기준 (선택)", en: "Pass criteria (optional)", ja: "通過基準（任意）", zh: "通过标准（可选）" })} className={inputCls} style={inputStyle} />
                       <div className="flex gap-1 justify-end">
-                        <button type="button" onClick={() => setEditGateId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => setEditGateId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 8 }}>
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
-                        <button type="button" onClick={() => void saveGate()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => void saveGate()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-bg-elevated)", border: "none", cursor: "pointer", borderRadius: 8 }}>
                           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                       </div>
@@ -294,10 +294,10 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                       )}
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button type="button" onClick={() => startEditGate(gate)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                      <button type="button" onClick={() => startEditGate(gate)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 8 }}>
                         {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
-                      <button type="button" onClick={() => void deleteGate(gate.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 0 }}>✕</button>
+                      <button type="button" onClick={() => void deleteGate(gate.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 8 }}>✕</button>
                     </div>
                   </div>
                 );

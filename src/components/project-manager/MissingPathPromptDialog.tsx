@@ -21,7 +21,7 @@ export default function MissingPathPromptDialog({
     <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
         className="w-full max-w-lg overflow-hidden"
-        style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
+        style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB", borderLeft: "3px solid #3B82F6" }}>
@@ -43,7 +43,7 @@ export default function MissingPathPromptDialog({
               zh: "该路径不存在。现在创建吗？",
             })}
           </p>
-          <p className="break-all px-2.5 py-2 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+          <p className="break-all px-2.5 py-2 text-xs font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
             {prompt.normalizedPath}
           </p>
           {prompt.nearestExistingParent && (
@@ -72,7 +72,7 @@ export default function MissingPathPromptDialog({
             type="button"
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-semibold font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -81,7 +81,7 @@ export default function MissingPathPromptDialog({
             disabled={!prompt.canCreate || saving}
             onClick={onConfirmCreate}
             className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: 0, background: "#10b981", color: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, background: "#10b981", color: "var(--th-bg-elevated)" }}
           >
             {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
           </button>

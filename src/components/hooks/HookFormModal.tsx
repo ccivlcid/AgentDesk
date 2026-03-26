@@ -166,7 +166,7 @@ export default function HookFormModal({
                 zh: "例如: 任务前运行 lint",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -186,7 +186,7 @@ export default function HookFormModal({
                 zh: "\u7B80\u8981\u8BF4\u660E\u6B64\u94A9\u5B50\u7684\u4F5C\u7528",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-              style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -206,7 +206,7 @@ export default function HookFormModal({
                 zh: "\u8F93\u5165\u8981\u6267\u884C\u7684shell\u547D\u4EE4",
               })}
               className="w-full px-3 py-2 text-sm text-green-300 focus:outline-none resize-none font-mono"
-              style={{ borderRadius: 0, background: "var(--th-terminal-bg)", border: "1px solid #E5E7EB" }}
+              style={{ borderRadius: 8, background: "var(--th-terminal-bg)", border: "1px solid #E5E7EB" }}
             />
             <div className="flex items-center justify-between mt-1.5">
               <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -222,7 +222,7 @@ export default function HookFormModal({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono transition-all"
-                  style={{ borderRadius: 0, background: "var(--th-bg-primary)", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 8, background: "var(--th-bg-primary)", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)" }}
                 >
                   {t({ ko: "\uD30C\uC77C\uC5D0\uC11C \uBD88\uB7EC\uC624\uAE30", en: "Load from file", ja: "\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u8AAD\u8FBC", zh: "\u4ECE\u6587\u4EF6\u52A0\u8F7D" })}
                 </button>
@@ -264,7 +264,7 @@ export default function HookFormModal({
             </div>
             {/* File content preview when loaded from file */}
             {fileName && command && (
-              <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)" }}>
+              <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)" }}>
                 <pre className="text-[10px] text-green-300/70 whitespace-pre-wrap break-all font-mono">
                   {command.slice(0, 500)}
                   {command.length > 500 && "..."}
@@ -275,7 +275,7 @@ export default function HookFormModal({
 
           {/* Scope Type */}
           {defaultProjectId ? (
-            <div className="flex items-center gap-2 px-3 py-2 text-xs font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 0 }}>
+            <div className="flex items-center gap-2 px-3 py-2 text-xs font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 8 }}>
               <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg></span>
               <span style={{ color: "var(--th-accent)" }}>
                 {t({ ko: "프로젝트 훅 (범위 고정)", en: "Project hook (scope locked)", ja: "プロジェクトフック（スコープ固定）", zh: "项目钩子（范围锁定）" })}
@@ -303,7 +303,7 @@ export default function HookFormModal({
                     }}
                     className="px-2.5 py-1.5 text-xs font-mono border transition-all"
                     style={{
-                      borderRadius: 0,
+                      borderRadius: 8,
                       background: scopeType === opt.value ? "rgba(245,158,11,0.15)" : "var(--th-bg-primary)",
                       color: scopeType === opt.value ? "var(--th-accent)" : "var(--th-text-muted)",
                       border: scopeType === opt.value ? "1px solid rgba(245,158,11,0.4)" : "1px solid #E5E7EB",
@@ -326,7 +326,7 @@ export default function HookFormModal({
                     t({ ko: "워크플로 팩 키", en: "Workflow Pack Key", ja: "ワークフローパックキー", zh: "工作流包键" })
                   }
                   className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
-                  style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+                  style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
                 />
               )}
             </div>
@@ -349,7 +349,7 @@ export default function HookFormModal({
                       : "border-[#E5E7EB] hover:bg-[#F3F4F6]"
                   }`}
                   style={{
-                    borderRadius: 0,
+                    borderRadius: 8,
                     background: eventType === et ? "rgba(245,158,11,0.15)" : "var(--th-bg-primary)",
                     color: eventType === et ? "var(--th-accent)" : "var(--th-text-muted)",
                   }}
@@ -372,7 +372,7 @@ export default function HookFormModal({
                 onChange={(e) => setWorkingDirectory(e.target.value)}
                 placeholder="/home/user/project"
                 className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
-              style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
               />
             </div>
             <div>
@@ -387,7 +387,7 @@ export default function HookFormModal({
                 value={timeoutMs}
                 onChange={(e) => setTimeoutMs(Math.max(1000, Math.min(300000, Number(e.target.value) || 30000)))}
                 className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
               />
               <div className="text-[10px] mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                 = {(timeoutMs / 1000).toFixed(1)}s
@@ -407,13 +407,13 @@ export default function HookFormModal({
               value={priority}
               onChange={(e) => setPriority(Math.max(1, Math.min(100, Number(e.target.value) || 50)))}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)" }}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-2" style={{ borderRadius: 0 }}>
+            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-2" style={{ borderRadius: 8 }}>
               {error}
             </div>
           )}
@@ -424,7 +424,7 @@ export default function HookFormModal({
               onClick={onClose}
               disabled={submitting}
               className="px-3 py-1.5 text-xs font-mono transition-all"
-              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "\uCDE8\uC18C", en: "Cancel", ja: "\u30AD\u30E3\u30F3\u30BB\u30EB", zh: "\u53D6\u6D88" })}
             </button>
@@ -435,7 +435,7 @@ export default function HookFormModal({
                 !canSubmit ? "cursor-not-allowed opacity-40" : ""
               }`}
               style={{
-                borderRadius: 0,
+                borderRadius: 8,
                 background: !canSubmit ? "var(--th-bg-primary)" : "var(--th-accent)",
                 color: !canSubmit ? "var(--th-text-muted)" : "var(--th-bg-elevated)",
                 border: "none",

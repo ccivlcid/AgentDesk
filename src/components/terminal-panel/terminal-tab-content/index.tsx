@@ -359,7 +359,7 @@ export function TerminalTabContent({
                       fontFamily: mono,
                       fontSize: 11,
                       lineHeight: 1.65,
-                      color: isLight ? "#92400e" : "rgba(251,191,36,0.8)",
+                      color: isLight ? "#92400e" : "rgba(59,130,246,0.6)",
                       margin: 0,
                       padding: "10px 14px",
                       whiteSpace: "pre-wrap",

@@ -28,13 +28,13 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
     const text = label ? t(label as Record<"ko" | "en" | "ja" | "zh", string>) : role;
     const colorStyle =
       role === "team_leader"
-        ? { color: "var(--th-accent)", background: "rgba(251,191,36,0.15)" }
+        ? { color: "var(--th-accent)", background: "rgba(59,130,246,0.08)" }
         : role === "senior"
           ? { color: "rgb(196,181,253)", background: "rgba(167,139,250,0.1)" }
           : role === "junior"
             ? { color: "rgb(167,243,208)", background: "rgba(52,211,153,0.15)" }
             : { color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" };
-    return <span className="text-[9px] px-1.5 py-0.5 font-medium font-mono" style={{ borderRadius: 0, ...colorStyle }}>{text}</span>;
+    return <span className="text-[9px] px-1.5 py-0.5 font-medium font-mono" style={{ borderRadius: 8, ...colorStyle }}>{text}</span>;
   };
 
   const grouped = apiAssignDepts
@@ -59,7 +59,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         disabled={apiAssigning || isAssigned}
         onClick={() => void handleApiAssignToAgent(agent.id)}
         className="w-full text-left px-2 py-1.5 text-xs font-mono transition flex items-center gap-2.5 disabled:opacity-60"
-        style={{ borderRadius: 0, ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
+        style={{ borderRadius: 8, ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
       >
         <AgentAvatar agent={agent} size={28} rounded="xl" />
         <div className="flex-1 min-w-0">
@@ -142,7 +142,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
           <button
             onClick={() => setApiAssignTarget(null)}
             className="text-xs px-3 py-1.5 font-mono transition-colors"
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
