@@ -382,13 +382,14 @@ function MergeTab({ folder, onProjectCreated }: {
             onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")} />
         </div>
-        {error && <div style={{ fontSize: 10, color: "var(--th-danger-text)", padding: "6px 10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
+        {error && <div style={{ fontSize: 10, color: "#DC2626", padding: "6px 10px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8 }}>{error}</div>}
         <button onClick={() => { void handleCreate(); }} disabled={submitting || overLimit || folder.projects.length === 0}
           style={{
             width: "100%", padding: "9px 0", fontSize: 11, fontFamily: "var(--th-font-mono)", fontWeight: 600,
-            background: (submitting || overLimit) ? "transparent" : "rgba(245,158,11,0.12)",
-            color: (submitting || overLimit) ? "var(--th-text-muted)" : "var(--th-accent)",
-            border: `1px solid ${(submitting || overLimit) ? "var(--th-border)" : "rgba(245,158,11,0.4)"}`,
+            background: (submitting || overLimit) ? "transparent" : "rgba(59,130,246,0.12)",
+            color: (submitting || overLimit) ? "#9CA3AF" : "#3B82F6",
+            border: `1px solid ${(submitting || overLimit) ? "#E5E7EB" : "rgba(59,130,246,0.4)"}`,
+            borderRadius: 8,
             cursor: (submitting || overLimit) ? "not-allowed" : "pointer",
           }}>
           {submitting ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." }) : t({ ko: "⊕ 통합 프로젝트 생성", en: "⊕ Create Integrated Project", ja: "⊕ 統合プロジェクトを作成", zh: "⊕ 创建集成项目" })}
@@ -442,13 +443,13 @@ function ChangelogTab({ folder }: { folder: ProjectFolder }) {
   };
 
   if (loading) return (
-    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "#9CA3AF", fontFamily: "var(--th-font-mono)" }}>
       {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
     </div>
   );
 
   if (entries.length === 0) return (
-    <div style={{ padding: 32, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+    <div style={{ padding: 32, textAlign: "center", fontSize: 11, color: "#9CA3AF", fontFamily: "var(--th-font-mono)" }}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}>
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
@@ -473,14 +474,14 @@ function ChangelogTab({ folder }: { folder: ProjectFolder }) {
         <div key={versionKey} style={{ marginBottom: 16 }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
-            borderBottom: "1px solid var(--th-border)", paddingBottom: 4,
+            borderBottom: "1px solid #E5E7EB", paddingBottom: 4,
           }}>
             <span style={{
-              fontSize: 12, fontWeight: 700, color: "var(--th-accent)",
+              fontSize: 12, fontWeight: 700, color: "#3B82F6",
             }}>
               {versionKey}
             </span>
-            <span style={{ fontSize: 9, color: "var(--th-text-muted)" }}>
+            <span style={{ fontSize: 9, color: "#9CA3AF" }}>
               {new Date(items[0].created_at).toLocaleDateString()}
             </span>
           </div>
@@ -490,7 +491,7 @@ function ChangelogTab({ folder }: { folder: ProjectFolder }) {
               padding: "4px 0 4px 8px",
             }}>
               <span style={{
-                fontSize: 8, padding: "1px 4px",
+                fontSize: 8, padding: "1px 4px", borderRadius: 4,
                 background: `${entryTypeColor(entry.entry_type)}20`,
                 color: entryTypeColor(entry.entry_type),
                 border: `1px solid ${entryTypeColor(entry.entry_type)}40`,
@@ -498,11 +499,11 @@ function ChangelogTab({ folder }: { folder: ProjectFolder }) {
               }}>
                 {t(entryTypeLabel(entry.entry_type))}
               </span>
-              <span style={{ fontSize: 10, color: "var(--th-text-primary)", flex: 1 }}>
+              <span style={{ fontSize: 10, color: "#111827", flex: 1 }}>
                 {entry.summary}
               </span>
               {entry.task_id && (
-                <span style={{ fontSize: 8, color: "var(--th-text-muted)", flexShrink: 0 }}>
+                <span style={{ fontSize: 8, color: "#9CA3AF", flexShrink: 0 }}>
                   #{entry.task_id.slice(0, 8)}
                 </span>
               )}
