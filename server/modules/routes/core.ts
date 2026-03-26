@@ -165,7 +165,6 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const getFlairs = __ctx.getFlairs;
   const ROLE_LABEL_L10N = __ctx.ROLE_LABEL_L10N;
   const classifyIntent = __ctx.classifyIntent;
-  const scheduleAnnouncementReplies = __ctx.scheduleAnnouncementReplies;
   const normalizeTextField = __ctx.normalizeTextField;
   const analyzeDirectivePolicy = __ctx.analyzeDirectivePolicy;
   const shouldExecuteDirectiveDelegation = __ctx.shouldExecuteDirectiveDelegation;
@@ -200,9 +199,6 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const pickPlanningReportAssignee = __ctx.pickPlanningReportAssignee;
   const handleReportRequest = __ctx.handleReportRequest;
   const handleTaskDelegation = __ctx.handleTaskDelegation;
-  const shouldTreatDirectChatAsTask = __ctx.shouldTreatDirectChatAsTask;
-  const createDirectAgentTaskAndRun = __ctx.createDirectAgentTaskAndRun;
-  const scheduleAgentReply = __ctx.scheduleAgentReply;
   const consumeOAuthState = __ctx.consumeOAuthState;
   const upsertOAuthCredential = __ctx.upsertOAuthCredential;
   const startGitHubOAuth = __ctx.startGitHubOAuth;

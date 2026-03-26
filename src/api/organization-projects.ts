@@ -346,10 +346,6 @@ export async function updateTask(
   await patch(`/api/tasks/${id}`, data);
 }
 
-export async function bulkHideTasks(statuses: string[], hidden: 0 | 1): Promise<void> {
-  await post("/api/tasks/bulk-hide", { statuses, hidden });
-}
-
 export async function deleteTask(id: string): Promise<void> {
   await del(`/api/tasks/${id}`);
 }
@@ -604,7 +600,7 @@ export async function deleteProject(id: string): Promise<void> {
 }
 
 /** Remove a project folder from disk (e.g. after trash). Server enforces allowed roots and refuses if a project row still uses the path. */
-export async function deleteProjectDirectory(projectPath: string): Promise<{ ok: boolean; deleted: boolean }> {
+async function deleteProjectDirectory(projectPath: string): Promise<{ ok: boolean; deleted: boolean }> {
   return post("/api/projects/delete-directory", { project_path: projectPath }) as Promise<{ ok: boolean; deleted: boolean }>;
 }
 

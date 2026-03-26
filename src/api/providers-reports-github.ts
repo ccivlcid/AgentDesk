@@ -255,11 +255,6 @@ export async function killCliProcess(
   }>;
 }
 
-export async function getTaskReports(): Promise<TaskReportSummary[]> {
-  const j = await request<{ ok: boolean; reports: TaskReportSummary[] }>("/api/task-reports");
-  return j.reports;
-}
-
 export async function getTaskReportDetail(taskId: string): Promise<TaskReportDetail> {
   return request<TaskReportDetail>(`/api/task-reports/${taskId}`);
 }
@@ -451,8 +446,3 @@ export async function getGitLabCloneStatus(cloneId: string): Promise<CloneStatus
   return request<CloneStatus>(`/api/gitlab/clone/${cloneId}`);
 }
 
-export async function getProjectBranches(
-  projectId: string,
-): Promise<{ branches: string[]; current_branch: string | null }> {
-  return request<{ branches: string[]; current_branch: string | null }>(`/api/projects/${projectId}/branches`);
-}

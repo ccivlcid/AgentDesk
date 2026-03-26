@@ -1,4 +1,4 @@
-import { del, extractMessageId, makeIdempotencyKey, post, postWithIdempotency, put, request } from "./core";
+import { extractMessageId, makeIdempotencyKey, post, postWithIdempotency, put, request } from "./core";
 
 import type {
   CliModelInfo,
@@ -110,41 +110,6 @@ export async function sendMessage(input: {
     idempotencyKey,
   );
   return extractMessageId(j);
-}
-
-export async function sendDirective(content: string): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("client-directive");
-  const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
-    "/api/directives",
-    { content },
-    idempotencyKey,
-  );
-  return extractMessageId(j);
-}
-
-export async function sendDirectiveWithProject(input: {
-  content: string;
-  project_id?: string;
-  project_path?: string;
-  project_context?: string;
-}): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("client-directive");
-  const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
-    "/api/directives",
-    input,
-    idempotencyKey,
-  );
-  return extractMessageId(j);
-}
-
-export async function clearMessages(agentId?: string): Promise<void> {
-  const params = new URLSearchParams();
-  if (agentId) {
-    params.set("agent_id", agentId);
-  } else {
-    params.set("scope", "announcements");
-  }
-  await del(`/api/messages?${params.toString()}`);
 }
 
 export type TerminalProgressHint = {

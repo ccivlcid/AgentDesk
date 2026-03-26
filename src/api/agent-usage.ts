@@ -40,11 +40,3 @@ export async function getAgentUsageSummary(sinceMs?: number): Promise<AgentUsage
   return data.usage ?? [];
 }
 
-export async function getAgentUsageDetail(
-  agentId: string,
-  limit = 50,
-): Promise<{ logs: AgentUsageLog[]; daily: AgentUsageDaily[] }> {
-  const res = await fetch(`${BASE}/api/agent-usage/${agentId}?limit=${limit}`);
-  const data = await res.json();
-  return { logs: data.logs ?? [], daily: data.daily ?? [] };
-}

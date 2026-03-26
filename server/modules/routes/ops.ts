@@ -150,7 +150,6 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const getFlairs = __ctx.getFlairs;
   const ROLE_LABEL_L10N = __ctx.ROLE_LABEL_L10N;
   const classifyIntent = __ctx.classifyIntent;
-  const scheduleAnnouncementReplies = __ctx.scheduleAnnouncementReplies;
   const normalizeTextField = __ctx.normalizeTextField;
   const analyzeDirectivePolicy = __ctx.analyzeDirectivePolicy;
   const shouldExecuteDirectiveDelegation = __ctx.shouldExecuteDirectiveDelegation;
@@ -185,9 +184,6 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const pickPlanningReportAssignee = __ctx.pickPlanningReportAssignee;
   const handleReportRequest = __ctx.handleReportRequest;
   const handleTaskDelegation = __ctx.handleTaskDelegation;
-  const shouldTreatDirectChatAsTask = __ctx.shouldTreatDirectChatAsTask;
-  const createDirectAgentTaskAndRun = __ctx.createDirectAgentTaskAndRun;
-  const scheduleAgentReply = __ctx.scheduleAgentReply;
   const getQueueStatus = __ctx.getQueueStatus;
 
   registerAgentRuntimeRoutes({

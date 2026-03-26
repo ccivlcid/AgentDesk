@@ -112,10 +112,6 @@ export function toggleAgentRule(id: string): Promise<{ id: string; enabled: bool
   return patch<{ id: string; enabled: boolean }>(`/api/agent-rules/${id}/toggle`, {});
 }
 
-export function reorderAgentRules(items: Array<{ id: string; priority: number }>): Promise<{ ok: true }> {
-  return patch<{ ok: true }>("/api/agent-rules/reorder", { items });
-}
-
 export function deleteAgentRule(id: string): Promise<{ ok: true }> {
   return del<{ ok: true }>(`/api/agent-rules/${id}`);
 }

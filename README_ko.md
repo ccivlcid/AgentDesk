@@ -145,7 +145,7 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 </table>
 
 <details>
-<summary><strong>추가</strong> — 데스크톱·프로젝트 단계·이미지 스튜디오·참고 JPG</summary>
+<summary><strong>추가</strong> — 데스크톱·프로젝트 단계·참고 JPG</summary>
 
 <br/>
 
@@ -154,8 +154,6 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 | <a href="docs/screen/widget-02.png"><img src="docs/screen/widget-02.png" width="380" alt="위젯 2"/></a> | <a href="docs/screen/widget-03.png"><img src="docs/screen/widget-03.png" width="380" alt="위젯 3"/></a> |
 | <a href="docs/screen/desktop-04.png"><img src="docs/screen/desktop-04.png" width="380" alt="데스크톱 4"/></a> | <a href="docs/screen/desktop-05.png"><img src="docs/screen/desktop-05.png" width="380" alt="데스크톱 5"/></a> |
 | <a href="docs/screen/desktop-06.png"><img src="docs/screen/desktop-06.png" width="380" alt="데스크톱 6"/></a> | <a href="docs/screen/project-create-03.png"><img src="docs/screen/project-create-03.png" width="380" alt="프로젝트 3단계"/></a> |
-
-<p align="center"><a href="docs/screen/image-studio.png"><img src="docs/screen/image-studio.png" width="560" alt="이미지 스튜디오"/></a><br/><sub><strong>이미지 스튜디오</strong></sub></p>
 
 | | |
 |:---:|:---:|

@@ -53,10 +53,6 @@ export function getMemoryEntries(filters?: MemoryFilters): Promise<MemoryEntry[]
   return request<MemoryEntry[]>(`/api/memory${buildQueryString(filters)}`);
 }
 
-export function getMemoryEntry(id: string): Promise<MemoryEntry> {
-  return request<MemoryEntry>(`/api/memory/${id}`);
-}
-
 export function createMemoryEntry(input: CreateMemoryInput): Promise<MemoryEntry> {
   return post<MemoryEntry>("/api/memory", input);
 }
@@ -123,11 +119,6 @@ export async function startMemoryLearning(input: {
   providers: MemoryLearnProvider[];
 }): Promise<MemoryLearnJob> {
   const res = await post<{ ok: true; job: MemoryLearnJob }>("/api/memory/learn", input);
-  return res.job;
-}
-
-export async function getMemoryLearningJob(jobId: string): Promise<MemoryLearnJob> {
-  const res = await request<{ ok: true; job: MemoryLearnJob }>(`/api/memory/learn/${jobId}`);
   return res.job;
 }
 
