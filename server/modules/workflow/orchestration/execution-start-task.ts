@@ -2,6 +2,7 @@ import path from "node:path";
 import { loadPromptSection } from "../../../lib/prompt-loader.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import type { AgentRow } from "../core/conversation-types.ts";
+import { resolveProviderForAgent } from "../../agent-runtime/llm-client.ts";
 import { getDepartmentPromptForPack } from "../packs/department-scope.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../core/video-skill-bootstrap.ts";
 import { buildWorkflowPackExecutionGuidance } from "../packs/execution-guidance.ts";
@@ -42,7 +43,6 @@ type CreateExecutionStartTaskToolsDeps = {
   getNextHttpAgentPid: RuntimeContext["getNextHttpAgentPid"];
   launchApiProviderAgent: RuntimeContext["launchApiProviderAgent"];
   launchHttpAgent: RuntimeContext["launchHttpAgent"];
-  getProviderModelConfig: RuntimeContext["getProviderModelConfig"];
   spawnCliAgent: RuntimeContext["spawnCliAgent"];
   handleTaskRunComplete: RuntimeContext["handleTaskRunComplete"];
   notifyClient: RuntimeContext["notifyClient"];
@@ -78,7 +78,6 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     getNextHttpAgentPid,
     launchApiProviderAgent,
     launchHttpAgent,
-    getProviderModelConfig,
     spawnCliAgent,
     handleTaskRunComplete,
     notifyClient,
@@ -183,11 +182,8 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
     broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(execAgent.id));
 
+    const resolved = resolveProviderForAgent(db, execAgent);
     const provider = execAgent.cli_provider || "claude";
-    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api", "ollama"].includes(provider)) {
-      onEarlyReturn?.(taskId);
-      return;
-    }
     const executionSession = ensureTaskExecutionSession(taskId, execAgent.id, provider);
 
     const taskData = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as
@@ -407,72 +403,55 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       );
     }
 
-    appendTaskLog(taskId, "system", `RUN start (agent=${execAgent.name}, provider=${provider})`);
-    if (provider === "api" || provider === "ollama") {
-      const controller = new AbortController();
-      const fakePid = getNextHttpAgentPid();
-
-      // For ollama: auto-resolve provider ID and model if not explicitly set
-      let apiProviderId = execAgent.api_provider_id;
-      let apiModel = execAgent.api_model;
-      if (provider === "ollama" && !apiProviderId) {
-        const ollamaProvider = db.prepare(
-          "SELECT id FROM api_providers WHERE type = 'ollama' AND enabled = 1 LIMIT 1",
-        ).get() as { id: string } | undefined;
-        if (ollamaProvider) apiProviderId = ollamaProvider.id;
-      }
-      if (provider === "ollama" && !apiModel) {
-        apiModel = execAgent.cli_model || "llama3.1";
-      }
-
-      launchApiProviderAgent(
-        taskId,
-        apiProviderId ?? null,
-        apiModel ?? null,
-        spawnPrompt,
-        agentCwd,
-        logFilePath,
-        controller,
-        fakePid,
-      );
-    } else if (provider === "copilot" || provider === "antigravity") {
-      const controller = new AbortController();
-      const fakePid = getNextHttpAgentPid();
-      launchHttpAgent(
-        taskId,
-        provider,
-        spawnPrompt,
-        agentCwd,
-        logFilePath,
-        controller,
-        fakePid,
-        execAgent.oauth_account_id ?? null,
-      );
-    } else {
-      const modelConfig = getProviderModelConfig();
-      const modelForProvider = execAgent.cli_model || modelConfig[provider]?.model || undefined;
-      const reasoningLevel =
-        provider === "codex"
-          ? execAgent.cli_reasoning_level || modelConfig[provider]?.reasoningLevel || undefined
-          : modelConfig[provider]?.reasoningLevel || undefined;
-
-      // All CLI providers run headless — agent executes autonomously,
-      // handleTaskRunComplete fires on process exit (no manual "완료" button needed).
-      // Client sees only the final result after PM reviews in decision inbox.
-      {
-        appendTaskLog(taskId, "system", `RUN headless (provider=${provider})`);
-        const child = spawnCliAgent(
+    appendTaskLog(taskId, "system", `RUN start (agent=${execAgent.name}, provider=${provider}, mode=${resolved.mode})`);
+    switch (resolved.mode) {
+      case "api":
+      case "ollama": {
+        const controller = new AbortController();
+        const fakePid = getNextHttpAgentPid();
+        launchApiProviderAgent(
           taskId,
-          provider,
+          resolved.mode === "api" ? resolved.apiProviderId : (resolved.apiProviderId ?? null),
+          resolved.model,
+          execAgent.id,
           spawnPrompt,
           agentCwd,
           logFilePath,
-          modelForProvider,
-          reasoningLevel,
+          controller,
+          fakePid,
+        );
+        break;
+      }
+      case "oauth": {
+        const controller = new AbortController();
+        const fakePid = getNextHttpAgentPid();
+        launchHttpAgent(
+          taskId,
+          resolved.provider,
+          spawnPrompt,
+          agentCwd,
+          logFilePath,
+          controller,
+          fakePid,
+          resolved.oauthAccountId,
+        );
+        break;
+      }
+      case "cli": {
+        appendTaskLog(taskId, "system", `RUN headless (provider=${resolved.cliProvider})`);
+        const child = spawnCliAgent(
+          taskId,
+          resolved.cliProvider,
+          spawnPrompt,
+          agentCwd,
+          logFilePath,
+          resolved.model,
+          resolved.reasoningLevel,
         );
         child.on("close", (code: number | null) => {
           handleTaskRunComplete(taskId, code ?? 1);
         });
+        break;
       }
     }
 

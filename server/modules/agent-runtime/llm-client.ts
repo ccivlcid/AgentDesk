@@ -86,48 +86,148 @@ export function resolveProvider(db: DatabaseSync, apiProviderId?: string): Resol
   throw new Error("No API provider found. Add a provider in Settings → API Providers, or set ANTHROPIC_API_KEY / OPENAI_API_KEY env.");
 }
 
+/**
+ * Unified provider resolution for any agent.
+ * Single entry point for all 3 execution paths (task execution, PM oneshot, system oneshot).
+ *
+ * Returns a discriminated union describing how to invoke the agent's configured provider.
+ */
+export type ResolvedAgentProvider =
+  | { mode: "api"; apiProviderId: string; model: string; providerType: string }
+  | { mode: "oauth"; provider: "copilot" | "antigravity"; oauthAccountId: string | null }
+  | { mode: "cli"; cliProvider: string; model?: string; reasoningLevel?: string }
+  | { mode: "ollama"; apiProviderId: string | null; model: string };
+
+const VALID_CLI_PROVIDERS = new Set(["claude", "codex", "gemini", "cursor", "opencode"]);
+
+export function resolveProviderForAgent(
+  db: DatabaseSync,
+  agent: {
+    cli_provider: string | null;
+    api_provider_id?: string | null;
+    api_model?: string | null;
+    cli_model?: string | null;
+    cli_reasoning_level?: string | null;
+    oauth_account_id?: string | null;
+  },
+): ResolvedAgentProvider {
+  const provider = agent.cli_provider || "claude";
+
+  // 1. API mode
+  if (provider === "api" && agent.api_provider_id) {
+    const row = db.prepare(
+      "SELECT id, type FROM api_providers WHERE id = ? AND enabled = 1",
+    ).get(agent.api_provider_id) as { id: string; type: string } | undefined;
+    if (row) {
+      return {
+        mode: "api",
+        apiProviderId: agent.api_provider_id,
+        model: agent.api_model || getDefaultModel(row.type),
+        providerType: row.type,
+      };
+    }
+    // Provider disabled/deleted → fall through to CLI fallback
+  }
+
+  // 2. OAuth mode (copilot / antigravity)
+  if (provider === "copilot" || provider === "antigravity") {
+    return { mode: "oauth", provider, oauthAccountId: agent.oauth_account_id ?? null };
+  }
+
+  // 3. Ollama mode
+  if (provider === "ollama") {
+    let apiProviderId = agent.api_provider_id ?? null;
+    if (!apiProviderId) {
+      const ollamaRow = db.prepare(
+        "SELECT id FROM api_providers WHERE type = 'ollama' AND enabled = 1 LIMIT 1",
+      ).get() as { id: string } | undefined;
+      if (ollamaRow) apiProviderId = ollamaRow.id;
+    }
+    return {
+      mode: "ollama",
+      apiProviderId,
+      model: agent.api_model || agent.cli_model || "llama3.1",
+    };
+  }
+
+  // 4. CLI mode (claude/codex/gemini/opencode/cursor)
+  const cliProvider = VALID_CLI_PROVIDERS.has(provider) ? provider : "claude";
+  const settingsRow = db.prepare("SELECT value FROM settings WHERE key = 'providerModelConfig'").get() as
+    | { value: string }
+    | undefined;
+  const modelConfig: Record<string, { model?: string; reasoningLevel?: string }> = settingsRow
+    ? JSON.parse(settingsRow.value)
+    : {};
+  return {
+    mode: "cli",
+    cliProvider,
+    model: agent.cli_model || modelConfig[cliProvider]?.model,
+    reasoningLevel: agent.cli_reasoning_level || modelConfig[cliProvider]?.reasoningLevel,
+  };
+}
+
 /** Get default model for a provider type */
 export function getDefaultModel(providerType: string): string {
   return DEFAULT_MODELS[providerType] ?? "gpt-4o";
 }
 
 /**
- * Resolve the best available CLI provider for system-level one-shot calls.
- * Priority:
- *  1. Agent with api_provider_id set → returns that agent's api_provider_id (caller uses resolveProvider)
- *  2. Agent with CLI provider (claude/codex/gemini/cursor/opencode) → returns cli_provider name
- *  3. settings.defaultProvider → fallback
+ * Resolve the best available provider for system-level one-shot calls.
+ *
+ * Deterministic priority:
+ *  1. settings.defaultProvider → most predictable
+ *  2. preferredAgentId (e.g. PM agent) → caller hint
+ *  3. First agent (by created_at) → fallback
  *  4. "claude" → ultimate fallback
+ *
+ * @deprecated Prefer passing a specific agent to resolveProviderForAgent() when possible.
  */
-export function resolveCliProviderFromAgents(db: DatabaseSync): { mode: "api"; apiProviderId: string } | { mode: "cli"; cliProvider: string } {
-  // 1. Check if any agent has an api_provider_id
-  const apiAgent = db.prepare(
-    "SELECT api_provider_id FROM agents WHERE api_provider_id IS NOT NULL AND status != 'offline' LIMIT 1",
-  ).get() as { api_provider_id: string } | undefined;
-  if (apiAgent?.api_provider_id) {
-    return { mode: "api", apiProviderId: apiAgent.api_provider_id };
-  }
-
-  // 2. Check agents' cli_provider (prefer non-api, non-ollama for one-shot text)
-  const CLI_ONESHOT = new Set(["claude", "codex", "gemini", "cursor", "opencode"]);
-  const cliAgent = db.prepare(
-    "SELECT cli_provider FROM agents WHERE status != 'offline' ORDER BY created_at ASC",
-  ).all() as { cli_provider: string }[];
-  for (const a of cliAgent) {
-    if (CLI_ONESHOT.has(a.cli_provider)) {
-      return { mode: "cli", cliProvider: a.cli_provider };
-    }
-  }
-
-  // 3. settings.defaultProvider
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
-  if (row) {
+export function resolveCliProviderFromAgents(
+  db: DatabaseSync,
+  preferredAgentId?: string,
+): { mode: "api"; apiProviderId: string } | { mode: "cli"; cliProvider: string } {
+  // 1. settings.defaultProvider (most deterministic)
+  const settingsRow = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
+  if (settingsRow) {
     try {
-      const parsed = JSON.parse(row.value) as { defaultProvider?: string };
-      if (parsed.defaultProvider && CLI_ONESHOT.has(parsed.defaultProvider)) {
+      const parsed = JSON.parse(settingsRow.value) as { defaultProvider?: string };
+      if (parsed.defaultProvider && VALID_CLI_PROVIDERS.has(parsed.defaultProvider)) {
         return { mode: "cli", cliProvider: parsed.defaultProvider };
       }
     } catch { /* ignore */ }
+  }
+
+  // 2. Preferred agent (e.g. PM agent)
+  if (preferredAgentId) {
+    const preferred = db.prepare(
+      "SELECT cli_provider, api_provider_id FROM agents WHERE id = ?",
+    ).get(preferredAgentId) as { cli_provider: string | null; api_provider_id: string | null } | undefined;
+    if (preferred) {
+      if (preferred.cli_provider === "api" && preferred.api_provider_id) {
+        return { mode: "api", apiProviderId: preferred.api_provider_id };
+      }
+      if (preferred.cli_provider && VALID_CLI_PROVIDERS.has(preferred.cli_provider)) {
+        return { mode: "cli", cliProvider: preferred.cli_provider };
+      }
+    }
+  }
+
+  // 3. First agent with usable provider
+  const agents = db.prepare(
+    "SELECT cli_provider, api_provider_id FROM agents WHERE status != 'offline' ORDER BY created_at ASC",
+  ).all() as { cli_provider: string | null; api_provider_id: string | null }[];
+
+  // Prefer API agent
+  for (const a of agents) {
+    if (a.cli_provider === "api" && a.api_provider_id) {
+      return { mode: "api", apiProviderId: a.api_provider_id };
+    }
+  }
+  // Then CLI agent
+  for (const a of agents) {
+    if (a.cli_provider && VALID_CLI_PROVIDERS.has(a.cli_provider)) {
+      return { mode: "cli", cliProvider: a.cli_provider };
+    }
   }
 
   // 4. Ultimate fallback
@@ -247,9 +347,10 @@ export async function callLlmOneShotAuto(params: {
   userPrompt: string;
   maxTokens?: number;
   timeoutMs?: number;
+  preferredAgentId?: string;
 }): Promise<string> {
-  const { db, systemPrompt, userPrompt, maxTokens = 2048, timeoutMs = 120_000 } = params;
-  const resolved = resolveCliProviderFromAgents(db);
+  const { db, systemPrompt, userPrompt, maxTokens = 2048, timeoutMs = 120_000, preferredAgentId } = params;
+  const resolved = resolveCliProviderFromAgents(db, preferredAgentId);
 
   if (resolved.mode === "api") {
     try {
@@ -261,7 +362,7 @@ export async function callLlmOneShotAuto(params: {
       });
     } catch {
       // API failed — fall through to CLI
-      const fallback = resolveCliProviderFromAgents(db);
+      const fallback = resolveCliProviderFromAgents(db, preferredAgentId);
       const cli = fallback.mode === "cli" ? fallback.cliProvider : "claude";
       return callViaCliProviderInternal(cli, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
     }

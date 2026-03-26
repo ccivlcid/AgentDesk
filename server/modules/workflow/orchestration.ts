@@ -95,7 +95,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const getNextOAuthLabel = __ctx.getNextOAuthLabel;
   const getOAuthAccounts = __ctx.getOAuthAccounts;
   const getPreferredOAuthAccounts = __ctx.getPreferredOAuthAccounts;
-  const getProviderModelConfig = __ctx.getProviderModelConfig;
+
   const getRecentChanges = __ctx.getRecentChanges;
   const getRecentConversationContext = __ctx.getRecentConversationContext;
   const getTaskContinuationContext = __ctx.getTaskContinuationContext;
@@ -459,7 +459,6 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getNextHttpAgentPid,
     launchApiProviderAgent,
     launchHttpAgent,
-    getProviderModelConfig,
     spawnCliAgent,
     handleTaskRunComplete,
     notifyClient,
