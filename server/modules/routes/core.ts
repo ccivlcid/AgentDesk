@@ -1,12 +1,5 @@
 import type { RuntimeContext } from "../../types/runtime-context.ts";
-import type { SQLInputValue } from "node:sqlite";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { execFile } from "node:child_process";
-import { randomUUID, createHash } from "node:crypto";
 import { INBOX_WEBHOOK_SECRET, PKG_VERSION } from "../../config/runtime.ts";
-// messenger/gateway imports removed (Chat/Messenger system deleted)
 import {
   BUILTIN_GITHUB_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_ID,
@@ -15,8 +8,6 @@ import {
   OAUTH_ENCRYPTION_SECRET,
   OAUTH_STATE_TTL_MS,
   appendOAuthQuery,
-  b64url,
-  pkceVerifier,
   sanitizeOAuthRedirect,
   encryptSecret,
   decryptSecret,

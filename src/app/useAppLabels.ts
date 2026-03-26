@@ -33,7 +33,6 @@ export function useAppLabels({
       case "cli-usage":
         return tk("app.view.cliUsage");
       case "tasks":
-      case "tasks-board":
         return tk("app.view.tasksBoard");
       case "agents":
         return tk("app.view.agents");

@@ -74,21 +74,6 @@ export async function testApiProvider(
   }>;
 }
 
-export async function getApiProviderModels(
-  id: string,
-  refresh = false,
-): Promise<{ ok: boolean; models: string[]; cached?: boolean; stale?: boolean }> {
-  const qs = refresh ? "?refresh=true" : "";
-  return request<{ ok: boolean; models: string[]; cached?: boolean; stale?: boolean }>(
-    `/api/api-providers/${id}/models${qs}`,
-  );
-}
-
-export async function getApiProviderPresets(): Promise<Record<string, ApiProviderPreset>> {
-  const j = await request<{ ok: boolean; presets: Record<string, ApiProviderPreset> }>("/api/api-providers/presets");
-  return j.presets;
-}
-
 // ── Task Reports ─────────────────────────────────────────────────────────────
 export interface TaskReportSummary {
   id: string;

@@ -73,7 +73,7 @@ export default function App() {
   const {
     tasks, cliStatus, subtasks, taskPanel,
     crossDeptDeliveries, clientOfficeCalls, meetingPresence, decisionInboxItems,
-    setTasks, setCliStatus, setSubtasks, setTaskPanel, setTaskReport,
+    setTasks, setCliStatus, setSubtasks, setTaskPanel,
     setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence, setDecisionInboxItems,
   } = useTaskStore();
 
@@ -203,7 +203,7 @@ export default function App() {
     on, connected, scheduleLiveSync,
     agentsRef, tasksRef, subAgentsRef, viewRef,
     codexThreadToSubAgentIdRef, codexThreadBindingTsRef, subAgentStreamTailRef,
-    setTasks, setAgents, setTaskReport,
+    setTasks, setAgents,
     setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence,
     setSubtasks, setSubAgents,
     onTaskDone, onTaskFailed,

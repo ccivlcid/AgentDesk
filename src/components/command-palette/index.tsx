@@ -81,7 +81,7 @@ export default function CommandPalette({
       onNavigate("agents");
     } else if (item.kind === "task") {
       saveHistory(`task:${item.task.id}`);
-      onNavigate("tasks-board");
+      onNavigate("tasks");
     } else if (item.kind === "project") {
       saveHistory(`project:${item.project.id}`);
       onSelectProject?.(item.project);

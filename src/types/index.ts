@@ -349,11 +349,6 @@ export interface ProjectSource {
   checked_deliverables: Array<{ key: string; label: string; note: string | null }>;
 }
 
-export interface ProjectSourcesResponse {
-  ok: boolean;
-  sources: ProjectSource[];
-}
-
 export interface ProjectDeliverableItem {
   key: string;
   label: string;
@@ -361,11 +356,6 @@ export interface ProjectDeliverableItem {
   checked: boolean;
   checked_at: number | null;
   note: string | null;
-}
-
-export interface ProjectDeliverablesResponse {
-  ok: boolean;
-  items: ProjectDeliverableItem[];
 }
 
 export interface ProjectFolder {
@@ -570,8 +560,6 @@ export interface CliModelInfo {
   reasoningLevels?: ReasoningLevelOption[];
   defaultReasoningLevel?: string;
 }
-
-export type CliModelsResponse = Record<string, CliModelInfo[]>;
 
 // Settings
 export interface ProviderModelConfig {

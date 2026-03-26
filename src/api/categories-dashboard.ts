@@ -34,15 +34,6 @@ export async function deleteCategory(id: string): Promise<void> {
   return apiFetch<void>(`${BASE}/categories/${id}`, { method: "DELETE" });
 }
 
-export async function cloneCategory(id: string, name?: string): Promise<Category> {
-  return apiFetch<Category>(`${BASE}/categories/${id}/clone`, json("POST", { name }));
-}
-
-export async function fetchCategoryVersions(id: string): Promise<unknown[]> {
-  const data = await apiFetch<{ versions: unknown[] }>(`${BASE}/categories/${id}/versions`);
-  return data.versions;
-}
-
 // ── Project Dashboard 4분면 ─────────────────────────────────────────────────
 
 function makeQuadrantApi<T>(resource: string) {
@@ -78,22 +69,6 @@ export async function addProjectAgent(projectId: string, agentId: string): Promi
 
 export async function removeProjectAgent(projectId: string, agentId: string): Promise<void> {
   await apiFetch<void>(`${BASE}/projects/${projectId}/agents/${agentId}`, { method: "DELETE" });
-}
-
-// ── Output suggestions (Phase 3-6) ──────────────────────────────────────────
-
-export async function fetchOutputSuggestions(
-  type?: string,
-  excludeProjectId?: string,
-): Promise<Array<ProjectOutput & { project_name: string }>> {
-  const params = new URLSearchParams();
-  if (type) params.set("type", type);
-  if (excludeProjectId) params.set("exclude_project_id", excludeProjectId);
-  const qs = params.toString() ? `?${params.toString()}` : "";
-  const data = await apiFetch<{ suggestions: Array<ProjectOutput & { project_name: string }> }>(
-    `${BASE}/outputs/suggestions${qs}`,
-  );
-  return data.suggestions;
 }
 
 // ── Personas ────────────────────────────────────────────────────────────────

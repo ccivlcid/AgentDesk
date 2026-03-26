@@ -1,6 +1,5 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { useUiStore } from "../store/uiStore";
-import type { TaskReportDetail } from "../api";
 import * as api from "../api";
 import type {
   Agent,
@@ -47,7 +46,6 @@ interface UseRealtimeSyncParams {
   subAgentStreamTailRef: MutableRefObject<Map<string, string>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
-  setTaskReport: Dispatch<SetStateAction<TaskReportDetail | null>>;
   setCrossDeptDeliveries: Dispatch<SetStateAction<CrossDeptDelivery[]>>;
   setClientOfficeCalls: Dispatch<SetStateAction<ClientOfficeCall[]>>;
   setMeetingPresence: Dispatch<SetStateAction<MeetingPresence[]>>;
@@ -72,7 +70,6 @@ export function useRealtimeSync({
   subAgentStreamTailRef,
   setTasks,
   setAgents,
-  setTaskReport,
   setCrossDeptDeliveries,
   setClientOfficeCalls,
   setMeetingPresence,
@@ -160,18 +157,6 @@ export function useRealtimeSync({
       }),
       on("departments_changed", () => {
         scheduleLiveSync(60);
-      }),
-      on("task_report", (payload: unknown) => {
-        const p = payload as { task?: { id?: string } } | null;
-        const reportTaskId = typeof p?.task?.id === "string" ? p.task.id : null;
-        if (!reportTaskId) {
-          setTaskReport(payload as TaskReportDetail);
-          return;
-        }
-        api
-          .getTaskReportDetail(reportTaskId)
-          .then((detail) => setTaskReport(detail))
-          .catch(() => setTaskReport(payload as TaskReportDetail));
       }),
       on("cross_dept_delivery", (payload: unknown) => {
         const p = payload as { from_agent_id: string; to_agent_id: string };

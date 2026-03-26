@@ -227,7 +227,7 @@ Supported external messenger channel types (`MessengerChannelType` in `src/types
 | `settings`       | Settings (API, general, OAuth, CLI, data)       |
 | `agent-manager`  | Agent Manager (CRUD agents/departments)        |
 | `cli`            | Agent CLI terminal                             |
-| `tasks`          | Orchestration Timeline (reserved, not yet implemented) |
+| `tasks`          | Orchestration Timeline                         |
 | `repo-store`     | Repo Store (GitHub trending + clone)           |
 | `decision-inbox` | Decision Inbox                                 |
 | `folder`         | Project Folder window                          |

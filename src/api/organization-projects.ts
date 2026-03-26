@@ -257,33 +257,6 @@ export async function getAgentsPerformance(projectId?: string): Promise<AgentPer
   return data.agents;
 }
 
-export async function processSprite(imageBase64: string): Promise<{
-  ok: boolean;
-  previews: Record<string, string>;
-  suggestedNumber: number;
-}> {
-  return post<{
-    ok: boolean;
-    previews: Record<string, string>;
-    suggestedNumber: number;
-  }>("/api/sprites/process", { image: imageBase64 });
-}
-
-export async function registerSprite(
-  sprites: Record<string, string>,
-  spriteNumber: number,
-): Promise<{
-  ok: boolean;
-  spriteNumber: number;
-  saved: string[];
-}> {
-  return post<{
-    ok: boolean;
-    spriteNumber: number;
-    saved: string[];
-  }>("/api/sprites/register", { sprites, spriteNumber });
-}
-
 // Tasks
 export async function getTasks(filters?: {
   status?: TaskStatus;
@@ -669,15 +642,6 @@ export interface ProjectFileTreeResult {
   root: string;
   tree: FileTreeNode[];
   truncated: boolean;
-}
-
-export async function getProjectFileTree(projectPath: string): Promise<ProjectFileTreeResult> {
-  const sp = new URLSearchParams();
-  sp.set("path", projectPath);
-  const j = await request<{ ok: boolean; root: string; tree: FileTreeNode[]; truncated: boolean }>(
-    `/api/projects/path-tree?${sp.toString()}`,
-  );
-  return { root: j.root, tree: j.tree ?? [], truncated: Boolean(j.truncated) };
 }
 
 // ── Project Templates ─────────────────────────────────────────────────────────

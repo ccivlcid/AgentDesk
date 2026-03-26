@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { Task, CliStatusMap, SubTask, MeetingPresence, CrossDeptDelivery, ClientOfficeCall } from "../types";
-import type { TaskReportDetail } from "../api";
 import type { TaskPanelTab } from "../app/types";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 
@@ -15,7 +14,6 @@ interface TaskStore {
   cliStatus: CliStatusMap | null; // CLI 프로세스별 실행 상태 맵 (provider → status)
   subtasks: SubTask[];            // 서브태스크 목록 (태스크 패널 하위 항목)
   taskPanel: { taskId: string; tab: TaskPanelTab } | null; // 열린 태스크 패널 (터미널/미팅 분)
-  taskReport: TaskReportDetail | null;    // 태스크 완료 보고서 (Orchestration Timeline에서 사용 예정)
   crossDeptDeliveries: CrossDeptDelivery[];  // 부서 간 산출물 전달 목록
   clientOfficeCalls: ClientOfficeCall[];     // 클라이언트 오피스 통화 기록
   meetingPresence: MeetingPresence[];        // 미팅 참여자 현황 (실시간 싱크)
@@ -25,7 +23,6 @@ interface TaskStore {
   setCliStatus: (a: SA<CliStatusMap | null>) => void;
   setSubtasks: (a: SA<SubTask[]>) => void;
   setTaskPanel: (a: SA<{ taskId: string; tab: TaskPanelTab } | null>) => void;
-  setTaskReport: (a: SA<TaskReportDetail | null>) => void;
   setCrossDeptDeliveries: (a: SA<CrossDeptDelivery[]>) => void;
   setClientOfficeCalls: (a: SA<ClientOfficeCall[]>) => void;
   setMeetingPresence: (a: SA<MeetingPresence[]>) => void;
@@ -37,7 +34,6 @@ export const useTaskStore = create<TaskStore>()((set) => ({
   cliStatus: null,
   subtasks: [],
   taskPanel: null,
-  taskReport: null,
   crossDeptDeliveries: [],
   clientOfficeCalls: [],
   meetingPresence: [],
@@ -47,7 +43,6 @@ export const useTaskStore = create<TaskStore>()((set) => ({
   setCliStatus: (a) => set((s) => ({ cliStatus: apply(s.cliStatus, a) })),
   setSubtasks: (a) => set((s) => ({ subtasks: apply(s.subtasks, a) })),
   setTaskPanel: (a) => set((s) => ({ taskPanel: apply(s.taskPanel, a) })),
-  setTaskReport: (a) => set((s) => ({ taskReport: apply(s.taskReport, a) })),
   setCrossDeptDeliveries: (a) => set((s) => ({ crossDeptDeliveries: apply(s.crossDeptDeliveries, a) })),
   setClientOfficeCalls: (a) => set((s) => ({ clientOfficeCalls: apply(s.clientOfficeCalls, a) })),
   setMeetingPresence: (a) => set((s) => ({ meetingPresence: apply(s.meetingPresence, a) })),
