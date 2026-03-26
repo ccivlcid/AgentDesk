@@ -177,6 +177,13 @@ project > agent > department > workflow_pack > global
 | **Cross-Dept Delivery** | —                         | Task handoff between agents of different departments                                                                          |
 | **Client Office Call**  | —                         | Meeting room interaction during kickoff/review phases                                                                         |
 
+### Messenger Channels
+
+Supported external messenger channel types (`MessengerChannelType` in `src/types/index.ts`):
+
+| Channel       | Key            | Notes                              |
+| ------------- | -------------- | ---------------------------------- |
+| Slack         | `slack`        | Bot / webhook                      |
 
 ---
 
@@ -220,7 +227,7 @@ project > agent > department > workflow_pack > global
 | `settings`       | Settings (API, general, OAuth, CLI, data)       |
 | `agent-manager`  | Agent Manager (CRUD agents/departments)        |
 | `cli`            | Agent CLI terminal                             |
-| `tasks`          | Orchestration Timeline (reserved, not yet implemented) |
+| `tasks`          | Orchestration Timeline                         |
 | `repo-store`     | Repo Store (GitHub trending + clone)           |
 | `decision-inbox` | Decision Inbox                                 |
 | `folder`         | Project Folder window                          |
@@ -250,7 +257,6 @@ project > agent > department > workflow_pack > global
 | **WebSocket Hub**      | `server/ws/hub.ts`                              | Real-time broadcast: cli_output, task_update, agent_status, etc.                                      |
 | **Pino Logger**        | `server/lib/logger.ts`                          | Structured logging (no console.log in server code)                                                    |
 | **Cron Parser**        | `server/modules/workflow/cron-utils.ts`         | 5-field cron expression parser (no external deps)                                                     |
-| **Workflow Scheduler** | `server/modules/workflow/workflow-scheduler.ts` | 60-second tick daemon for scheduled workflows                                                         |
 | **Pipeline Gates**     | `pipeline_gates`                                | Quality checkpoints: auto or manual approval                                                          |
 | **Deferred Runtime**   | `server/modules/deferred-runtime.ts`            | Lazy-initialized runtime modules loaded on first use (avoids startup cost)                            |
 

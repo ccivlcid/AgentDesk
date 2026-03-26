@@ -335,7 +335,7 @@ slate/gray utilities are remapped to `--th-*` variables:
 **Decision:** DecisionInboxModal
 **Library:** CustomSkillModal, LearningModal (Skills), ClassroomOverlay, RuleFormModal, RuleLearningModal, RuleHistoryPanel, MemoryFormModal, MemoryLearningModal, HookFormModal, HookLearningModal, HookHistoryPanel
 **Settings:** CategoryFormModal
-**Other:** CommandPalette, KeyboardShortcutsGuide, NotificationCenter, TextPreviewModal, ConfirmDialog
+**Other:** CommandPalette, NotificationCenter, TextPreviewModal, ConfirmDialog
 
 ---
 

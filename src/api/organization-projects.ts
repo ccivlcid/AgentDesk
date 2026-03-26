@@ -230,31 +230,31 @@ export async function getAgentPerformance(id: string): Promise<AgentPerformanceD
   return request<AgentPerformanceData>(`/api/agents/${id}/performance`);
 }
 
-export async function processSprite(imageBase64: string): Promise<{
-  ok: boolean;
-  previews: Record<string, string>;
-  suggestedNumber: number;
-}> {
-  return post<{
-    ok: boolean;
-    previews: Record<string, string>;
-    suggestedNumber: number;
-  }>("/api/sprites/process", { image: imageBase64 });
+export interface AgentFitnessByType {
+  task_type: string;
+  success_rate: number;
+  total: number;
 }
 
-export async function registerSprite(
-  sprites: Record<string, string>,
-  spriteNumber: number,
-): Promise<{
-  ok: boolean;
-  spriteNumber: number;
-  saved: string[];
-}> {
-  return post<{
-    ok: boolean;
-    spriteNumber: number;
-    saved: string[];
-  }>("/api/sprites/register", { sprites, spriteNumber });
+export interface AgentPerformanceEntry {
+  agent_id: string;
+  agent_name: string;
+  total: number;
+  done: number;
+  cancelled: number;
+  failed_exec: number;
+  in_progress: number;
+  review: number;
+  planned: number;
+  success_rate: number | null;
+  avg_duration_ms: number | null;
+  fitness_by_type?: AgentFitnessByType[];
+}
+
+export async function getAgentsPerformance(projectId?: string): Promise<AgentPerformanceEntry[]> {
+  const qs = projectId ? `?project_id=${projectId}` : "";
+  const data = await request<{ agents: AgentPerformanceEntry[] }>(`/api/agents/performance${qs}`);
+  return data.agents;
 }
 
 // Tasks
@@ -344,10 +344,6 @@ export async function updateTask(
   >,
 ): Promise<void> {
   await patch(`/api/tasks/${id}`, data);
-}
-
-export async function bulkHideTasks(statuses: string[], hidden: 0 | 1): Promise<void> {
-  await post("/api/tasks/bulk-hide", { statuses, hidden });
 }
 
 export async function deleteTask(id: string): Promise<void> {
@@ -604,7 +600,7 @@ export async function deleteProject(id: string): Promise<void> {
 }
 
 /** Remove a project folder from disk (e.g. after trash). Server enforces allowed roots and refuses if a project row still uses the path. */
-export async function deleteProjectDirectory(projectPath: string): Promise<{ ok: boolean; deleted: boolean }> {
+async function deleteProjectDirectory(projectPath: string): Promise<{ ok: boolean; deleted: boolean }> {
   return post("/api/projects/delete-directory", { project_path: projectPath }) as Promise<{ ok: boolean; deleted: boolean }>;
 }
 
@@ -642,15 +638,6 @@ export interface ProjectFileTreeResult {
   root: string;
   tree: FileTreeNode[];
   truncated: boolean;
-}
-
-export async function getProjectFileTree(projectPath: string): Promise<ProjectFileTreeResult> {
-  const sp = new URLSearchParams();
-  sp.set("path", projectPath);
-  const j = await request<{ ok: boolean; root: string; tree: FileTreeNode[]; truncated: boolean }>(
-    `/api/projects/path-tree?${sp.toString()}`,
-  );
-  return { root: j.root, tree: j.tree ?? [], truncated: Boolean(j.truncated) };
 }
 
 // ── Project Templates ─────────────────────────────────────────────────────────
@@ -817,4 +804,22 @@ export async function getProjectVersion(projectId: string): Promise<string> {
     `/api/projects/${projectId}/version`,
   );
   return res.version ?? "0.1.0";
+}
+
+// ── Team Board (Phase 7) ──
+
+export interface TeamBoardEntry {
+  timestamp: string;
+  sender: string;
+  target: string;
+  subject: string;
+  body: string;
+}
+
+export async function getProjectTeamBoard(projectId: string): Promise<{ content: string | null; entries: TeamBoardEntry[] }> {
+  return request(`/api/projects/${projectId}/team-board`);
+}
+
+export async function getTaskReportMd(projectId: string, taskId: string): Promise<{ content: string | null }> {
+  return request(`/api/projects/${projectId}/tasks/${taskId}/report-md`);
 }

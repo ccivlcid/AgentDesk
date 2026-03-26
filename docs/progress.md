@@ -27,7 +27,7 @@
 | 3 | App Runner (프로젝트 자동 실행) | ~1,248 | 완전 제거 완료 |
 | 4 | Wallpaper Picker (배경화면) | ~475 | 완전 제거 완료 |
 | 5 | Dashboard (메트릭 대시보드) | ~680 | 완전 제거 완료 |
-| 6 | Workflow Builder (@xyflow/react 플로우 에디터) | ~7,994 | 완전 제거 완료 |
+| 6 | Workflow Builder (플로우 에디터) | ~7,994 | 완전 제거 완료 |
 | 7 | Telegram Messenger | — | 완전 제거 완료 |
 | 8 | Chat 시스템 (Direct/Group/Announcement/Directive) | ~35,000 | 완전 제거 완료 |
 | 9 | Messenger 통합 (Discord/Slack/WhatsApp/Google Chat/Signal/iMessage) | ~34,000 | 완전 제거 완료 |
@@ -123,8 +123,8 @@
 **Emoji → SVG Fixes (Rule 0-1):**
 - Fixed 14 files, ~40+ violations replaced with inline SVG:
   - `settings/constants.tsx`, `TaskBoardKanban.tsx`, `HeartbeatBody.tsx`, `utils.ts`
-  - `LlmGuideModal.tsx`, `HeartbeatGuideModal.tsx`, `CommandPaletteResults.tsx`, `CliUsagePanel.tsx`
-  - `MemoryMemorySection.tsx`, `TeamPageView.tsx`, `ScreenGuidePanel.tsx`, `ExportModal.tsx`
+  - `LlmGuideModal.tsx`, `CommandPaletteResults.tsx`
+  - `MemoryMemorySection.tsx`, `ExportModal.tsx`
   - `SkillsLibrary.tsx`, `AnomalySection.tsx`
 - Previously fixed by other sessions: `TrafficLights.tsx`, `CalloutBox.tsx`, `GenerateTab.tsx`, `GalleryTab.tsx`
 
@@ -207,9 +207,10 @@
 
 | Priority | Item | Status |
 |----------|------|--------|
-| **P0** | **Orchestration Timeline Phase 2-5** | Phase 1 완료. Phase 2: Timeline 실데이터 연동 (Agent Lanes + Task Inspector), Phase 3: Logs 실데이터 (에러 우선 모드 + 에이전트 필터), Phase 4: Agents 실데이터 (팀 테이블 + fitness), Phase 5: Room 실데이터 (Communication Feed + Reasoning Tree) |
-| P1 | Execution path consistency (task vs chat vs runtime) | Not Started — same agent behaves differently per entry point |
-| P1 | Document drift prevention | Not Started — migration IDs, API coverage already drifting across docs |
+| ~~**P0**~~ | ~~**Orchestration Timeline Phase 2-5**~~ | **Done** — real progress bars (`execution_state`), fitness data, TOKENS/BUDGET API, Task Inspector (click-to-expand), team-board.md feed in RoomTab, execution events in LogsTab |
+| ~~**P0**~~ | ~~**Orchestration Timeline Spec Alignment**~~ | **Done** — Timeline: FILES CHANGED + CLI HISTORY + ORCHESTRATION LOGIC in Task Inspector; Logs: ERROR_FIRST_MODE + LEVEL filter + agent error badges + TOKEN_THROUGHPUT/ERR_RATE metrics; Agents: ACTION menu + task_type fitness breakdown + real metrics bar; Room: message type styling + step progress tree + ACTIVE_DEPENDENCIES |
+| ~~P1~~ | ~~Execution path consistency~~ | **Done** — 10/10 phases: `resolveProviderForAgent()` unification, PM review parsing + structured logs, context expansion, max-turns fix, Task Inspector, shared .md team communication |
+| ~~P1~~ | ~~Document drift prevention~~ | **Done** — `lint:docs` 19/19 pass, API v1.6.5, all version refs synced |
 | P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |
 | P2 | `any` types / double-casts cleanup | Phase 1-2 done, remaining ~1,200 cases |
 

@@ -1,5 +1,4 @@
 import type { DatabaseSync } from "node:sqlite";
-import logger from "../../../lib/logger";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -20,42 +19,6 @@ export type TaskExecutionState =
   | "succeeded"
   | "failed"
   | "cancelled";
-
-/**
- * Allowed execution_state transitions.
- * A transition not listed here is considered invalid and will be logged.
- */
-const ALLOWED_TRANSITIONS: Record<TaskExecutionState, readonly TaskExecutionState[]> = {
-  queued:              ["claiming", "running", "cancelled", "failed"],
-  claiming:            ["workspace_preparing", "ready", "running", "failed", "cancelled"],
-  workspace_preparing: ["ready", "running", "failed", "cancelled"],
-  ready:               ["running", "failed", "cancelled"],
-  running:             ["awaiting_review", "blocked", "stalled", "succeeded", "failed", "cancelled"],
-  awaiting_review:     ["succeeded", "failed", "running"],
-  retry_backoff:       ["queued", "running", "failed", "cancelled"],
-  blocked:             ["queued", "running", "failed", "cancelled"],
-  stalled:             ["recovering", "failed", "cancelled", "running", "queued"],
-  recovering:          ["queued", "running", "failed", "cancelled"],
-  succeeded:           ["queued", "running"],   // allow re-run
-  failed:              ["queued", "running"],    // allow re-run
-  cancelled:           ["queued", "running"],    // allow re-run
-};
-
-/**
- * Validate whether a state transition is allowed.
- * Returns true if valid, false if invalid (logs a warning but does not throw).
- */
-export function isValidExecutionStateTransition(
-  from: TaskExecutionState | null | undefined,
-  to: TaskExecutionState,
-): boolean {
-  if (!from) return true; // initial state or unknown — allow
-  const allowed = ALLOWED_TRANSITIONS[from];
-  if (!allowed) return true; // unknown source — allow
-  if (allowed.includes(to)) return true;
-  logger.warn(`[state-guard] Invalid execution_state transition: ${from} → ${to}`);
-  return false;
-}
 
 type TaskExecutionMetaPatch = {
   execution_state?: TaskExecutionState | null;
@@ -88,10 +51,6 @@ function getTableSet(db: DbLike): Set<string> {
   const set = new Set(rows.map((row) => row.name));
   tableCache.set(db as object, set);
   return set;
-}
-
-export function taskHasColumn(db: DbLike, columnName: string): boolean {
-  return getTaskColumnSet(db).has(columnName);
 }
 
 export function taskExecutionEventsTableExists(db: DbLike): boolean {

@@ -1,7 +1,7 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 // node-pty uses native bindings — load via CJS require
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const nodePty = require("node-pty") as typeof import("node-pty");
 
 import { WebSocket } from "ws";

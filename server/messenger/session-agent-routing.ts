@@ -40,7 +40,7 @@ type DbLike = Pick<DatabaseSync, "prepare">;
 
 /** No-op: source chat routing removed. */
 export function resolveSourceChatRoute(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { source: unknown; chat: unknown },
 ): SourceChatRoute | null {
   return null;
@@ -48,7 +48,7 @@ export function resolveSourceChatRoute(
 
 /** No-op: session target routing removed. */
 export function resolveSessionTargetRouteFromSettings(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; source: unknown; chat: unknown },
 ): SessionTargetRoute | null {
   return null;
@@ -56,7 +56,7 @@ export function resolveSessionTargetRouteFromSettings(
 
 /** No-op: session agent routing removed. */
 export function resolveSessionAgentRouteFromSettings(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; source: unknown; chat: unknown },
 ): SessionAgentRoute | null {
   return null;
@@ -64,7 +64,7 @@ export function resolveSessionAgentRouteFromSettings(
 
 /** No-op: agent session routing removed. */
 export function resolveAgentSessionRoutesFromSettings(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; agentId: unknown },
 ): AgentSessionRoute[] {
   return [];
@@ -72,7 +72,7 @@ export function resolveAgentSessionRoutesFromSettings(
 
 /** No-op: session workflow pack removed. */
 export function resolveSessionWorkflowPackFromSettings(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; source: unknown; chat: unknown },
 ): WorkflowPackKey | null {
   return null;
@@ -80,7 +80,7 @@ export function resolveSessionWorkflowPackFromSettings(
 
 /** No-op: session agent routing removed. */
 export function resolveSessionAgentRouteFromDb(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; source: unknown; chat: unknown; sessionKey?: unknown },
 ): SessionAgentRoute | null {
   return null;
@@ -88,7 +88,7 @@ export function resolveSessionAgentRouteFromDb(
 
 /** No-op: session target routing removed. */
 export function resolveSessionTargetRouteFromDb(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; source: unknown; chat: unknown; sessionKey?: unknown },
 ): SessionTargetRoute | null {
   return null;
@@ -96,7 +96,7 @@ export function resolveSessionTargetRouteFromDb(
 
 /** No-op: agent session routing removed. */
 export function resolveAgentSessionRoutesFromDb(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: DbLike; agentId: unknown },
 ): AgentSessionRoute[] {
   return [];
@@ -104,7 +104,7 @@ export function resolveAgentSessionRoutesFromDb(
 
 /** No-op: session workflow pack removed. */
 export function resolveSessionWorkflowPackFromDb(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _params: { db: unknown; sessionKey: string },
 ): WorkflowPackKey | null {
   return null;

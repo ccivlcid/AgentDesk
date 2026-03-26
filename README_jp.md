@@ -61,7 +61,7 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
 - **AIエージェントの作成・管理** — ペルソナ、役割、部署、CLIプロバイダー、APIモデルの設定
 - **ワークフローのオーケストレーション** — ビジュアルビルダー、スケジュールタスク、マルチエージェントコンポジションパイプライン
 - **リアルタイム監視** — ハートビートウィジェット、タスクボード、アラートフィード、フローグラフ、CLIコスト追跡
-- **エージェントとのチャット** — ダイレクトメッセージ、グループ放送、Telegram/Discord/Slackゲートウェイ
+- **エージェント通信** — Slackゲートウェイ連携、Decision Inbox、チームボード(.md)によるPM-エージェント通信
 - **共有ナレッジベース** — Skills、Rules、Memory、Hooks、Deliverables、Templatesライブラリ
 - **分析・エクスポート** — エージェントパフォーマンスダッシュボード、CSV/JSONデータエクスポート、コスト分析
 - **すべてをコントロール** — macOSスタイルデスクトップ（Spotlight検索、ミッションコントロール、クイックルック）
@@ -97,11 +97,10 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
 - パラメータタイプ: テキスト、数値、トグル、セレクト、エージェントピッカー
 - カスタムウィジェットの保存・管理・Dock追加
 
-### 💬 マルチエージェントチャット
-- 個別エージェントへのダイレクトメッセージ
-- 全エージェントへのグループ放送チャンネル
-- Telegram / Discord / Slackゲートウェイ連携
-- メッセンジャー `$` ディレクティブ・`!` タスクフロー
+### 💬 エージェント通信
+- Slackゲートウェイ連携
+- Decision Inbox: タスク中の意思決定リクエスト
+- チームボード(.md) PM-エージェント通信
 
 ### 📚 ナレッジライブラリ
 - **Skills** — 再利用可能なタスクテンプレート
@@ -190,7 +189,6 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
 |---------|------|
 | フロントエンド | React 19 + TypeScript + Vite + Tailwind CSS |
 | 状態管理 | Zustand |
-| フロー図 | `@xyflow/react` v12 |
 | バックエンド | Node.js + Express + tsx |
 | データベース | SQLite (`better-sqlite3`) + バージョン管理マイグレーション |
 | リアルタイム | WebSocket |
@@ -251,7 +249,7 @@ pnpm dev                  # フロントエンド(8800) + APIサーバー(8790)
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DBスキーマ ER + 状態機械 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 全画面・モーダル仕様 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS変数 + コンポーネントスタイルルール |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 (v1.6.4) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 (v1.6.5) |
 | [`docs/progress.md`](docs/progress.md) | 開発進捗ログ |
 
 ---

@@ -16,7 +16,6 @@ export interface DecisionInboxModalProps {
     payload?: { note?: string; selected_option_numbers?: number[] },
   ) => void;
   onOpenChat: (agentId: string) => void;
-  onOpenGroupChat?: (agentIds: string[]) => void;
 }
 
 export function formatDecisionInboxTime(ts: number, locale: UiLanguage): string {

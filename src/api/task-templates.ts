@@ -19,17 +19,6 @@ export async function getTaskTemplates(): Promise<TaskTemplate[]> {
   return j.templates;
 }
 
-export async function createTaskTemplate(
-  input: Omit<TaskTemplate, "id" | "created_at" | "updated_at">,
-): Promise<TaskTemplate> {
-  const j = await request<{ ok: boolean; template: TaskTemplate }>("/api/task-templates", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return j.template;
-}
-
 export async function deleteTaskTemplate(id: string): Promise<void> {
   await request(`/api/task-templates/${id}`, { method: "DELETE" });
 }

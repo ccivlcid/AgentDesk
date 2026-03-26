@@ -56,11 +56,3 @@ export function nextCronRunAfter(cronExpr: string, afterMs: number): number {
   throw new Error(`No next run found within 1 year for cron: "${cronExpr}"`);
 }
 
-export function validateCron(expr: string): boolean {
-  try {
-    nextCronRunAfter(expr, Date.now());
-    return true;
-  } catch {
-    return false;
-  }
-}

@@ -60,7 +60,7 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 - **创建和管理AI代理** — 设置角色、部门、CLI提供商、API模型
 - **工作流编排** — 可视化构建器、定时任务、多代理组合管道
 - **实时监控** — 心跳小组件、任务看板、警报推送、流程图、CLI成本追踪
-- **与代理聊天** — 直接消息、群组广播、Telegram/Discord/Slack网关
+- **代理通信** — Slack网关集成、Decision Inbox、团队板(.md) PM-代理通信
 - **共享知识库** — Skills、Rules、Memory、Hooks、Deliverables、Templates库
 - **分析与导出** — 代理绩效仪表盘、CSV/JSON数据导出、成本分析
 - **全面控制** — macOS风格桌面（Spotlight搜索、任务控制、快速预览）
@@ -96,11 +96,10 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 - 参数类型：文本、数字、开关、选择、代理选择器
 - 保存、管理并添加自定义小组件到Dock
 
-### 💬 多代理聊天
-- 对单个代理的直接消息
-- 全体代理群组广播频道
-- Telegram / Discord / Slack网关集成
-- 消息端`$`指令和`!`任务流
+### 💬 代理通信
+- Slack网关集成
+- Decision Inbox：任务中的决策请求
+- 团队板(.md) PM-代理通信
 
 ### 📚 知识库
 - **Skills** — 可复用的任务模板
@@ -189,7 +188,6 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 |----|------|
 | 前端 | React 19 + TypeScript + Vite + Tailwind CSS |
 | 状态管理 | Zustand |
-| 流程图 | `@xyflow/react` v12 |
 | 后端 | Node.js + Express + tsx |
 | 数据库 | SQLite (`better-sqlite3`) + 版本化迁移 |
 | 实时通信 | WebSocket |
@@ -250,7 +248,7 @@ pnpm dev                  # 前端(8800) + API服务器(8790)
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | 数据库 ER 图与状态机 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 完整界面和模态框规范 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS变量 + 组件样式规则 |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API 规范 (v1.6.4) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API 规范 (v1.6.5) |
 | [`docs/progress.md`](docs/progress.md) | 开发进度日志 |
 
 ---

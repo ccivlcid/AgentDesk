@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, Response , Express } from "express";
 import {
   createVideoRenderJob,
   startVideoRenderJob,
@@ -9,7 +9,6 @@ import {
   cleanupOldRenderJobs,
 } from "../../workflow/orchestration/video-render-manager.ts";
 
-import type { Express } from "express";
 
 interface VideoRenderRouteDeps {
   app: Express;

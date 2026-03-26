@@ -67,8 +67,6 @@ export interface RuntimeContextAutoAugmented {
   formatMeetingTranscript: any;
   freshGeminiToken: any;
   geminiProjectCache: any;
-  generateAnnouncementReply: any;
-  generateChatReply: any;
   getAllActiveTeamLeaders: any;
   getDefaultProjectRoot: any;
   getFlairs: any;

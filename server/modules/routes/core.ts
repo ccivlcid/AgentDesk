@@ -1,12 +1,5 @@
 import type { RuntimeContext } from "../../types/runtime-context.ts";
-import type { SQLInputValue } from "node:sqlite";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { execFile } from "node:child_process";
-import { randomUUID, createHash } from "node:crypto";
 import { INBOX_WEBHOOK_SECRET, PKG_VERSION } from "../../config/runtime.ts";
-// messenger/gateway imports removed (Chat/Messenger system deleted)
 import {
   BUILTIN_GITHUB_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_ID,
@@ -15,8 +8,6 @@ import {
   OAUTH_ENCRYPTION_SECRET,
   OAUTH_STATE_TTL_MS,
   appendOAuthQuery,
-  b64url,
-  pkceVerifier,
   sanitizeOAuthRedirect,
   encryptSecret,
   decryptSecret,
@@ -174,9 +165,6 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const getFlairs = __ctx.getFlairs;
   const ROLE_LABEL_L10N = __ctx.ROLE_LABEL_L10N;
   const classifyIntent = __ctx.classifyIntent;
-  const generateChatReply = __ctx.generateChatReply;
-  const generateAnnouncementReply = __ctx.generateAnnouncementReply;
-  const scheduleAnnouncementReplies = __ctx.scheduleAnnouncementReplies;
   const normalizeTextField = __ctx.normalizeTextField;
   const analyzeDirectivePolicy = __ctx.analyzeDirectivePolicy;
   const shouldExecuteDirectiveDelegation = __ctx.shouldExecuteDirectiveDelegation;
@@ -211,9 +199,6 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const pickPlanningReportAssignee = __ctx.pickPlanningReportAssignee;
   const handleReportRequest = __ctx.handleReportRequest;
   const handleTaskDelegation = __ctx.handleTaskDelegation;
-  const shouldTreatDirectChatAsTask = __ctx.shouldTreatDirectChatAsTask;
-  const createDirectAgentTaskAndRun = __ctx.createDirectAgentTaskAndRun;
-  const scheduleAgentReply = __ctx.scheduleAgentReply;
   const consumeOAuthState = __ctx.consumeOAuthState;
   const upsertOAuthCredential = __ctx.upsertOAuthCredential;
   const startGitHubOAuth = __ctx.startGitHubOAuth;

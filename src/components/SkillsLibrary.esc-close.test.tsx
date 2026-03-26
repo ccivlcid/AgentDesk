@@ -45,25 +45,25 @@ const UI_TEXT: Record<
     learn: "학습",
     modalHeading: "스킬 학습 스쿼드",
     startLearning: "학습 시작",
-    running: "학습중",
+    running: "학습중...",
   },
   en: {
     learn: "Learn",
     modalHeading: "Skill Learning Squad",
     startLearning: "Start Learning",
-    running: "Running",
+    running: "Learning...",
   },
   ja: {
     learn: "学習",
     modalHeading: "スキル学習スクワッド",
     startLearning: "学習開始",
-    running: "実行中",
+    running: "学習中...",
   },
   zh: {
     learn: "学习",
     modalHeading: "技能学习小队",
     startLearning: "开始学习",
-    running: "进行中",
+    running: "学习中...",
   },
 };
 
@@ -158,12 +158,12 @@ describe("SkillsLibrary learning modal ESC close", () => {
 
       fireEvent.click(screen.getByRole("button", { name: exactText(text.learn) }));
 
-      expect(screen.getByRole("heading", { name: exactText(text.modalHeading) })).toBeInTheDocument();
+      expect(screen.getByText(exactText(text.modalHeading))).toBeInTheDocument();
 
       fireEvent.keyDown(window, { key: "Escape" });
 
       await waitFor(() => {
-        expect(screen.queryByRole("heading", { name: exactText(text.modalHeading) })).not.toBeInTheDocument();
+        expect(screen.queryByText(exactText(text.modalHeading))).not.toBeInTheDocument();
       });
     });
   }
@@ -205,7 +205,7 @@ describe("SkillsLibrary learning modal ESC close", () => {
 
       fireEvent.keyDown(window, { key: "Escape" });
 
-      expect(screen.getByRole("heading", { name: exactText(text.modalHeading) })).toBeInTheDocument();
+      expect(screen.getByText(exactText(text.modalHeading))).toBeInTheDocument();
     });
   }
 

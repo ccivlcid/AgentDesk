@@ -21,5 +21,5 @@ export function useDesktopData(
 
   useEffect(() => {
     getProjectFolders().then(setFolders).catch(() => {});
-  }, []);
+  }, [setFolders]);
 }

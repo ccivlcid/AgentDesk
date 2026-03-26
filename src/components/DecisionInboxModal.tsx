@@ -50,7 +50,6 @@ export default function DecisionInboxModal({
   onRefresh,
   onReplyOption,
   onOpenChat,
-  onOpenGroupChat,
 }: DecisionInboxModalProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
   const { showToast } = useToast();
@@ -325,23 +324,6 @@ export default function DecisionInboxModal({
                       </div>
                       {item.agentId && (
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {item.kind === "project_review_ready" && onOpenGroupChat && (
-                            <button
-                              onClick={() => { onOpenGroupChat?.([item.agentId!]); }}
-                              style={{
-                                ...mono, fontSize: "9px", fontWeight: 700,
-                                padding: "2px 8px",
-                                border: "1px solid var(--th-accent)",
-                                background: "var(--th-bg-surface)",
-                                color: "var(--th-accent)",
-                                cursor: "pointer",
-                                letterSpacing: "0.04em",
-                              }}
-                              className="hover:opacity-90"
-                            >
-                              {t({ ko: "회의 참여", en: "JOIN MEETING", ja: "会議参加", zh: "加入会议" })}
-                            </button>
-                          )}
                           <button
                             onClick={() => onOpenChat(item.agentId!)}
                             style={{

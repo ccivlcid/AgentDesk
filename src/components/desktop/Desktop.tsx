@@ -376,7 +376,7 @@ export default function Desktop({
       onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange,
     }),
     // overlay block deps (stable refs/setters omitted)
-    [runProjectInfo, projectCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange],
+    [runProjectInfo, projectCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, setFolders, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, showTrash, folders, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, setCurrentProjectId, setMissionControlOpen],
   );
   const overlayBlockProps = useDesktopOverlayBlockProps(overlayBridge);
   return (

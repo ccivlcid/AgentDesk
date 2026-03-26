@@ -47,7 +47,7 @@ interface AutonomousMemoryDeps {
  * - Workflow pack-scoped memories (scope_type = 'workflow_pack', scope_id = packKey)
  * - Keyword match from task title/description
  */
-export function searchRelevantMemories(
+function searchRelevantMemories(
   deps: { db: unknown },
   context: {
     agentId: string | null;

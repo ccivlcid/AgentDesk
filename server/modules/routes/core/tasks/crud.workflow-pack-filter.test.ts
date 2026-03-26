@@ -54,7 +54,9 @@ function createTaskCrudHarness(): { db: DatabaseSync; routes: Map<string, RouteH
       updated_at INTEGER NOT NULL,
       category_id TEXT,
       handoff_to_agent_id TEXT,
-      handoff_condition TEXT
+      handoff_condition TEXT,
+      kb_context_sources TEXT,
+      figma_url TEXT
     );
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,
@@ -80,6 +82,10 @@ function createTaskCrudHarness(): { db: DatabaseSync; routes: Map<string, RouteH
       task_id TEXT NOT NULL,
       status TEXT NOT NULL,
       delegated_task_id TEXT
+    );
+    CREATE TABLE settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
     );
   `);
 

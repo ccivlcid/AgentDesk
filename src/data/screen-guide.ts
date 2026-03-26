@@ -33,46 +33,6 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "사용자 정의 카테고리 생성·수정", en: "Create or edit custom categories", ja: "ユーザー定義カテゴリの作成・編集", zh: "创建或编辑自定义类别" },
     ],
   },
-  "tasks-board": {
-    title: { ko: "업무 보드", en: "Task Board", ja: "タスクボード", zh: "任务看板" },
-    description: {
-      ko: "칸반 보드로 태스크를 관리합니다. 드래그하여 상태를 바꾸고, 에이전트를 배정하고 실행할 수 있습니다.",
-      en: "Manage tasks on a Kanban board. Drag to change status, assign agents, and run tasks.",
-      ja: "カンバンボードでタスクを管理。ドラッグで状態変更、エージェント割り当て・実行ができます。",
-      zh: "在看板上管理任务。可拖拽改状态、分配代理并运行任务。",
-    },
-    tips: [
-      { ko: "N 키 또는 새 태스크 버튼으로 태스크 추가", en: "Press N or use New Task button to add a task", ja: "Nキーまたは新規タスクボタンで追加", zh: "按 N 或使用新建任务按钮添加任务" },
-      { ko: "카드 드래그로 TODO → 진행 중 → 완료 이동", en: "Drag cards to move TODO → In progress → Done", ja: "カードをドラッグして TODO→進行中→完了へ", zh: "拖拽卡片在待办→进行中→完成间移动" },
-      { ko: "태스크 클릭 후 에이전트 배정·실행", en: "Click a task to assign an agent and run", ja: "タスクをクリックしてエージェント割り当て・実行", zh: "点击任务后可分配代理并运行" },
-      { ko: "Esc로 모달·팝업 닫기", en: "Press Esc to close modal or popup", ja: "Escでモーダル・ポップアップを閉じる", zh: "按 Esc 关闭模态框或弹窗" },
-    ],
-  },
-  "tasks-scheduled": {
-    title: { ko: "스케줄러", en: "Scheduler", ja: "スケジューラ", zh: "调度器" },
-    description: {
-      ko: "예약된 태스크를 보고 관리합니다.",
-      en: "View and manage scheduled tasks.",
-      ja: "予約済みタスクを表示・管理します。",
-      zh: "查看并管理已预约任务。",
-    },
-    tips: [
-      { ko: "예약 일시·반복 설정 확인·수정", en: "View or edit schedule and recurrence", ja: "予約日時・繰り返しを確認・編集", zh: "查看或编辑预约时间与重复设置" },
-    ],
-  },
-  "tasks-deliverables": {
-    title: { ko: "산출물", en: "Outputs", ja: "成果物", zh: "产出物" },
-    description: {
-      ko: "태스크 실행 결과물과 프로젝트 산출물을 봅니다.",
-      en: "View task run artifacts and project deliverables.",
-      ja: "タスク実行の成果物とプロジェクトの成果物を表示します。",
-      zh: "查看任务运行产物与项目产出物。",
-    },
-    tips: [
-      { ko: "태스크별 아티팩트·파일·Git 요약", en: "Artifacts, files, and Git summary per task", ja: "タスクごとのアーティファクト・ファイル・Git概要", zh: "每任务的产物、文件与 Git 摘要" },
-      { ko: "프로젝트 산출물(계획)과 실행 결과 매칭", en: "Match project deliverables (planned) with run results", ja: "プロジェクト成果物（計画）と実行結果の対応", zh: "将项目产出物（计划）与运行结果对应" },
-    ],
-  },
   agents: {
     title: { ko: "에이전트 & 전문 분야", en: "Agents & Specialties", ja: "エージェント & 専門分野", zh: "代理与专业领域" },
     description: {
@@ -165,32 +125,18 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "새로고침으로 최신 집계 반영", en: "Refresh to get latest totals", ja: "更新で最新の集計を反映", zh: "刷新以获取最新统计" },
     ],
   },
-  "agent-repl": {
-    title: { ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" },
-    description: {
-      ko: "터미널 스타일로 에이전트에게 직접 태스크를 입력하고 즉시 실행합니다.",
-      en: "Send tasks directly to agents in a terminal-style REPL and execute them immediately.",
-      ja: "ターミナル形式でエージェントに直接タスクを送信し、即座に実行します。",
-      zh: "以终端方式直接向代理发送任务并立即执行。",
-    },
-    tips: [
-      { ko: "우측 드롭다운에서 대상 에이전트를 선택하거나 :use <이름> 으로 전환", en: "Select the target agent from the dropdown or type :use <name>", ja: "右上ドロップダウンまたは :use <名前> でエージェントを選択", zh: "从右侧下拉框选择代理，或输入 :use <名称> 切换" },
-      { ko: ":list 로 전체 에이전트 목록 및 상태 확인", en: ":list shows all agents and their status", ja: ":list で全エージェントと状態を確認", zh: ":list 查看所有代理及其状态" },
-      { ko: "↑/↓ 화살표 키로 이전 명령 히스토리 탐색", en: "Use ↑/↓ arrow keys to navigate command history", ja: "↑/↓キーでコマンド履歴を参照", zh: "使用 ↑/↓ 方向键浏览命令历史" },
-    ],
-  },
   settings: {
     title: { ko: "설정", en: "Settings", ja: "設定", zh: "设置" },
     description: {
-      ko: "API 프로바이더, OAuth, 메신저 게이트웨이, 데이터, 카테고리 등 앱 설정을 변경합니다.",
-      en: "Change app settings: API providers, OAuth, messenger gateway, data, categories, etc.",
-      ja: "APIプロバイダー、OAuth、メッセンジャーゲートウェイ、データ、カテゴリなどのアプリ設定を変更。",
-      zh: "修改应用设置：API 提供商、OAuth、消息网关、数据、类别等。",
+      ko: "API 프로바이더, OAuth, 웹훅, 데이터, 카테고리 등 앱 설정을 변경합니다.",
+      en: "Change app settings: API providers, OAuth, webhooks, data, categories, etc.",
+      ja: "APIプロバイダー、OAuth、Webhook、データ、カテゴリなどのアプリ設定を変更。",
+      zh: "修改应用设置：API 提供商、OAuth、Webhook、数据、类别等。",
     },
     tips: [
       { ko: "API 프로바이더에서 Claude·OpenAI 등 키 설정", en: "Set API keys for Claude, OpenAI, etc. in API providers", ja: "APIプロバイダーでClaude・OpenAIなどのキーを設定", zh: "在 API 提供商中设置 Claude、OpenAI 等密钥" },
       { ko: "OAuth 탭에서 GitHub Copilot 등 연동", en: "Connect GitHub Copilot etc. in OAuth tab", ja: "OAuthタブでGitHub Copilotなどを連携", zh: "在 OAuth 选项卡中连接 GitHub Copilot 等" },
-      { ko: "게이트웨이에서 Telegram·Discord 채널 설정", en: "Configure Telegram/Discord channels in Gateway", ja: "ゲートウェイでTelegram・Discordチャンネルを設定", zh: "在网关中配置 Telegram、Discord 频道" },
+      { ko: "게이트웨이에서 Slack 채널 설정", en: "Configure Slack channels in Gateway", ja: "ゲートウェイでSlackチャンネルを設定", zh: "在网关中配置 Slack 频道" },
     ],
   },
   library: {

@@ -134,8 +134,8 @@ const SENSITIVE_PATTERNS: RegExp[] = [
   /\b(sk-[a-zA-Z0-9]{20,})\b/g,
   /\b(ghp_[a-zA-Z0-9]{36,})\b/g,
   /\b(gho_[a-zA-Z0-9]{36,})\b/g,
-  /\b(xoxb-[a-zA-Z0-9\-]{30,})\b/g,
-  /\b(xoxp-[a-zA-Z0-9\-]{30,})\b/g,
+  /\b(xoxb-[a-zA-Z0-9-]{30,})\b/g,
+  /\b(xoxp-[a-zA-Z0-9-]{30,})\b/g,
   // Bearer tokens
   /Bearer\s+[a-zA-Z0-9\-._~+/]+=*/gi,
   // Generic long hex/base64 tokens (40+ chars)

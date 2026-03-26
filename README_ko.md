@@ -93,11 +93,10 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 <tr>
 <td valign="top" width="50%">
 
-### 💬 멀티 에이전트 채팅
-- 개별 DM + 전체 브로드캐스트 채널
-- Telegram · Discord · Slack 게이트웨이 연동
-- `$` 접두사 → 디렉티브 · `!` 접두사 → 태스크 생성
+### 💬 에이전트 커뮤니케이션
+- Slack 게이트웨이 연동
 - Decision Inbox: 태스크 중 의사결정 요청 전달
+- Team board (.md) PM-에이전트 커뮤니케이션
 
 </td>
 <td valign="top" width="50%">
@@ -146,7 +145,7 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 </table>
 
 <details>
-<summary><strong>추가</strong> — 데스크톱·프로젝트 단계·이미지 스튜디오·참고 JPG</summary>
+<summary><strong>추가</strong> — 데스크톱·프로젝트 단계·참고 JPG</summary>
 
 <br/>
 
@@ -155,8 +154,6 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 | <a href="docs/screen/widget-02.png"><img src="docs/screen/widget-02.png" width="380" alt="위젯 2"/></a> | <a href="docs/screen/widget-03.png"><img src="docs/screen/widget-03.png" width="380" alt="위젯 3"/></a> |
 | <a href="docs/screen/desktop-04.png"><img src="docs/screen/desktop-04.png" width="380" alt="데스크톱 4"/></a> | <a href="docs/screen/desktop-05.png"><img src="docs/screen/desktop-05.png" width="380" alt="데스크톱 5"/></a> |
 | <a href="docs/screen/desktop-06.png"><img src="docs/screen/desktop-06.png" width="380" alt="데스크톱 6"/></a> | <a href="docs/screen/project-create-03.png"><img src="docs/screen/project-create-03.png" width="380" alt="프로젝트 3단계"/></a> |
-
-<p align="center"><a href="docs/screen/image-studio.png"><img src="docs/screen/image-studio.png" width="560" alt="이미지 스튜디오"/></a><br/><sub><strong>이미지 스튜디오</strong></sub></p>
 
 | | |
 |:---:|:---:|
@@ -212,7 +209,6 @@ pnpm dev
 | 백엔드 | Node.js · Express · tsx |
 | 데이터베이스 | SQLite (`better-sqlite3`) · 버전 관리 마이그레이션 |
 | 실시간 | WebSocket |
-| 플로우 다이어그램 | `@xyflow/react` |
 | 테스팅 | Vitest · Playwright |
 | 데스크톱 | Electron (선택) |
 

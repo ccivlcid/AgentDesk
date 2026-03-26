@@ -3,12 +3,14 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import type { WriteStream } from "node:fs";
+import type { DatabaseSync } from "node:sqlite";
 import type { AgentRow, OneShotRunOptions, OneShotRunResult } from "./conversation-types.ts";
+import { resolveProviderForAgent } from "../../agent-runtime/llm-client.ts";
 
 type CreateOneShotRunnerDeps = {
+  db: DatabaseSync;
   logsDir: string;
   broadcast: (event: string, payload: unknown) => void;
-  getProviderModelConfig: () => Record<string, { model?: string; reasoningLevel?: string }>;
   executeApiProviderAgent: (
     prompt: string,
     projectPath: string,
@@ -43,15 +45,15 @@ type CreateOneShotRunnerDeps = {
   normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
   hasStructuredJsonLines: (raw: string) => boolean;
   normalizeConversationReply: (raw: string, maxChars?: number, opts?: { maxSentences?: number }) => string;
-  buildAgentArgs: (provider: string, model?: string, reasoningLevel?: string, opts?: { noTools?: boolean }) => string[];
+  buildAgentArgs: (provider: string, model?: string, reasoningLevel?: string, opts?: { noTools?: boolean; maxTurns?: number }) => string[];
   withCliPathFallback: (pathValue: string | undefined) => string;
 };
 
 export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
   const {
+    db,
     logsDir,
     broadcast,
-    getProviderModelConfig,
     executeApiProviderAgent,
     executeCopilotAgent,
     executeAntigravityAgent,
@@ -110,6 +112,7 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
     prompt: string,
     opts: OneShotRunOptions = {},
   ): Promise<OneShotRunResult> {
+    const resolved = resolveProviderForAgent(db, agent);
     const provider = agent.cli_provider || "claude";
     const timeoutMs = opts.timeoutMs ?? 180_000;
     const projectPath = opts.projectPath || process.cwd();
@@ -165,7 +168,7 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
     };
 
     try {
-      if (provider === "api") {
+      if (resolved.mode === "api" || resolved.mode === "ollama") {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), timeoutMs);
         try {
@@ -175,8 +178,8 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
             logStream,
             controller.signal,
             streamTaskId ?? undefined,
-            agent.api_provider_id ?? null,
-            agent.api_model ?? null,
+            resolved.mode === "api" ? resolved.apiProviderId : (resolved.apiProviderId ?? null),
+            resolved.model,
             (text: string) => {
               rawOutput += text;
               return safeWrite(text);
@@ -186,7 +189,7 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
           clearTimeout(timeout);
         }
         if (!rawOutput.trim() && fs.existsSync(logPath)) rawOutput = fs.readFileSync(logPath, "utf8");
-      } else if (provider === "copilot" || provider === "antigravity") {
+      } else if (resolved.mode === "oauth") {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), timeoutMs);
         const oauthWrite = (text: string) => {
@@ -194,14 +197,14 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
           return safeWrite(text);
         };
         try {
-          if (provider === "copilot") {
+          if (resolved.provider === "copilot") {
             await executeCopilotAgent(
               prompt,
               projectPath,
               logStream,
               controller.signal,
               streamTaskId ?? undefined,
-              agent.oauth_account_id ?? null,
+              resolved.oauthAccountId,
               oauthWrite,
             );
           } else {
@@ -210,7 +213,7 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
               logStream,
               controller.signal,
               streamTaskId ?? undefined,
-              agent.oauth_account_id ?? null,
+              resolved.oauthAccountId,
               oauthWrite,
             );
           }
@@ -219,13 +222,9 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
         }
         if (!rawOutput.trim() && fs.existsSync(logPath)) rawOutput = fs.readFileSync(logPath, "utf8");
       } else {
-        const modelConfig = getProviderModelConfig();
-        const model = agent.cli_model || modelConfig[provider]?.model || undefined;
-        const reasoningLevel =
-          provider === "codex"
-            ? agent.cli_reasoning_level || modelConfig[provider]?.reasoningLevel || undefined
-            : modelConfig[provider]?.reasoningLevel || undefined;
-        const args = buildAgentArgs(provider, model, reasoningLevel, { noTools });
+        // CLI mode — model + reasoningLevel already resolved by resolveProviderForAgent
+        // Oneshot calls use maxTurns=3 (review retry room) instead of task execution's 200
+        const args = buildAgentArgs(resolved.cliProvider, resolved.model, resolved.reasoningLevel, { noTools, maxTurns: 3 });
 
         await new Promise<void>((resolve, reject) => {
           const cleanEnv = { ...process.env };

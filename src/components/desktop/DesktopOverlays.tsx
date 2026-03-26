@@ -7,9 +7,8 @@ import ContextMenu from "../ui/ContextMenu";
 import CommandPalette from "../CommandPalette";
 import UserGuidePanel from "./UserGuidePanel";
 import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
-import { RunProjectModal } from "./DesktopRunProjectModal";
+import { RunProjectModal , buildRunPrompt } from "./DesktopRunProjectModal";
 import { TrashModal } from "./DesktopTrash";
-import { buildRunPrompt } from "./DesktopRunProjectModal";
 import { deleteTrashedProjectDirectories } from "../../api/organization-projects";
 
 export interface DesktopOverlaysProps {

@@ -1,85 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { runVersionedMigrations, MIGRATIONS, type Migration } from "./versioned-migrations.ts";
+import { applyBaseSchema } from "./base-schema.ts";
 
 function makeDb(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
-  // Minimal tables needed by all versioned migrations
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS projects (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL DEFAULT '',
-      project_path TEXT NOT NULL DEFAULT '',
-      core_goal TEXT NOT NULL DEFAULT '',
-      default_pack_key TEXT NOT NULL DEFAULT 'development',
-      assignment_mode TEXT NOT NULL DEFAULT 'auto',
-      last_used_at INTEGER,
-      created_at INTEGER DEFAULT (unixepoch()*1000),
-      updated_at INTEGER DEFAULT (unixepoch()*1000)
-    );
-    CREATE TABLE IF NOT EXISTS agents (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL DEFAULT '',
-      persona TEXT,
-      persona_id TEXT
-    );
-    CREATE TABLE IF NOT EXISTS categories (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL DEFAULT '',
-      pack_key TEXT
-    );
-    CREATE TABLE IF NOT EXISTS tasks (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'inbox',
-      assigned_agent_id TEXT,
-      category_id TEXT,
-      last_heartbeat_at INTEGER,
-      execution_state TEXT
-    );
-    CREATE TABLE IF NOT EXISTS task_execution_events (
-      id TEXT PRIMARY KEY,
-      task_id TEXT NOT NULL,
-      event_type TEXT NOT NULL,
-      created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
-    );
-    CREATE TABLE IF NOT EXISTS project_agents (
-      project_id TEXT NOT NULL,
-      agent_id TEXT NOT NULL,
-      PRIMARY KEY (project_id, agent_id)
-    );
-    CREATE TABLE IF NOT EXISTS hook_entries (
-      id TEXT PRIMARY KEY,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      event_type TEXT NOT NULL DEFAULT '',
-      scope_type TEXT NOT NULL DEFAULT 'global',
-      scope_id TEXT
-    );
-    CREATE TABLE IF NOT EXISTS agent_rules (
-      id TEXT PRIMARY KEY,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      scope_type TEXT NOT NULL DEFAULT 'global',
-      scope_id TEXT,
-      priority INTEGER NOT NULL DEFAULT 0
-    );
-    CREATE TABLE IF NOT EXISTS memory_entries (
-      id TEXT PRIMARY KEY,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      scope_type TEXT NOT NULL DEFAULT 'global',
-      scope_id TEXT,
-      priority INTEGER NOT NULL DEFAULT 0
-    );
-    CREATE TABLE IF NOT EXISTS agent_usage_logs (
-      id TEXT PRIMARY KEY,
-      agent_id TEXT NOT NULL,
-      exit_code INTEGER,
-      created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
-    );
-    CREATE TABLE IF NOT EXISTS skill_learning_history (
-      id TEXT PRIMARY KEY,
-      category TEXT
-    );
-  `);
+  applyBaseSchema(db);
   return db;
 }
 

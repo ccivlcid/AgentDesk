@@ -92,7 +92,7 @@ export default function AgentDetailPanel() {
           : null,
       });
     }).finally(() => setLoading(false));
-  }, [selectedAgentId]);
+  }, [selectedAgentId, agent?.cli_provider]);
 
   useEffect(() => {
     if (!selectedAgentId) prevIdRef.current = null;

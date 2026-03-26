@@ -4,11 +4,10 @@ import { useProjectFolderWindowState } from "./useProjectFolderWindowState";
 import { useI18n } from "../../../i18n";
 import TrafficLights from "../TrafficLights";
 import { timeAgo } from "./utils";
-import { StatPill, Divider } from "./DetailsTab";
+import { StatPill, Divider , DetailsTab } from "./DetailsTab";
 import { FilesTab } from "./FilesTab";
 import { TasksTab } from "./TasksTab";
 import { AgentsTab } from "./AgentsTab";
-import { DetailsTab } from "./DetailsTab";
 import { TerminalTab } from "./TerminalTab";
 import { GitTab } from "./GitTab";
 

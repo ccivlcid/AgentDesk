@@ -10,6 +10,7 @@ import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
 import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 
 import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
+import { registerTeamBoardRoutes } from "./projects/register-team-board-routes.ts";
 import { callLlmOneShotAuto } from "../../agent-runtime/llm-client.ts";
 import logger from "../../../lib/logger.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
@@ -65,6 +66,7 @@ export function registerProjectRoutes({
   registerFeatureRoutes(deps);
   registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog, resolveProjectPath, nowMs, startTaskExecutionForAgent, insertNotification });
   registerChangelogRoutes(deps);
+  registerTeamBoardRoutes(deps);
 
   // ── AI auto-assign agents ─────────────────────────────────────────────────
   app.post("/api/projects/auto-assign-agents", async (req, res) => {

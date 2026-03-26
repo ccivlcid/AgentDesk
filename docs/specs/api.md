@@ -2,7 +2,8 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.6.4` (local snapshot, 2026-03-24).
+Current baseline target: `v1.6.5` (local snapshot, 2026-03-26).
+> **v1.6.5 changes:** Added `GET /api/projects/:id/team-board` (team communication board from `docs/team-board.md`), `GET /api/projects/:id/tasks/:taskId/report-md` (PM review report from `docs/tasks/{taskId}-report.md`).
 > **v1.6.4 changes:** Added `POST /api/projects/delete-directory` — recursively delete a project directory on disk when allowed by `PROJECT_PATH_ALLOWED_ROOTS` and no `projects` row references the path (trash empty / permanent erase).
 > **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
 > **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
@@ -109,6 +110,10 @@ The frontend client wraps non-2xx responses with `ApiRequestError` (`status`, `c
 | GET | `/api/decision-inbox` | Decision inbox items |
 | POST | `/api/decision-inbox/:id/reply` | Decision reply |
 
+**Messenger Channels:** The system supports bridging decisions and directives to external messenger channels.
+Supported channel type: `slack`.
+Channel configuration is stored in `CompanySettings.messengerChannels` as `MessengerChannelsConfig`.
+
 ### Skills / Providers / OAuth
 
 | Method | Path | Purpose |
@@ -153,6 +158,8 @@ The frontend client wraps non-2xx responses with `ApiRequestError` (`status`, `c
 | POST | `/api/projects/:id/add-tasks` | Add tasks to an existing project via abbreviated PM planning flow |
 | POST | `/api/projects/:id/resume` | Resume next planned task |
 | POST | `/api/projects/:id/clarification-reply` | Reply to kickoff clarification |
+| GET | `/api/projects/:id/team-board` | Read team communication board (`docs/team-board.md`) |
+| GET | `/api/projects/:id/tasks/:taskId/report-md` | Read task PM review report (`docs/tasks/{taskId}-report.md`) |
 | POST | `/api/projects/auto-assign-agents` | AI auto-assign agents to project roles |
 | GET | `/api/github/status` | GitHub integration status |
 | GET | `/api/github/repos` | Repositories |
@@ -170,6 +177,25 @@ The frontend client wraps non-2xx responses with `ApiRequestError` (`status`, `c
   "by_agent": [
     { "agent_id": "uuid", "agent_name": "string", "cost_usd": 0.012 }
   ]
+}
+```
+
+`GET /api/projects/:id/team-board` response shape:
+```json
+{
+  "ok": true,
+  "content": "# Team Board\n---\n...",
+  "entries": [
+    { "timestamp": "2026-03-26 14:30", "sender": "PM", "target": "ALL", "subject": "Review: task title", "body": "APPROVE — ..." }
+  ]
+}
+```
+
+`GET /api/projects/:id/tasks/:taskId/report-md` response shape:
+```json
+{
+  "ok": true,
+  "content": "# Task Report: ...\n\n## PM Review\n### Round 1\n..."
 }
 ```
 
@@ -320,7 +346,7 @@ Used for saving and loading agent composition canvases (Workflow → Composition
 }
 ```
 
-`nodes` and `edges` are serialized directly as `@xyflow/react` Node/Edge arrays. Stored in DB as `nodes_json` and `edges_json` columns.
+`nodes` and `edges` are serialized as Node/Edge arrays. Stored in DB as `nodes_json` and `edges_json` columns.
 
 ### GET Response
 
@@ -486,84 +512,6 @@ The following endpoints are registered on the server but omitted from this basel
 - **Spec file:** `docs/specs/openapi.json`
 - **Serving:** The server reads this file and serves it at `GET /api/openapi.json`; Swagger UI is available at `/api/docs`.
 - **Load path:** Server code `server/modules/routes/ops/api-docs.ts` uses `docs/specs/openapi.json`.
-
----
-
-## Image Studio API
-
-Base path: `/api/image-studio`
-
-Image generation routes backed by the user's configured API providers (`api_providers` table). Providers must have `enabled = 1` and a valid encrypted API key.
-
-### Providers
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/image-studio/providers` | List all enabled providers with image-capable models |
-
-**Response:**
-```json
-{
-  "ok": true,
-  "providers": [
-    { "id": "uuid", "name": "OpenAI", "type": "openai", "base_url": "...", "models": ["dall-e-3", "dall-e-2"] }
-  ]
-}
-```
-
-Models are filtered from `models_cache` by image keywords (dall-e, flux, stable-diffusion, sdxl, etc.). Falls back to `TYPE_DEFAULT_MODELS` if cache is empty.
-
-### Generate
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/image-studio/generate` | Generate an image |
-
-**Request body:**
-```json
-{
-  "api_provider_id": "uuid",
-  "model": "dall-e-3",
-  "prompt": "a cat on a moon",
-  "width": 1024,
-  "height": 1024,
-  "quality": "standard",
-  "style": "vivid",
-  "mode": "txt2img",
-  "inputImageB64": "data:image/png;base64,...",
-  "maskB64": "data:image/png;base64,...",
-  "task_id": "task_abc"
-}
-```
-
-- `mode`: `"txt2img"` (default) | `"inpaint"`
-- `inputImageB64` / `maskB64`: required for `inpaint` mode (base64 PNG, data-URL prefix optional)
-- `task_id`: optional — links image to a task (visible in TaskCard)
-- On success, broadcasts `image_studio_done` WebSocket event
-
-**Response:** `{ ok, id, provider, model, prompt, revisedPrompt?, width, height, createdAt }`
-
-### Gallery
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/image-studio/gallery` | Paginated image list |
-| `GET` | `/api/image-studio/image/:id` | Serve image file (`?thumb=1` for thumbnail) |
-| `GET` | `/api/image-studio/task/:taskId/images` | Images linked to a specific task |
-| `DELETE` | `/api/image-studio/gallery/:id` | Delete image (file + DB row) |
-
-**Gallery query params:** `limit` (max 100), `offset`, `provider`, `search` (prompt LIKE)
-
-**Gallery item shape:**
-```json
-{
-  "id": "img_...", "provider": "OpenAI", "model": "dall-e-3",
-  "prompt": "...", "width": 1024, "height": 1024,
-  "createdAt": 1710000000000, "metadata": { "revisedPrompt": "..." }
-}
-```
-
-**Image file endpoint:** Streams the PNG/JPEG file directly with `Cache-Control: public, max-age=86400`.
 
 ---
 

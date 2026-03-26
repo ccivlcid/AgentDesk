@@ -278,11 +278,9 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openWindow,
     openCliAgentIds,
     closeCliWindow,
-    bridge.folders,
     openFolders,
     closeFolder,
     projects,
-    bridge.setFolders,
     setProjects,
     tasks,
     agents,
@@ -291,5 +289,9 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openCliWindow,
     removeFromTrash,
     setDesktopIconLayout,
+    setEditDirectiveProjectId,
+    showToast,
+    t,
+    toggleWindow,
   ]);
 }

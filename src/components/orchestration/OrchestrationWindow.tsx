@@ -21,7 +21,7 @@ export default function OrchestrationWindow() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<OrchestraTab>("timeline");
 
-  const { tasks, subtasks } = useTaskStore();
+  const { tasks } = useTaskStore();
   const { agents, departments } = useAgentStore();
   const { currentProjectId, projects } = useProjectStore();
   const { kickoffStage } = useUiStore();
@@ -82,14 +82,13 @@ export default function OrchestrationWindow() {
                 <TimelineTab
                   tasks={projectTasks}
                   agents={projectAgents}
-                  subtasks={subtasks}
-                  departments={departments}
                 />
               )}
               {activeTab === "logs" && (
                 <LogsTab
                   tasks={projectTasks}
                   agents={projectAgents}
+                  projectId={currentProjectId ?? undefined}
                 />
               )}
               {activeTab === "agents" && (
@@ -97,6 +96,7 @@ export default function OrchestrationWindow() {
                   agents={projectAgents}
                   tasks={projectTasks}
                   departments={departments}
+                  projectId={currentProjectId ?? undefined}
                 />
               )}
               {activeTab === "room" && (
@@ -104,6 +104,7 @@ export default function OrchestrationWindow() {
                   tasks={projectTasks}
                   agents={projectAgents}
                   project={currentProject}
+                  projectId={currentProjectId ?? undefined}
                 />
               )}
             </div>

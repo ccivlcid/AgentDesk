@@ -237,7 +237,7 @@ export interface WorkflowCoreExports {
     provider: string,
     model?: string,
     reasoningLevel?: string,
-    opts?: { noTools?: boolean },
+    opts?: { noTools?: boolean; maxTurns?: number },
   ) => string[];
   shouldSkipDuplicateCliOutput: (taskId: string, stream: "stdout" | "stderr", text: string) => boolean;
   clearCliOutputDedup: (taskId: string) => void;

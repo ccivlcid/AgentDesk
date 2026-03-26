@@ -223,16 +223,6 @@ export function IconProjectDesign({ color }: IconProps) {
   );
 }
 
-export function IconImageStudio({ color }: IconProps) {
-  return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <rect x="3" y="5" width="22" height="18" rx="2.5" />
-      <circle cx="9.5" cy="11" r="2" />
-      <polyline points="3,22 10,15 14,19 18,14 25,22" />
-    </svg>
-  );
-}
-
 export function IconTrash({ color }: IconProps) {
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>

@@ -10,7 +10,7 @@ export const STATUS_DOT: Record<string, { color: string; label: string }> = {
 };
 
 export const SHORTCUT_MAP: Record<string, string> = {
-  n: "new-task", t: "tasks-board",
+  n: "new-task", t: "tasks",
   a: "agents", s: "skills", m: "memory",
   r: "agent-rules", h: "hooks", ",": "settings",
 };

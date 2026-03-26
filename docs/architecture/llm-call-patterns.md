@@ -15,7 +15,7 @@ AgentDesk has two distinct LLM call categories:
 | Type | Who decides provider? | Entry point | Example |
 |------|----------------------|-------------|---------|
 | **Agent-level** | Each agent's `cli_provider` + `api_provider_id` | Task execution, direct chat | Agent runs a task, agent replies in chat |
-| **System-level** | `callLlmOneShotAuto()` auto-detects from agent configs | Kickoff, auto-assign, app-runner analysis | System generates tasks, system assigns agents |
+| **System-level** | `callLlmOneShotAuto()` auto-detects from agent configs | Kickoff, auto-assign | System generates tasks, system assigns agents |
 
 **This distinction is critical.** Agent-level calls never had the "No API provider" problem because they read each agent's own config. System-level calls had the problem because they used `resolveProvider()` which only checks the `api_providers` table.
 
@@ -83,7 +83,7 @@ runDirectReplyExecution(agent, message)
 
 ### The problem that was solved
 
-System-level calls (kickoff task creation, auto-assign, app-runner AI analysis) need to call an LLM but aren't tied to a specific agent. Previously these used `resolveProvider(db)` which only checked:
+System-level calls (kickoff task creation, auto-assign) need to call an LLM but aren't tied to a specific agent. Previously these used `resolveProvider(db)` which only checked:
 1. `api_providers` table
 2. `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` env vars
 
@@ -134,7 +134,6 @@ resolveCliProviderFromAgents(db)
 | Auto-assign | `routes/core/projects.ts` | AI agent role assignment | 2048 | 30s |
 | Kickoff task creation | `routes/core/projects/kickoff.ts` | LLM generates tasks from project goal | 4096 | 120s |
 | Add-tasks pipeline | `routes/core/projects/kickoff.ts` | Additional task generation | 4096 | 120s |
-| App Runner AI analysis | `routes/ops/app-runner.ts` | Project file scan + LLM description | 1200 | 60s |
 
 ### PM Orchestrator (special case)
 
@@ -159,7 +158,7 @@ PM orchestrator uses `callProviderCompat()` → `callLlmOneShot()` (low-level), 
 
 ┌─────────────────────────────────────────────────────────────────┐
 │                    SYSTEM-LEVEL CALLS                           │
-│  (kickoff, auto-assign, app-runner, add-tasks)                 │
+│  (kickoff, auto-assign, add-tasks)                              │
 │                                                                 │
 │  callLlmOneShotAuto({ db, ... })                               │
 │    1. agent with api_provider_id → API call                    │

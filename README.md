@@ -93,11 +93,10 @@ AgentDesk is built on the principle that developers should see exactly what thei
 <tr>
 <td valign="top" width="50%">
 
-### 💬 Multi-Agent Chat
-- Direct messages + broadcast channel
-- Telegram · Discord · Slack gateway
-- `$` prefix → directive · `!` prefix → direct agent task · `#` prefix → orchestrated task registration
+### 💬 Agent Communication
+- Slack gateway integration
 - Decision Inbox for mid-task agent requests
+- Team board (.md) for PM-agent communication
 
 </td>
 <td valign="top" width="50%">
@@ -147,7 +146,7 @@ AgentDesk is built on the principle that developers should see exactly what thei
 </table>
 
 <details>
-<summary><strong>More</strong> — extra desktops, project step, image studio, reference JPGs</summary>
+<summary><strong>More</strong> — extra desktops, project step, reference JPGs</summary>
 
 <br/>
 
@@ -156,8 +155,6 @@ AgentDesk is built on the principle that developers should see exactly what thei
 | <a href="docs/screen/widget-02.png"><img src="docs/screen/widget-02.png" width="380" alt="Widget 2"/></a> | <a href="docs/screen/widget-03.png"><img src="docs/screen/widget-03.png" width="380" alt="Widget 3"/></a> |
 | <a href="docs/screen/desktop-04.png"><img src="docs/screen/desktop-04.png" width="380" alt="Desktop 4"/></a> | <a href="docs/screen/desktop-05.png"><img src="docs/screen/desktop-05.png" width="380" alt="Desktop 5"/></a> |
 | <a href="docs/screen/desktop-06.png"><img src="docs/screen/desktop-06.png" width="380" alt="Desktop 6"/></a> | <a href="docs/screen/project-create-03.png"><img src="docs/screen/project-create-03.png" width="380" alt="Project step 3"/></a> |
-
-<p align="center"><a href="docs/screen/image-studio.png"><img src="docs/screen/image-studio.png" width="560" alt="Image Studio"/></a><br/><sub><strong>Image Studio</strong></sub></p>
 
 | | |
 |:---:|:---:|
@@ -239,7 +236,6 @@ Open **http://localhost:8800** — requires Node.js 22+, pnpm 10+.
 | Backend | Node.js · Express · tsx |
 | Database | SQLite (`better-sqlite3`) · versioned migrations |
 | Real-time | WebSocket |
-| Flow diagrams | `@xyflow/react` |
 | Testing | Vitest · Playwright |
 | Desktop | Electron (optional) |
 

@@ -20,34 +20,6 @@ export async function kickoffProject(
   }) as Promise<KickoffResult>;
 }
 
-export interface ResumeResult {
-  status: "ok" | "nothing_to_resume";
-  runId?: string;
-  taskId?: string;
-  title?: string;
-  message?: string;
-}
-
-export async function resumeProject(projectId: string): Promise<ResumeResult> {
-  return post(`/api/projects/${projectId}/resume`) as Promise<ResumeResult>;
-}
-
-export interface AddTasksResult {
-  status: "ok";
-  taskCount: number;
-}
-
-export async function addProjectTasks(
-  projectId: string,
-  directive: string,
-  attachedFile?: { name: string; content: string },
-): Promise<AddTasksResult> {
-  return post(`/api/projects/${projectId}/add-tasks`, {
-    additional_directive: directive,
-    attached_file: attachedFile ?? undefined,
-  }) as Promise<AddTasksResult>;
-}
-
 export interface AutoAssignResult {
   ok: boolean;
   assignments: { role: string; agent_id: string }[];
@@ -62,17 +34,6 @@ export async function autoAssignAgents(params: {
   return post("/api/projects/auto-assign-agents", params) as Promise<AutoAssignResult>;
 }
 
-export async function replyClarification(
-  projectId: string,
-  clarificationId: string,
-  answer: string,
-): Promise<void> {
-  await post(`/api/projects/${projectId}/clarification-reply`, {
-    clarification_id: clarificationId,
-    answer,
-  });
-}
-
 // ── Task Debug APIs ──
 
 export async function fetchTaskPrompt(taskId: string): Promise<string | null> {
@@ -80,6 +41,3 @@ export async function fetchTaskPrompt(taskId: string): Promise<string | null> {
   return result.prompt;
 }
 
-export async function retryTask(taskId: string): Promise<void> {
-  await post(`/api/tasks/${taskId}/retry`);
-}

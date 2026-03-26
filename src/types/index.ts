@@ -349,11 +349,6 @@ export interface ProjectSource {
   checked_deliverables: Array<{ key: string; label: string; note: string | null }>;
 }
 
-export interface ProjectSourcesResponse {
-  ok: boolean;
-  sources: ProjectSource[];
-}
-
 export interface ProjectDeliverableItem {
   key: string;
   label: string;
@@ -361,11 +356,6 @@ export interface ProjectDeliverableItem {
   checked: boolean;
   checked_at: number | null;
   note: string | null;
-}
-
-export interface ProjectDeliverablesResponse {
-  ok: boolean;
-  items: ProjectDeliverableItem[];
 }
 
 export interface ProjectFolder {
@@ -571,8 +561,6 @@ export interface CliModelInfo {
   defaultReasoningLevel?: string;
 }
 
-export type CliModelsResponse = Record<string, CliModelInfo[]>;
-
 // Settings
 export interface ProviderModelConfig {
   model: string;
@@ -589,13 +577,7 @@ export interface RoomTheme {
 }
 
 export const MESSENGER_CHANNELS = [
-  "telegram",
-  "whatsapp",
-  "discord",
-  "googlechat",
   "slack",
-  "signal",
-  "imessage",
 ] as const;
 
 export type MessengerChannelType = (typeof MESSENGER_CHANNELS)[number];
@@ -731,12 +713,6 @@ export const DEFAULT_SETTINGS: CompanySettings = {
     antigravity: { model: "google/antigravity-gemini-3-pro" },
   },
   messengerChannels: {
-    telegram: { token: "", sessions: [], receiveEnabled: true },
-    whatsapp: { token: "", sessions: [], receiveEnabled: false },
-    discord: { token: "", sessions: [], receiveEnabled: false },
-    googlechat: { token: "", sessions: [], receiveEnabled: false },
     slack: { token: "", sessions: [], receiveEnabled: false },
-    signal: { token: "", sessions: [], receiveEnabled: false },
-    imessage: { token: "", sessions: [], receiveEnabled: false },
   },
 };

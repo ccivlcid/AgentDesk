@@ -28,13 +28,9 @@ export type WindowType =
 export type View =
   | "agents"
   | "heartbeat"
-  | "agent-repl"
   | "project-types"
   | "cli-usage"
   | "tasks"
-  | "tasks-board"
-  | "tasks-scheduled"
-  | "tasks-deliverables"
   | "skills"
   | "agent-rules"
   | "memory"

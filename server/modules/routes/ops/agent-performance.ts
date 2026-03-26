@@ -31,6 +31,14 @@ interface StatusRow {
   cnt: number;
 }
 
+interface FitnessRow {
+  agent_id: string;
+  task_type: string;
+  success_count: number;
+  failure_count: number;
+  avg_duration_ms: number;
+}
+
 export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
   /**
    * GET /api/agents/performance
@@ -96,6 +104,18 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
       `).all(...paramsWithSince),
       );
 
+      // task_type fitness per agent
+      let fitnessRows: FitnessRow[] = [];
+      try {
+        fitnessRows = castSqliteRows<FitnessRow>(
+          db.prepare(`
+          SELECT agent_id, task_type, success_count, failure_count, avg_duration_ms
+          FROM agent_task_fitness
+          ORDER BY agent_id, task_type
+        `).all(),
+        );
+      } catch { /* table may not exist */ }
+
       // Build lookup maps
       const statusMap: Record<string, Record<string, number>> = {};
       for (const row of statusRows) {
@@ -107,6 +127,17 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
       for (const row of dailyRows) {
         if (!dailyMap[row.agent_id]) dailyMap[row.agent_id] = {};
         dailyMap[row.agent_id][row.day] = row.cnt;
+      }
+
+      const fitnessMap: Record<string, Array<{ task_type: string; success_rate: number; total: number }>> = {};
+      for (const row of fitnessRows) {
+        if (!fitnessMap[row.agent_id]) fitnessMap[row.agent_id] = [];
+        const total = (row.success_count ?? 0) + (row.failure_count ?? 0);
+        fitnessMap[row.agent_id].push({
+          task_type: row.task_type,
+          success_rate: total > 0 ? Math.round(((row.success_count ?? 0) / total) * 100) : 0,
+          total,
+        });
       }
 
       // Generate day labels
@@ -137,6 +168,7 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
           success_rate: successRate,
           avg_duration_ms: a.avg_duration_ms ? Math.round(a.avg_duration_ms) : null,
           status_breakdown: statusMap[a.agent_id] ?? {},
+          fitness_by_type: fitnessMap[a.agent_id] ?? [],
           trend,
           day_labels: dayLabels,
         };

@@ -107,7 +107,7 @@ export default function XTerminal({ sessionId, cwd, taskId, initialCommand, onEx
     const cols = term?.cols ?? 120;
     const rows = term?.rows ?? 30;
     sendPty("pty_create", { cwd, cols, rows, ...(taskId ? { taskId } : {}) });
-  }, [connected, sendPty, cwd]);
+  }, [connected, sendPty, cwd, taskId]);
 
   // ── WebSocket 메시지 핸들러 ────────────────────────────────────────────────
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function XTerminal({ sessionId, cwd, taskId, initialCommand, onEx
     });
 
     return () => { offReady(); offOutput(); offExit(); };
-  }, [on, sessionId, onExit]);
+  }, [on, sessionId, onExit, sendPty]);
 
   // initialCommand가 PTY ready 이후에 늦게 세팅되는 경우 처리
   // (예: agents가 비동기 로드된 후 initialCommand가 계산될 때)

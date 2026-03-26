@@ -349,7 +349,6 @@ src/
 │   │                               LibraryWindow, SettingsWindow,
 │   │                               AgentManagerWindow, FolderWindow, CliWindow (Agent CLI)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
-│   ├── performance/             ← AgentPerformanceDashboard (Library → Performance tab)
 │   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
@@ -456,7 +455,6 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 ```
 
 ### App window keyboard shortcuts
-After updating the shortcut map in `Desktop.tsx`, also add the entry to `KeyboardShortcutsGuide.tsx`.
 Current shortcuts:
 
 | Shortcut | Action |
@@ -521,7 +519,6 @@ When adding a new field to the task schema:
 |------|------------|
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
 | State management | Zustand |
-| Flow diagrams | `@xyflow/react` v12 |
 | Backend | Node.js + Express + tsx (TypeScript direct execution) |
 | DB | SQLite (`better-sqlite3`) + versioned migrations |
 | Logging | pino |
@@ -539,7 +536,7 @@ When adding a new field to the task schema:
 |----------|-------------|
 | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | System terminology — DB/UI mapping, domain concepts |
 | [`docs/progress.md`](docs/progress.md) | Development progress — current + completed phases |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.4) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.5) |
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DB schema ER diagram + state machines |
 | [`docs/architecture/llm-call-patterns.md`](docs/architecture/llm-call-patterns.md) | LLM call patterns — all prompts in .md |
 | [`docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution branching |

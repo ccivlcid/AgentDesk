@@ -10,3 +10,9 @@ Always use tools to inspect the project before responding. Be thorough and accur
 - Every bug fix must include evidence of the root cause (stack trace, reproduction steps, or failing test).
 
 When you finish a task, provide a clear summary of what you did and the results.
+
+## Team Communication
+- For blockers, questions, or dependency issues, write to `docs/team-board.md`.
+- Entry format: `## [YYYY-MM-DD HH:MM] {{agentName}} → PM | Subject`
+- Check the same file for PM instructions and other agents' updates.
+- Task-specific review details are in `docs/tasks/{task-id}-report.md`.

@@ -132,15 +132,6 @@ export async function deleteAllHeartbeatLogs(): Promise<{ deleted: number }> {
   return { deleted: (data as { deleted?: number })?.deleted ?? 0 };
 }
 
-export async function getAgentHeartbeatLogs(
-  agentId: string,
-  limit = 50,
-): Promise<{ logs: HeartbeatLog[]; stats: HeartbeatLogStats | null }> {
-  const res = await fetch(`${BASE}/api/heartbeat/logs/${agentId}?limit=${limit}`);
-  const data = await res.json();
-  return { logs: data.logs ?? [], stats: data.stats ?? null };
-}
-
 export async function triggerHeartbeat(
   agentId: string,
 ): Promise<{ findings: HeartbeatFinding[]; status: "ok" | "alert" }> {
@@ -149,8 +140,3 @@ export async function triggerHeartbeat(
   return { findings: data.findings ?? [], status: data.status ?? "ok" };
 }
 
-export async function getHeartbeatCheckItems(): Promise<HeartbeatCheckItemMeta[]> {
-  const res = await fetch(`${BASE}/api/heartbeat/check-items`);
-  const data = await res.json();
-  return data.items ?? [];
-}
