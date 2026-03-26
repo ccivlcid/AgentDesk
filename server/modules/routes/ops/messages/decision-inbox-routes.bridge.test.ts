@@ -111,9 +111,11 @@ describe("decision inbox bridge characterization", () => {
     expect(sendMessengerMessageMock).not.toHaveBeenCalled();
   });
 
-  it("explicit decision marker without pending decision returns 404 and sends warning message", async () => {
+  it("explicit decision marker without valid messenger channel is not handled (messenger removed)", async () => {
     const { bridge } = createRouteBridge();
 
+    // isMessengerChannel() always returns false (messenger system removed),
+    // so no route can be resolved and the reply is not handled.
     const result = await bridge.tryHandleInboxDecisionReply({
       text: "[DECISION:abc123] 승인",
       channel: "slack",
@@ -121,15 +123,10 @@ describe("decision inbox bridge characterization", () => {
     });
 
     expect(result).toEqual({
-      handled: true,
-      status: 404,
-      payload: { error: "decision_not_found_for_route" },
+      handled: false,
+      status: 200,
+      payload: {},
     });
-    expect(sendMessengerMessageMock).toHaveBeenCalledTimes(1);
-    expect(sendMessengerMessageMock).toHaveBeenCalledWith({
-      channel: "slack",
-      targetId: "-100123",
-      text: expect.stringContaining("no pending decision request"),
-    });
+    expect(sendMessengerMessageMock).not.toHaveBeenCalled();
   });
 });

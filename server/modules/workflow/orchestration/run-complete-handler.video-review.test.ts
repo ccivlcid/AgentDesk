@@ -46,6 +46,14 @@ function createDb(): DatabaseSync {
       stats_tasks_done INTEGER DEFAULT 0,
       stats_xp INTEGER DEFAULT 0
     );
+
+    CREATE TABLE task_dependencies (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL,
+      depends_on_task_id TEXT NOT NULL,
+      gate_condition TEXT,
+      gate_branch TEXT CHECK(gate_branch IN ('true','false'))
+    );
   `);
   return db;
 }
