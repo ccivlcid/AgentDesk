@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Task, Agent, TaskExecutionEvent } from "../../../types";
+import type { Task, Agent, TaskExecutionEvent, TaskLog } from "../../../types";
 import { getTaskProgress } from "../task-progress";
-import { getTaskExecutionEvents } from "../../../api/organization-projects";
+import { getTaskExecutionEvents, getTask } from "../../../api/organization-projects";
 import { getTaskReportDetail } from "../../../api/providers-reports-github";
 import type { TaskReportDetail } from "../../../api/providers-reports-github";
+import { getTaskDiff } from "../../../api/workflow-skills-subtasks";
+import type { TaskDiffResult } from "../../../api/workflow-skills-subtasks";
 
 const mono = "var(--th-font-mono)";
 
@@ -218,7 +220,10 @@ function TaskCard({ task, label, isSelected, onClick }: {
 function TaskInspector({ taskId }: { taskId: string }) {
   const [events, setEvents] = useState<TaskExecutionEvent[]>([]);
   const [report, setReport] = useState<TaskReportDetail | null>(null);
+  const [diffResult, setDiffResult] = useState<TaskDiffResult | null>(null);
+  const [taskLogs, setTaskLogs] = useState<TaskLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState<"files" | "cli" | "logic" | "events">("files");
 
   useEffect(() => {
     let cancelled = false;
@@ -227,10 +232,17 @@ function TaskInspector({ taskId }: { taskId: string }) {
     Promise.allSettled([
       getTaskExecutionEvents(taskId, 10),
       getTaskReportDetail(taskId).catch(() => null),
-    ]).then(([eventsResult, reportResult]) => {
+      getTaskDiff(taskId).catch(() => null),
+      getTask(taskId).catch(() => null),
+    ]).then(([eventsResult, reportResult, diffRes, taskRes]) => {
       if (cancelled) return;
       if (eventsResult.status === "fulfilled") setEvents(eventsResult.value.events);
       if (reportResult.status === "fulfilled" && reportResult.value) setReport(reportResult.value);
+      if (diffRes.status === "fulfilled" && diffRes.value) setDiffResult(diffRes.value as TaskDiffResult);
+      if (taskRes.status === "fulfilled" && taskRes.value) {
+        const detail = taskRes.value as { logs: TaskLog[] };
+        setTaskLogs(detail.logs ?? []);
+      }
       setLoading(false);
     });
 
@@ -248,7 +260,19 @@ function TaskInspector({ taskId }: { taskId: string }) {
   const pmEvents = events.filter((e) => e.event_type === "pm_review" || e.event_type === "state_change");
   const planningContent = report?.planning_summary?.content;
 
-  if (!pmEvents.length && !planningContent) {
+  // Parse diff stat lines into structured data
+  const fileChanges = parseDiffStat(diffResult?.stat);
+
+  // CLI history from task_logs
+  const cliLogs = taskLogs.filter((l) => l.kind === "cli_output" || l.kind === "system").slice(0, 20);
+
+  // Orchestration logic from PM oversight logs
+  const orchestrationLogs = taskLogs.filter((l) => l.kind === "pm_oversight");
+
+  const hasAnyData = fileChanges.length > 0 || cliLogs.length > 0 || orchestrationLogs.length > 0
+    || pmEvents.length > 0 || !!planningContent;
+
+  if (!hasAnyData) {
     return (
       <div style={{ padding: "8px 14px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", marginBottom: 6 }}>
         No execution data yet.
@@ -256,47 +280,229 @@ function TaskInspector({ taskId }: { taskId: string }) {
     );
   }
 
+  const tabs: { key: typeof activeSection; label: string; count: number }[] = [
+    { key: "files", label: "FILES", count: fileChanges.length },
+    { key: "cli", label: "CLI", count: cliLogs.length },
+    { key: "logic", label: "LOGIC", count: orchestrationLogs.length },
+    { key: "events", label: "EVENTS", count: pmEvents.length },
+  ];
+
   return (
     <div style={{
       border: "1px solid var(--th-border)",
       borderTop: "none",
       background: "var(--th-bg-primary)",
-      padding: "10px 14px",
       marginBottom: 6,
-      maxHeight: 240,
-      overflowY: "auto",
     }}>
-      {/* PM Review / Report summary */}
-      {planningContent && (
-        <div style={{ marginBottom: pmEvents.length ? 10 : 0 }}>
-          <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-accent)", letterSpacing: 0.5, marginBottom: 4 }}>
-            REPORT
+      {/* Section tabs */}
+      <div style={{
+        display: "flex",
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-surface)",
+      }}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveSection(tab.key)}
+            style={{
+              flex: 1,
+              padding: "5px 8px",
+              fontFamily: mono,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 0.5,
+              color: activeSection === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              background: activeSection === tab.key ? "var(--th-bg-primary)" : "transparent",
+              border: "none",
+              borderBottom: activeSection === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
+              cursor: "pointer",
+            }}
+          >
+            {tab.label} {tab.count > 0 && <span style={{ color: "var(--th-text-code)" }}>({tab.count})</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Section content */}
+      <div style={{ padding: "10px 14px", maxHeight: 220, overflowY: "auto" }}>
+        {activeSection === "files" && (
+          <FilesChangedSection files={fileChanges} />
+        )}
+        {activeSection === "cli" && (
+          <CliHistorySection logs={cliLogs} />
+        )}
+        {activeSection === "logic" && (
+          <OrchestrationLogicSection logs={orchestrationLogs} planningContent={planningContent} />
+        )}
+        {activeSection === "events" && (
+          <EventsSection events={pmEvents} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── FILES CHANGED section ── */
+
+interface DiffFileStat {
+  path: string;
+  added: number;
+  removed: number;
+  isNew: boolean;
+}
+
+function parseDiffStat(stat: string | undefined | null): DiffFileStat[] {
+  if (!stat) return [];
+  const lines = stat.split("\n").filter((l) => l.includes("|"));
+  return lines.map((line) => {
+    const match = line.match(/^\s*(.+?)\s*\|\s*(\d+)\s*([+-]+)?/);
+    if (!match) return null;
+    const filePath = match[1].trim();
+    const plusCount = (match[3] ?? "").split("").filter((c) => c === "+").length;
+    const minusCount = (match[3] ?? "").split("").filter((c) => c === "-").length;
+    return {
+      path: filePath,
+      added: plusCount,
+      removed: minusCount,
+      isNew: minusCount === 0 && plusCount > 0,
+    };
+  }).filter((x): x is DiffFileStat => x !== null);
+}
+
+function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
+  if (files.length === 0) {
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No file changes detected.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-accent)", letterSpacing: 0.5, marginBottom: 6 }}>
+        FILES CHANGED
+      </div>
+      {files.map((f) => (
+        <div key={f.path} style={{ display: "flex", alignItems: "center", gap: 8, padding: "2px 0", fontFamily: mono, fontSize: 11 }}>
+          <span style={{ display: "flex", alignItems: "center", color: f.isNew ? "var(--th-text-code)" : "var(--th-accent)", flexShrink: 0 }}>
+            {f.isNew ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5" /></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" /></svg>
+            )}
+          </span>
+          <span style={{ color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {f.path}
+          </span>
+          <span style={{ color: "var(--th-text-code)", flexShrink: 0 }}>+{f.added}</span>
+          <span style={{ color: "var(--th-error, #ef4444)", flexShrink: 0 }}>-{f.removed}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── CLI HISTORY section ── */
+
+function CliHistorySection({ logs }: { logs: TaskLog[] }) {
+  if (logs.length === 0) {
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No CLI output recorded.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-accent)", letterSpacing: 0.5, marginBottom: 6 }}>
+        CLI HISTORY
+      </div>
+      {logs.map((log) => {
+        const ts = new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const isCmd = log.message.startsWith("$") || log.message.startsWith(">");
+        return (
+          <div key={log.id} style={{ padding: "2px 0", fontFamily: mono, fontSize: 11, display: "flex", gap: 6 }}>
+            <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 52 }}>{ts}</span>
+            <span style={{
+              color: isCmd ? "var(--th-accent)" : "var(--th-text-secondary)",
+              fontWeight: isCmd ? 600 : 400,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+              flex: 1,
+            }}>
+              {log.message.length > 200 ? `${log.message.slice(0, 197)}...` : log.message}
+            </span>
           </div>
-          <div style={{
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── ORCHESTRATION LOGIC section ── */
+
+function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[]; planningContent?: string | null }) {
+  const hasContent = logs.length > 0 || !!planningContent;
+  if (!hasContent) {
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No orchestration data.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-accent)", letterSpacing: 0.5, marginBottom: 6 }}>
+        ORCHESTRATION LOGIC
+      </div>
+
+      {/* PM oversight logs */}
+      {logs.map((log) => {
+        const ts = new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return (
+          <div key={log.id} style={{
+            padding: "4px 0",
             fontFamily: mono,
             fontSize: 11,
             color: "var(--th-text-secondary)",
-            lineHeight: 1.5,
-            whiteSpace: "pre-wrap",
-            maxHeight: 120,
-            overflowY: "auto",
+            borderLeft: "2px solid var(--th-accent)",
+            paddingLeft: 10,
+            marginBottom: 4,
           }}>
-            {planningContent.length > 500 ? `${planningContent.slice(0, 497)}...` : planningContent}
+            <span style={{ color: "var(--th-text-muted)", marginRight: 6 }}>{ts}</span>
+            {log.message.length > 300 ? `${log.message.slice(0, 297)}...` : log.message}
           </div>
-        </div>
-      )}
+        );
+      })}
 
-      {/* Execution events */}
-      {pmEvents.length > 0 && (
-        <div>
-          <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-code)", letterSpacing: 0.5, marginBottom: 4 }}>
-            EVENTS ({pmEvents.length})
+      {/* Planning summary */}
+      {planningContent && (
+        <div style={{
+          marginTop: logs.length > 0 ? 8 : 0,
+          fontFamily: mono,
+          fontSize: 11,
+          color: "var(--th-text-secondary)",
+          lineHeight: 1.5,
+          whiteSpace: "pre-wrap",
+          borderLeft: "2px solid var(--th-text-code)",
+          paddingLeft: 10,
+        }}>
+          <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-code)", marginBottom: 4 }}>
+            PLANNING SUMMARY
           </div>
-          {pmEvents.map((evt) => (
-            <ExecutionEventRow key={evt.id} event={evt} />
-          ))}
+          {planningContent.length > 500 ? `${planningContent.slice(0, 497)}...` : planningContent}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── EVENTS section ── */
+
+function EventsSection({ events }: { events: TaskExecutionEvent[] }) {
+  if (events.length === 0) {
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No events recorded.</div>;
+  }
+
+  return (
+    <div>
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-code)", letterSpacing: 0.5, marginBottom: 4 }}>
+        EVENTS ({events.length})
+      </div>
+      {events.map((evt) => (
+        <ExecutionEventRow key={evt.id} event={evt} />
+      ))}
     </div>
   );
 }

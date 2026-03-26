@@ -208,6 +208,7 @@
 | Priority | Item | Status |
 |----------|------|--------|
 | ~~**P0**~~ | ~~**Orchestration Timeline Phase 2-5**~~ | **Done** — real progress bars (`execution_state`), fitness data, TOKENS/BUDGET API, Task Inspector (click-to-expand), team-board.md feed in RoomTab, execution events in LogsTab |
+| ~~**P0**~~ | ~~**Orchestration Timeline Spec Alignment**~~ | **Done** — Timeline: FILES CHANGED + CLI HISTORY + ORCHESTRATION LOGIC in Task Inspector; Logs: ERROR_FIRST_MODE + LEVEL filter + agent error badges + TOKEN_THROUGHPUT/ERR_RATE metrics; Agents: ACTION menu + task_type fitness breakdown + real metrics bar; Room: message type styling + step progress tree + ACTIVE_DEPENDENCIES |
 | ~~P1~~ | ~~Execution path consistency~~ | **Done** — 10/10 phases: `resolveProviderForAgent()` unification, PM review parsing + structured logs, context expansion, max-turns fix, Task Inspector, shared .md team communication |
 | ~~P1~~ | ~~Document drift prevention~~ | **Done** — `lint:docs` 19/19 pass, API v1.6.5, all version refs synced |
 | P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |

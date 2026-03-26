@@ -230,6 +230,12 @@ export async function getAgentPerformance(id: string): Promise<AgentPerformanceD
   return request<AgentPerformanceData>(`/api/agents/${id}/performance`);
 }
 
+export interface AgentFitnessByType {
+  task_type: string;
+  success_rate: number;
+  total: number;
+}
+
 export interface AgentPerformanceEntry {
   agent_id: string;
   agent_name: string;
@@ -242,6 +248,7 @@ export interface AgentPerformanceEntry {
   planned: number;
   success_rate: number | null;
   avg_duration_ms: number | null;
+  fitness_by_type?: AgentFitnessByType[];
 }
 
 export async function getAgentsPerformance(projectId?: string): Promise<AgentPerformanceEntry[]> {
