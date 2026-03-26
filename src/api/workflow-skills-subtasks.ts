@@ -324,88 +324,9 @@ export type MessengerRuntimeSession = {
   displayName: string;
 };
 
-export type TelegramReceiverStatus = {
-  running: boolean;
-  configured: boolean;
-  receiveEnabled: boolean;
-  enabled: boolean;
-  allowedChatCount: number;
-  nextOffset: number;
-  lastPollAt: number | null;
-  lastForwardAt: number | null;
-  lastUpdateId: number | null;
-  lastError: string | null;
-};
-
-export type DiscordReceiverStatus = {
-  running: boolean;
-  configured: boolean;
-  enabled: boolean;
-  routeCount: number;
-  nextCursorCount: number;
-  lastPollAt: number | null;
-  lastForwardAt: number | null;
-  lastMessageId: string | null;
-  lastError: string | null;
-};
-
-export type DiscordDiscoverableChannel = {
-  id: string;
-  name: string;
-  guildId: string;
-  guildName: string;
-  type: number;
-};
-
 export async function getMessengerRuntimeSessions(): Promise<MessengerRuntimeSession[]> {
   const data = await request<{ sessions?: MessengerRuntimeSession[] }>("/api/messenger/sessions");
   return data.sessions ?? [];
-}
-
-export async function getTelegramReceiverStatus(): Promise<TelegramReceiverStatus> {
-  const data = await request<{ status?: TelegramReceiverStatus }>("/api/messenger/receiver/telegram");
-  return (
-    data.status ?? {
-      running: false,
-      configured: false,
-      receiveEnabled: false,
-      enabled: false,
-      allowedChatCount: 0,
-      nextOffset: 0,
-      lastPollAt: null,
-      lastForwardAt: null,
-      lastUpdateId: null,
-      lastError: "status_unavailable",
-    }
-  );
-}
-
-export async function getDiscordReceiverStatus(): Promise<DiscordReceiverStatus> {
-  const data = await request<{ status?: DiscordReceiverStatus }>("/api/messenger/receiver/discord");
-  return (
-    data.status ?? {
-      running: false,
-      configured: false,
-      enabled: false,
-      routeCount: 0,
-      nextCursorCount: 0,
-      lastPollAt: null,
-      lastForwardAt: null,
-      lastMessageId: null,
-      lastError: "status_unavailable",
-    }
-  );
-}
-
-export async function listDiscordChannelsByToken(token: string): Promise<DiscordDiscoverableChannel[]> {
-  const normalizedToken = token.trim();
-  if (!normalizedToken) {
-    return [];
-  }
-  const data = await post<{ channels?: DiscordDiscoverableChannel[] }>("/api/messenger/discord/channels", {
-    token: normalizedToken,
-  });
-  return data.channels ?? [];
 }
 
 export async function sendMessengerRuntimeMessage(input: {

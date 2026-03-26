@@ -111,7 +111,7 @@ The frontend client wraps non-2xx responses with `ApiRequestError` (`status`, `c
 | POST | `/api/decision-inbox/:id/reply` | Decision reply |
 
 **Messenger Channels:** The system supports bridging decisions and directives to external messenger channels.
-Supported channel types: `telegram`, `whatsapp`, `discord`, `googlechat`, `slack`, `signal`, `imessage`.
+Supported channel type: `slack`.
 Channel configuration is stored in `CompanySettings.messengerChannels` as `MessengerChannelsConfig`.
 
 ### Skills / Providers / OAuth

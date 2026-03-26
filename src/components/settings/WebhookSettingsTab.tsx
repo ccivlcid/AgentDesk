@@ -97,7 +97,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
             // webhook integration
           </div>
           <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {tr("태스크 이벤트를 Slack, Discord 등 외부 채널로 전송", "Send task events to Slack, Discord, or any HTTP endpoint", "タスクイベントをSlack、Discordなど外部チャンネルに送信", "将任务事件发送到Slack、Discord等外部频道")}
+            {tr("태스크 이벤트를 Slack 등 외부 채널로 전송", "Send task events to Slack or any HTTP endpoint", "タスクイベントをSlackなど外部チャンネルに送信", "将任务事件发送到Slack等外部频道")}
           </p>
         </div>
         <button

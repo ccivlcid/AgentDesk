@@ -182,15 +182,15 @@ const guides: Record<View, ScreenGuideEntry> = {
   settings: {
     title: { ko: "설정", en: "Settings", ja: "設定", zh: "设置" },
     description: {
-      ko: "API 프로바이더, OAuth, 메신저 게이트웨이, 데이터, 카테고리 등 앱 설정을 변경합니다.",
-      en: "Change app settings: API providers, OAuth, messenger gateway, data, categories, etc.",
-      ja: "APIプロバイダー、OAuth、メッセンジャーゲートウェイ、データ、カテゴリなどのアプリ設定を変更。",
-      zh: "修改应用设置：API 提供商、OAuth、消息网关、数据、类别等。",
+      ko: "API 프로바이더, OAuth, 웹훅, 데이터, 카테고리 등 앱 설정을 변경합니다.",
+      en: "Change app settings: API providers, OAuth, webhooks, data, categories, etc.",
+      ja: "APIプロバイダー、OAuth、Webhook、データ、カテゴリなどのアプリ設定を変更。",
+      zh: "修改应用设置：API 提供商、OAuth、Webhook、数据、类别等。",
     },
     tips: [
       { ko: "API 프로바이더에서 Claude·OpenAI 등 키 설정", en: "Set API keys for Claude, OpenAI, etc. in API providers", ja: "APIプロバイダーでClaude・OpenAIなどのキーを設定", zh: "在 API 提供商中设置 Claude、OpenAI 等密钥" },
       { ko: "OAuth 탭에서 GitHub Copilot 등 연동", en: "Connect GitHub Copilot etc. in OAuth tab", ja: "OAuthタブでGitHub Copilotなどを連携", zh: "在 OAuth 选项卡中连接 GitHub Copilot 等" },
-      { ko: "게이트웨이에서 Telegram·Discord 채널 설정", en: "Configure Telegram/Discord channels in Gateway", ja: "ゲートウェイでTelegram・Discordチャンネルを設定", zh: "在网关中配置 Telegram、Discord 频道" },
+      { ko: "게이트웨이에서 Slack 채널 설정", en: "Configure Slack channels in Gateway", ja: "ゲートウェイでSlackチャンネルを設定", zh: "在网关中配置 Slack 频道" },
     ],
   },
   library: {

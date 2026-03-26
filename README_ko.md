@@ -93,11 +93,10 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 <tr>
 <td valign="top" width="50%">
 
-### 💬 멀티 에이전트 채팅
-- 개별 DM + 전체 브로드캐스트 채널
-- Telegram · Discord · Slack 게이트웨이 연동
-- `$` 접두사 → 디렉티브 · `!` 접두사 → 태스크 생성
+### 💬 에이전트 커뮤니케이션
+- Slack 게이트웨이 연동
 - Decision Inbox: 태스크 중 의사결정 요청 전달
+- Team board (.md) PM-에이전트 커뮤니케이션
 
 </td>
 <td valign="top" width="50%">

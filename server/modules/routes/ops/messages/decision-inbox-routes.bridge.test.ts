@@ -82,7 +82,7 @@ describe("decision inbox bridge characterization", () => {
 
     const result = await bridge.tryHandleInboxDecisionReply({
       text: "hello there",
-      channel: "telegram",
+      channel: "slack",
       targetId: "-100123",
     });
 
@@ -99,7 +99,7 @@ describe("decision inbox bridge characterization", () => {
 
     const result = await bridge.tryHandleInboxDecisionReply({
       text: "1",
-      channel: "telegram",
+      channel: "slack",
       targetId: "-100123",
     });
 
@@ -116,7 +116,7 @@ describe("decision inbox bridge characterization", () => {
 
     const result = await bridge.tryHandleInboxDecisionReply({
       text: "[DECISION:abc123] 승인",
-      channel: "telegram",
+      channel: "slack",
       targetId: "-100123",
     });
 
@@ -127,7 +127,7 @@ describe("decision inbox bridge characterization", () => {
     });
     expect(sendMessengerMessageMock).toHaveBeenCalledTimes(1);
     expect(sendMessengerMessageMock).toHaveBeenCalledWith({
-      channel: "telegram",
+      channel: "slack",
       targetId: "-100123",
       text: expect.stringContaining("no pending decision request"),
     });

@@ -1,6 +1,5 @@
 import type { ResolveProjectPathInput, RuntimeContext, RouteCollabExports } from "../../types/runtime-context.ts";
 import { createAnnouncementReplyScheduler } from "./collab/announcement-response.ts";
-import { createChatReplyGenerator } from "./collab/chat-response.ts";
 import { initializeCollabCoordination } from "./collab/coordination.ts";
 import { createDirectChatHandlers, type AgentRow } from "./collab/direct-chat.ts";
 import { initializeCollabLanguagePolicy } from "./collab/language-policy.ts";
@@ -106,19 +105,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     getHandleTaskDelegation: () => taskDelegationRef.handle!,
   });
 
-  const { generateChatReply } = createChatReplyGenerator({
-    db,
-    resolveLang,
-    getDeptName,
-    getRoleLabel,
-    pickRandom,
-    getFlairs,
-    classifyIntent,
-    l,
-    pickL,
-  });
-
-  const { generateAnnouncementReply, scheduleAnnouncementReplies } = createAnnouncementReplyScheduler({
+  const { scheduleAnnouncementReplies } = createAnnouncementReplyScheduler({
     db,
     resolveLang,
     getDeptName,
@@ -127,8 +114,6 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     pickL,
     sendAgentMessage,
   });
-
-  Object.assign(__ctx, { generateChatReply, generateAnnouncementReply });
 
   const { normalizeTextField, resolveProjectFromOptions, buildRoundGoal } = initializeProjectResolution({ db });
 

@@ -175,10 +175,6 @@ interface UiStore {
   settings: CompanySettings;
   oauthResult: OAuthCallbackResult | null;
   showAgentStatus: boolean;
-  showGroupChat: boolean;
-  groupChatInitialAgentIds: string[];
-  lastGroupRoomId: string | null;
-  lastGroupAgentIds: string[];
   decisionInboxLoading: boolean;
   decisionReplyBusyKey: string | null;
   // ── Agent Runtime 상태 ──────────────────────────────────────────
@@ -204,9 +200,6 @@ interface UiStore {
   setSettings: (a: SA<CompanySettings>) => void;
   setOauthResult: (a: SA<OAuthCallbackResult | null>) => void;
   setShowAgentStatus: (a: SA<boolean>) => void;
-  setShowGroupChat: (a: SA<boolean>) => void;
-  setGroupChatInitialAgentIds: (a: SA<string[]>) => void;
-  setLastGroupRoom: (roomId: string | null, agentIds: string[]) => void;
   setDecisionInboxLoading: (a: SA<boolean>) => void;
   setDecisionReplyBusyKey: (a: SA<string | null>) => void;
   setMobileNavOpen: (a: SA<boolean>) => void;
@@ -409,10 +402,6 @@ export const useUiStore = create<UiStore>()((set) => ({
   settings: mergeSettingsWithDefaults({ language: detectBrowserLanguage() }),
   oauthResult: null,
   showAgentStatus: false,
-  showGroupChat: false,
-  groupChatInitialAgentIds: [],
-  lastGroupRoomId: null,
-  lastGroupAgentIds: [],
   decisionInboxLoading: false,
   decisionReplyBusyKey: null,
   runtimeStatuses: new Map<string, { status: string; runId?: string; agentId?: string; inputTokens?: number; outputTokens?: number; toolCalls?: number }>(),
@@ -444,9 +433,6 @@ export const useUiStore = create<UiStore>()((set) => ({
   setSettings: (a) => set((s) => ({ settings: apply(s.settings, a) })),
   setOauthResult: (a) => set((s) => ({ oauthResult: apply(s.oauthResult, a) })),
   setShowAgentStatus: (a) => set((s) => ({ showAgentStatus: apply(s.showAgentStatus, a) })),
-  setShowGroupChat: (a) => set((s) => ({ showGroupChat: apply(s.showGroupChat, a) })),
-  setGroupChatInitialAgentIds: (a) => set((s) => ({ groupChatInitialAgentIds: apply(s.groupChatInitialAgentIds, a) })),
-  setLastGroupRoom: (roomId: string | null, agentIds: string[]) => set({ lastGroupRoomId: roomId, lastGroupAgentIds: agentIds }),
   setDecisionInboxLoading: (a) => set((s) => ({ decisionInboxLoading: apply(s.decisionInboxLoading, a) })),
   setDecisionReplyBusyKey: (a) => set((s) => ({ decisionReplyBusyKey: apply(s.decisionReplyBusyKey, a) })),
   setMobileNavOpen: (a) => set((s) => ({ mobileNavOpen: apply(s.mobileNavOpen, a) })),

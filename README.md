@@ -93,11 +93,10 @@ AgentDesk is built on the principle that developers should see exactly what thei
 <tr>
 <td valign="top" width="50%">
 
-### 💬 Multi-Agent Chat
-- Direct messages + broadcast channel
-- Telegram · Discord · Slack gateway
-- `$` prefix → directive · `!` prefix → direct agent task · `#` prefix → orchestrated task registration
+### 💬 Agent Communication
+- Slack gateway integration
 - Decision Inbox for mid-task agent requests
+- Team board (.md) for PM-agent communication
 
 </td>
 <td valign="top" width="50%">

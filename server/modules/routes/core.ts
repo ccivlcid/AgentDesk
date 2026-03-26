@@ -174,8 +174,6 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const getFlairs = __ctx.getFlairs;
   const ROLE_LABEL_L10N = __ctx.ROLE_LABEL_L10N;
   const classifyIntent = __ctx.classifyIntent;
-  const generateChatReply = __ctx.generateChatReply;
-  const generateAnnouncementReply = __ctx.generateAnnouncementReply;
   const scheduleAnnouncementReplies = __ctx.scheduleAnnouncementReplies;
   const normalizeTextField = __ctx.normalizeTextField;
   const analyzeDirectivePolicy = __ctx.analyzeDirectivePolicy;

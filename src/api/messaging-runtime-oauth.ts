@@ -29,20 +29,6 @@ export async function getMessages(params: {
   return j.messages;
 }
 
-// Group chat rooms
-export interface GroupChatRoom {
-  room_id: string;
-  last_ts: number;
-  msg_count: number;
-  last_content: string | null;
-  agent_ids: string[];
-}
-
-export async function getGroupChatRooms(): Promise<GroupChatRoom[]> {
-  const j = await request<{ rooms: GroupChatRoom[] }>("/api/group-chat-rooms");
-  return j.rooms;
-}
-
 export type DecisionInboxRouteOption = {
   number: number;
   action: string;
@@ -121,31 +107,6 @@ export async function sendMessage(input: {
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/messages",
     { sender_type: "client", ...input },
-    idempotencyKey,
-  );
-  return extractMessageId(j);
-}
-
-export async function sendGroupMessage(input: {
-  agent_ids: string[];
-  content: string;
-  message_type?: string;
-  room_id?: string;
-  project_id?: string;
-  project_path?: string;
-  project_context?: string;
-}): Promise<{ room_id: string; message_id: string }> {
-  const j = await post<{ room_id: string; message_id: string }>("/api/group-chat", input);
-  return j;
-}
-
-export async function sendAnnouncement(content: string, projectId?: string | null): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("client-announcement");
-  const payload: Record<string, unknown> = { content };
-  if (projectId) payload.project_id = projectId;
-  const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
-    "/api/announcements",
-    payload,
     idempotencyKey,
   );
   return extractMessageId(j);
@@ -427,28 +388,3 @@ export async function getCliModels(refresh = false): Promise<Record<string, CliM
   return j.models;
 }
 
-// Chat Attachments
-export interface ChatAttachment {
-  id: string;
-  fileName: string;
-  size: number;
-  mime: string;
-  relativePath: string;
-}
-
-export async function uploadChatFiles(files: File[]): Promise<ChatAttachment[]> {
-  const formData = new FormData();
-  for (const file of files) {
-    formData.append("files", file);
-  }
-  const res = await fetch("/api/chat/upload", {
-    method: "POST",
-    credentials: "same-origin",
-    body: formData,
-  });
-  if (!res.ok) {
-    throw new Error(`Upload failed: ${res.status}`);
-  }
-  const j = await res.json();
-  return j.attachments ?? [];
-}
