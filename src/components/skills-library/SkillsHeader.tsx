@@ -23,7 +23,7 @@ export default function SkillsHeader({
     <div
       className="border p-4"
       style={{
-        background: "var(--th-bg-panel)",
+        background: "var(--th-bg-elevated)",
         borderColor: "var(--th-border)",
         borderRadius: "10px 10px 0 0",
         backdropFilter: "blur(12px)",
@@ -32,7 +32,7 @@ export default function SkillsHeader({
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-primary)", textTransform: "uppercase" }}>
             {t({ ko: "SKILLS LIBRARY", en: "SKILLS LIBRARY", ja: "SKILLS LIBRARY", zh: "SKILLS LIBRARY" })}
           </span>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-text-muted)" }}>
@@ -64,7 +64,7 @@ export default function SkillsHeader({
               zh: "搜索技能...（名称、仓库、分类）",
             })}
             className="w-full px-4 py-2 text-sm focus:outline-none"
-            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
+            style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
           />
           {search && (
             <button
@@ -81,7 +81,7 @@ export default function SkillsHeader({
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as "rank" | "name" | "installs")}
           className="px-3 py-2 text-xs focus:outline-none"
-          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
+          style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
         >
           <option value="rank">{t({ ko: "순위순", en: "By Rank", ja: "順位順", zh: "按排名" })}</option>
           <option value="installs">

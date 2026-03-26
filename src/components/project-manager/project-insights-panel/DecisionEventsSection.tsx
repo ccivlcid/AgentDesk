@@ -16,8 +16,8 @@ export function DecisionEventsSection({
   getDecisionEventLabel,
 }: DecisionEventsSectionProps) {
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "대표 선택사항", en: "Representative Decisions", ja: "代表選択事項", zh: "代表选择事项" })}
       </h4>
       {!selectedProject ? (
@@ -52,7 +52,7 @@ export function DecisionEventsSection({
               <div
                 key={`${event.id}-${event.created_at}`}
                 className="px-3 py-2"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>

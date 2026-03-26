@@ -156,7 +156,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 style={{
                   ...mono, fontSize: "10px", fontWeight: 700,
                   padding: "1px 6px",
-                  border: "1px solid var(--th-border-accent)",
+                  border: "1px solid #BFDBFE",
                   background: "var(--th-amber-glow)",
                   color: "var(--th-accent)",
                 }}
@@ -183,7 +183,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                     cursor: "pointer",
                     letterSpacing: "0.04em",
                     background: inspectorMode === mode ? "var(--th-amber-glow)" : "transparent",
-                    borderColor: inspectorMode === mode ? "var(--th-border-accent)" : "var(--th-border)",
+                    borderColor: inspectorMode === mode ? "var(--th-accent-border)" : "var(--th-border)",
                     color: inspectorMode === mode ? "var(--th-accent)" : "var(--th-text-muted)",
                   }}
                 >
@@ -244,7 +244,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   style={{
                     gridTemplateColumns: "32px 1fr 80px 60px 60px 60px",
                     borderBottom: "1px solid var(--th-border)",
-                    background: idx % 2 === 0 ? "transparent" : "var(--th-glass-bg)",
+                    background: idx % 2 === 0 ? "transparent" : "var(--th-bg-elevated)",
                   }}
                 >
                   {/* 아바타 */}
@@ -255,7 +255,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   {/* 이름 + 태스크 */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-text-heading)" }}>{agentName}</span>
+                      <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)" }}>{agentName}</span>
                       <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "0 4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                         {deptName}
                       </span>
@@ -301,7 +301,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                         ...mono, fontSize: "9px", fontWeight: 700,
                         padding: "2px 6px",
                         cursor: isKilling ? "not-allowed" : "pointer",
-                        border: "1px solid var(--th-danger-border)",
+                        border: "1px solid #FECACA",
                         letterSpacing: "0.04em",
                         opacity: isKilling ? 0.5 : 1,
                         background: "var(--th-danger-bg)",
@@ -363,7 +363,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           <span
                             style={{
                               ...mono, fontSize: "9px", padding: "0 4px",
-                              border: proc.is_idle ? "1px solid var(--th-border-accent)" : "1px solid var(--th-border)",
+                              border: proc.is_idle ? "1px solid #BFDBFE" : "1px solid var(--th-border)",
                               color: proc.is_idle ? "var(--th-accent)" : "var(--th-attr-elite)",
                               background: proc.is_idle ? "var(--th-amber-glow)" : "var(--th-green-glow)",
                             }}
@@ -388,7 +388,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           ...mono, fontSize: "9px", fontWeight: 700,
                           padding: "2px 7px", flexShrink: 0,
                           cursor: isKillingPid ? "not-allowed" : "pointer",
-                          border: "1px solid var(--th-danger-border)",
+                          border: "1px solid #FECACA",
                           background: "var(--th-danger-bg)",
                           color: "var(--th-danger-text)",
                           opacity: isKillingPid ? 0.5 : 1,

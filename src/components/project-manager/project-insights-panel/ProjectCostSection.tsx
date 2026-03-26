@@ -21,8 +21,8 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
   }, [projectId]);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-      <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+      <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "비용 요약", en: "Cost Summary", ja: "コスト概要", zh: "成本摘要" })}
       </h4>
 
@@ -69,7 +69,7 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
                 {cost.agentBreakdown.slice(0, 5).map((row) => (
                   <div key={row.agentId} className="flex items-center gap-2 text-[11px] font-mono">
                     <span className="w-24 truncate" style={{ color: "var(--th-text-secondary)" }}>{row.agentName}</span>
-                    <div className="flex-1 overflow-hidden" style={{ height: 5, background: "var(--th-bg-surface-hover)" }}>
+                    <div className="flex-1 overflow-hidden" style={{ height: 5, background: "var(--th-bg-primary)" }}>
                       <div
                         className="h-full bg-amber-400/60"
                         style={{ width: cost.totalUsd > 0 ? `${Math.min(100, (row.totalUsd / cost.totalUsd) * 100)}%` : "0%" }}

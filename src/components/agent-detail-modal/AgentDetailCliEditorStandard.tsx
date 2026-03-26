@@ -75,7 +75,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
             ))}
           </select>
         ) : (
-          <span className="text-[10px] text-amber-300">
+          <span className="text-[10px] text-blue-500">
             {t({
               ko: "활성 OAuth 계정 없음",
               en: "No active OAuth account",
@@ -85,7 +85,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
           </span>
         ))}
       {requiresApiProvider && (
-        <span className="text-[10px] text-amber-300">
+        <span className="text-[10px] text-blue-500">
           {t({
             ko: "⚙️ 설정 > API 탭에서 모델을 배정하세요",
             en: "⚙️ Assign models in Settings > API tab",
@@ -147,10 +147,10 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         }}
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50"
         style={{
-          borderRadius: 0,
-          background: "rgba(251,191,36,0.15)",
+          borderRadius: 8,
+          background: "var(--th-accent-glow)",
           color: "var(--th-accent)",
-          border: "1px solid rgba(251,191,36,0.35)",
+          border: "1px solid #BFDBFE",
         }}
       >
         {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
@@ -160,7 +160,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         onClick={handleCancelCliEdit}
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
         style={{
-          borderRadius: 0,
+          borderRadius: 8,
           border: "1px solid var(--th-border)",
           background: "transparent",
           color: "var(--th-text-secondary)",

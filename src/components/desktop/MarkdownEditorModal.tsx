@@ -130,7 +130,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             gap: 12,
             padding: "10px 16px",
             borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-glass-bg)",
+            background: "var(--th-bg-elevated)",
             flexShrink: 0,
           }}
         >
@@ -169,7 +169,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               fontFamily: mono,
               fontSize: 18,
               fontWeight: 700,
-              color: "var(--th-text-heading)",
+              color: "var(--th-text-primary)",
               caretColor: "var(--th-accent)",
             }}
           />
@@ -316,7 +316,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             gap: 12,
             padding: "8px 16px",
             borderTop: "1px solid var(--th-border)",
-            background: "var(--th-glass-bg)",
+            background: "var(--th-bg-elevated)",
             flexShrink: 0,
           }}
         >
@@ -404,7 +404,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               fontFamily: mono,
               fontSize: 11,
               fontWeight: 700,
-              color: content.trim() || title.trim() ? "var(--th-accent-text)" : "var(--th-text-muted)",
+              color: content.trim() || title.trim() ? "var(--th-bg-elevated)" : "var(--th-text-muted)",
               cursor: content.trim() || title.trim() ? "pointer" : "not-allowed",
               opacity: content.trim() || title.trim() ? 1 : 0.5,
             }}

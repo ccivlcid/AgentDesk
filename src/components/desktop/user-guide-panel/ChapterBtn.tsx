@@ -20,7 +20,7 @@ export function ChapterBtn({ color, icon, title, active, onClick }: ChapterBtnPr
       style={{
         display: "flex", alignItems: "center", gap: 8,
         width: "100%", padding: "7px 12px",
-        background: active ? `${color}14` : hovered ? "var(--th-hover-overlay-subtle)" : "transparent",
+        background: active ? `${color}14` : hovered ? "var(--th-bg-primary)" : "transparent",
         border: "none",
         borderRight: active ? `2px solid ${color}` : "2px solid transparent",
         color: active ? color : "var(--th-text-secondary)",

@@ -147,7 +147,7 @@ export default function TerminalPanel({
           overflow: "hidden",
           display: "flex", flexDirection: "column",
           boxShadow: isLight
-            ? "0 24px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.08)"
+            ? "0 24px 60px rgba(0,0,0,0.14), 0 4px 16px var(--th-glass-shadow)"
             : "0 24px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.25)",
           animation: "tpOpen 0.2s cubic-bezier(0.16,1,0.3,1)",
         }}
@@ -157,7 +157,7 @@ export default function TerminalPanel({
             onMouseDown={onHeaderMouseDown}
             style={{
               borderBottom: `1px solid var(--th-border)`,
-              background: isLight ? "rgba(255,255,255,0.85)" : "var(--th-bg-panel)",
+              background: isLight ? "rgba(255,255,255,0.85)" : "var(--th-bg-elevated)",
               borderTopLeftRadius: 14,
               borderTopRightRadius: 14,
               backdropFilter: "blur(16px)",
@@ -185,7 +185,7 @@ export default function TerminalPanel({
                 fontFamily: mono,
                 fontSize: 12,
                 fontWeight: 600,
-                color: "var(--th-text-heading)",
+                color: "var(--th-text-primary)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -329,7 +329,7 @@ export default function TerminalPanel({
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "5px 16px",
               borderTop: "1px solid var(--th-border)",
-              background: isLight ? "rgba(255,255,255,0.7)" : "var(--th-bg-panel)",
+              background: isLight ? "rgba(255,255,255,0.7)" : "var(--th-bg-elevated)",
               flexShrink: 0,
             }}
           >

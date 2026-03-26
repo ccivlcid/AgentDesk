@@ -60,7 +60,7 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
               border: `1.5px solid ${isSelected ? "var(--th-accent)" : "transparent"}`,
               background: isSelected ? "rgba(245,158,11,0.06)" : "var(--th-bg-surface)",
               cursor: "pointer",
-              borderRadius: 0,
+              borderRadius: 8,
             }}
             onMouseEnter={(e) => {
               if (!isSelected) e.currentTarget.style.background = "var(--th-bg-elevated)";

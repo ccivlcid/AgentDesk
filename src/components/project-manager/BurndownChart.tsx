@@ -111,11 +111,11 @@ export default function BurndownChart({ projectId, t }: Props) {
           {tr(t, "전체", "Total")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5" style={{ background: "rgb(52,211,153)", borderRadius: 0 }} />
+          <span className="w-3 h-0.5" style={{ background: "rgb(52,211,153)", borderRadius: 8 }} />
           {tr(t, "완료", "Done")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5" style={{ background: "rgb(251,191,36)", borderRadius: 0 }} />
+          <span className="w-3 h-0.5" style={{ background: "rgb(251,191,36)", borderRadius: 8 }} />
           {tr(t, "잔여", "Remaining")}
         </span>
       </div>
@@ -145,7 +145,7 @@ export default function BurndownChart({ projectId, t }: Props) {
 
           {/* Lines */}
           <path d={chartData.totalPath} fill="none" stroke="rgba(148,163,184,0.6)" strokeWidth={1.5} />
-          <path d={chartData.remainingPath} fill="none" stroke="rgba(251,191,36,0.7)" strokeWidth={1.5} strokeDasharray="3 2" />
+          <path d={chartData.remainingPath} fill="none" stroke="var(--th-accent-overlay)" strokeWidth={1.5} strokeDasharray="3 2" />
           <path d={chartData.donePath} fill="none" stroke="rgba(52,211,153,0.8)" strokeWidth={1.5} />
 
           {/* X-axis labels */}

@@ -53,7 +53,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             position: "relative",
             padding: "18px 20px 14px",
             borderBottom: "1px solid var(--th-border)",
-            background: "linear-gradient(180deg, var(--th-accent-glow) 0%, transparent 100%)",
+            background: "linear-gradient(180deg, #EBF5FF 0%, transparent 100%)",
           }}
         >
           <div
@@ -78,7 +78,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   fontSize: 16,
                   fontWeight: 600,
                   letterSpacing: "-0.02em",
-                  color: "var(--th-text-heading)",
+                  color: "var(--th-text-primary)",
                   lineHeight: 1.3,
                 }}
               >
@@ -121,7 +121,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--th-hover-bg)";
+                e.currentTarget.style.background = "var(--th-bg-primary)";
                 e.currentTarget.style.color = "var(--th-text-secondary)";
               }}
               onMouseLeave={(e) => {
@@ -139,7 +139,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             style={{
               borderRadius: 10,
               border: "1px solid var(--th-border)",
-              background: "var(--th-bg-secondary)",
+              background: "var(--th-bg-surface)",
               overflow: "hidden",
             }}
           >
@@ -180,7 +180,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   fontSize: 12,
                   color: "var(--th-text-primary)",
                   borderBottom: i < rows.length - 1 ? "1px solid var(--th-border)" : "none",
-                  background: i % 2 === 1 ? "var(--th-hover-bg)" : "transparent",
+                  background: i % 2 === 1 ? "var(--th-bg-primary)" : "transparent",
                 }}
               >
                 <span style={{ lineHeight: 1.45, paddingRight: 8 }}>{row.label}</span>
@@ -189,7 +189,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: row.free ? "var(--th-terminal-success)" : "var(--th-text-muted)",
+                    color: row.free ? "var(--th-success)" : "var(--th-text-muted)",
                     opacity: row.free ? 1 : 0.45,
                   }}
                 >
@@ -200,7 +200,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "var(--th-terminal-success)",
+                    color: "var(--th-success)",
                   }}
                 >
                   <IconCheck />

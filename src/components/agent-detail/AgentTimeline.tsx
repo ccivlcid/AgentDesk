@@ -5,8 +5,8 @@ import { getAgentTimeline } from "../../api/agent-timeline";
 
 const EVENT_COLOR: Record<TimelineEvent["type"], string> = {
   task_start: "var(--th-accent)",
-  task_done: "var(--th-terminal-success)",
-  task_fail: "var(--th-danger-border)",
+  task_done: "#30d158",
+  task_fail: "var(--th-danger-text)",
   skill_learn: "#3fb950",
   memory_save: "var(--th-text-secondary)",
   hook_run: "var(--th-accent)",
@@ -72,7 +72,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
     return (
       <div
         className="py-8 text-center text-xs"
-        style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-danger-border)" }}
+        style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-danger-text)" }}
       >
         {error}
       </div>

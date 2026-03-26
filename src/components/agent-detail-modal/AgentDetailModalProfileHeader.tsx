@@ -49,7 +49,7 @@ export function AgentDetailModalProfileHeader({
           border: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
           color: "var(--th-text-muted)",
-          borderRadius: 0,
+          borderRadius: 8,
           fontFamily: "var(--th-font-mono)",
           fontSize: "0.75rem",
         }}
@@ -74,7 +74,7 @@ export function AgentDetailModalProfileHeader({
                   ? "bg-green-500"
                   : agent.status === "break"
                     ? "bg-yellow-500"
-                    : "bg-[var(--th-text-muted)]"
+                    : "bg-gray-400"
             }`}
             style={{ border: "2px solid var(--th-bg-primary)" }}
           />
@@ -84,13 +84,13 @@ export function AgentDetailModalProfileHeader({
           <div className="flex items-center gap-2">
             <h2
               className="text-base font-bold"
-              style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-heading)" }}
+              style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-primary)" }}
             >
               {localeName(language, agent)}
             </h2>
             <span
               className={`text-xs px-1.5 py-0.5 font-mono ${statusCfg.bg} ${statusCfg.color}`}
-              style={{ borderRadius: 0 }}
+              style={{ borderRadius: 8 }}
             >
               {statusLabel(statusCfg.label, t)}
             </span>
@@ -112,7 +112,7 @@ export function AgentDetailModalProfileHeader({
                   void onPlanningLeadChange(event.target.checked);
                 }}
                 className="h-3.5 w-3.5 disabled:opacity-60"
-                style={{ borderRadius: 0, accentColor: "var(--th-accent)" }}
+                style={{ borderRadius: 4, accentColor: "var(--th-accent)" }}
               />
               <span>
                 {t({

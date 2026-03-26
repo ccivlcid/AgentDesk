@@ -69,7 +69,7 @@ export default function FloatingWindow({
         maxHeight: "calc(100vh - 100px)",
         border: "1px solid var(--th-border)",
         background: "var(--th-bg-surface)",
-        borderRadius: 0,
+        borderRadius: 8,
       }}
     >
       {/* Title bar */}
@@ -95,7 +95,7 @@ export default function FloatingWindow({
         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: "#28c840", opacity: 0.4 }} />
 
         <div className="flex-1 min-w-0 ml-1">
-          <h3 className="text-[13px] font-semibold font-mono truncate" style={{ color: "var(--th-text-heading)", margin: 0 }}>
+          <h3 className="text-[13px] font-semibold font-mono truncate" style={{ color: "var(--th-text-primary)", margin: 0 }}>
             {title}
           </h3>
           {subtitle && (
@@ -108,7 +108,7 @@ export default function FloatingWindow({
         {disableClose && (
           <div
             className="text-[11px] font-mono px-2 py-0.5"
-            style={{ border: "1px solid rgba(251,191,36,0.35)", color: "var(--th-accent)", background: "rgba(251,191,36,0.08)" }}
+            style={{ border: "1px solid var(--th-accent-border-subtle)", color: "var(--th-accent)", background: "var(--th-accent-bg-subtle)" }}
           >
             {closeBtnLabel}
           </div>

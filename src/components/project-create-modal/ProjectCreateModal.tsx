@@ -248,7 +248,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
             ...display,
             fontSize: "20px",
             fontWeight: 700,
-            color: "var(--th-text-heading)",
+            color: "var(--th-text-primary)",
             lineHeight: 1.3,
             margin: 0,
           }}>
@@ -605,7 +605,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                   padding: "4px 8px",
                                   textAlign: "center",
                                   background: slot.agentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                                  color: slot.agentId ? "var(--th-accent-text)" : "var(--th-text-muted)",
+                                  color: slot.agentId ? "var(--th-bg-elevated)" : "var(--th-text-muted)",
                                   border: "none", outline: "none",
                                 }}
                               />
@@ -620,7 +620,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       <path d="M6 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                       <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                     </svg>
-                                    <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: "var(--th-text-heading)" }}>
+                                    <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: "var(--th-text-primary)" }}>
                                       {assignedAgent.name_ko || assignedAgent.name}
                                     </span>
                                     <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
@@ -698,7 +698,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       </svg>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                          <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-heading)" }}>
+                                          <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-primary)" }}>
                                             {agent.name_ko || agent.name}
                                           </span>
                                           <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>

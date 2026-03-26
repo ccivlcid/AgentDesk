@@ -22,7 +22,7 @@ function KickoffIndicator() {
     <div style={{
       display: "flex", alignItems: "center", gap: 6,
       padding: "3px 14px",
-      background: "var(--th-accent-glow, rgba(245,158,11,0.08))",
+      background: "var(--th-accent-glow)",
       border: "1px solid rgba(245,158,11,0.18)",
       borderRadius: 8,
     }}>
@@ -114,7 +114,7 @@ function ProjectProgressIndicator() {
       {/* Progress bar */}
       <div style={{
         width: 60, height: 3,
-        background: "var(--th-border, rgba(255,255,255,0.1))",
+        background: "var(--th-border)",
         borderRadius: 2,
         overflow: "hidden",
         flexShrink: 0,
@@ -287,10 +287,10 @@ export default function MenuBar({
         right: 0,
         height: 44,
         zIndex: 1000,
-        background: "var(--th-glass-surface)",
+        background: "var(--th-bg-surface)",
         backdropFilter: "var(--th-glass-blur) saturate(180%)",
         WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
-        borderBottom: "1px solid var(--th-glass-border-subtle)",
+        borderBottom: "1px solid var(--th-border)",
         display: "flex",
         alignItems: "center",
         padding: "0 20px",
@@ -324,7 +324,7 @@ export default function MenuBar({
           onMouseLeave={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
         >
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="22" height="22" rx="5" fill="#3B82F6" />
+            <rect width="22" height="22" rx="5" fill="var(--th-accent)" />
             <rect x="0.5" y="0.5" width="21" height="21" rx="4.5" stroke="rgba(255,255,255,0.15)" />
             <text x="11" y="15.5" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontSize="13" fontWeight="700" fill="white">A</text>
           </svg>
@@ -338,10 +338,10 @@ export default function MenuBar({
               top: "calc(100% + 6px)",
               left: 0,
               minWidth: 220,
-              background: "var(--th-glass-surface-active)",
+              background: "var(--th-bg-surface)",
               backdropFilter: "var(--th-glass-blur)",
               WebkitBackdropFilter: "var(--th-glass-blur)",
-              border: "1px solid var(--th-glass-border-strong)",
+              border: "1px solid var(--th-border-strong)",
               borderRadius: 12,
               boxShadow: "var(--th-glass-shadow-active)",
               padding: "4px 0",
@@ -449,7 +449,7 @@ export default function MenuBar({
 
       {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
       {!connected && (
-        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10, display: "inline-flex", alignItems: "center" }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/></svg></span>
+        <span style={{ color: "var(--th-danger-text)", fontSize: 10, display: "inline-flex", alignItems: "center" }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/></svg></span>
       )}
 
       {/* 프로젝트 선택 */}
@@ -587,7 +587,7 @@ export default function MenuBar({
             borderBottom: "1px solid var(--th-border)",
             background: "var(--th-accent-glow)",
           }}>
-            <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-heading)", letterSpacing: "-1px", lineHeight: 1 }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: "-1px", lineHeight: 1 }}>
               {timeStrFull}
             </div>
             <div style={{ fontSize: 12, color: "var(--th-text-muted)", marginTop: 6 }}>
@@ -638,7 +638,7 @@ export default function MenuBar({
                   fontSize: 10,
                   fontWeight: 700,
                   padding: "2px 0",
-                  color: i === 0 ? "var(--th-danger, #ef4444)" : i === 6 ? "var(--th-info, #60a5fa)" : "var(--th-text-muted)",
+                  color: i === 0 ? "var(--th-danger-text)" : i === 6 ? "var(--th-accent)" : "var(--th-text-muted)",
                   letterSpacing: "0.05em",
                 }}>
                   {d}
@@ -666,11 +666,11 @@ export default function MenuBar({
                       color: day == null
                         ? "transparent"
                         : isToday
-                          ? "var(--th-accent-text)"
+                          ? "var(--th-bg-elevated)"
                           : isSun
-                            ? "var(--th-danger, #ef4444)"
+                            ? "var(--th-danger-text)"
                             : isSat
-                              ? "var(--th-info, #60a5fa)"
+                              ? "var(--th-accent)"
                               : "var(--th-text-secondary)",
                       cursor: day != null ? "default" : "default",
                     }}
@@ -690,7 +690,7 @@ export default function MenuBar({
                   marginTop: 10,
                   width: "100%",
                   background: "var(--th-accent-glow)",
-                  border: "1px solid var(--th-accent-border)",
+                  border: "1px solid #BFDBFE",
                   borderRadius: 6,
                   color: "var(--th-accent)",
                   fontFamily: mono,

@@ -95,7 +95,7 @@ export function TerminalTabContent({
         style={{
           padding: "0 14px",
           borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-panel)",
+          background: "var(--th-bg-elevated)",
           height: 34,
           gap: 0,
         }}
@@ -155,7 +155,7 @@ export function TerminalTabContent({
           {showSearchBar && (
             <div
               className="flex items-center gap-2 flex-shrink-0"
-              style={{ padding: "6px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+              style={{ padding: "6px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
             >
               <input
                 ref={searchInputRef}
@@ -359,7 +359,7 @@ export function TerminalTabContent({
                       fontFamily: mono,
                       fontSize: 11,
                       lineHeight: 1.65,
-                      color: isLight ? "#92400e" : "rgba(251,191,36,0.8)",
+                      color: isLight ? "#92400e" : "var(--th-accent-overlay)",
                       margin: 0,
                       padding: "10px 14px",
                       whiteSpace: "pre-wrap",

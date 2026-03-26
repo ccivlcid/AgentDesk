@@ -212,7 +212,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Frontend: "text-[#60a5fa] bg-[rgba(59,130,246,0.15)] border-[rgba(59,130,246,0.3)]",
+  Frontend: "text-[#60a5fa] bg-[var(--th-amber-glow)] border-[var(--th-accent-focus)]",
   Backend: "text-green-400 bg-green-500/15 border-green-500/30",
   Design: "text-pink-400 bg-pink-500/15 border-pink-500/30",
   "AI & Agent": "text-purple-400 bg-purple-500/15 border-purple-500/30",

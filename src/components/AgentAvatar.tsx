@@ -63,7 +63,7 @@ export default function AgentAvatar({
 
   return (
     <div
-      className={`${roundedClass} bg-[var(--th-bg-elevated)] flex-shrink-0 relative ${className}`}
+      className={`${roundedClass} bg-[#FFFFFF] flex-shrink-0 relative ${className}`}
       style={{ width: size, height: size, ...pulseStyle }}
     >
       <style>{`
@@ -82,7 +82,7 @@ export default function AgentAvatar({
           style={{ 
             background: agent.status === "working" ? "var(--th-success)" : 
                         agent.status === "idle" ? "var(--th-accent)" : "var(--th-text-muted)",
-            boxShadow: agent.status === "working" ? "0 0 4px var(--th-success)" : "none"
+            boxShadow: agent.status === "working" ? "0 0 4px #059669" : "none"
           }}
         />
       )}

@@ -261,7 +261,7 @@ export default function SkillHistoryPanel({
   return (
     <div
       className={`skill-history-panel flex h-full min-h-[360px] flex-col ${className}`}
-      style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+      style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
     >
       <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <div className="flex items-center gap-1">
@@ -270,8 +270,8 @@ export default function SkillHistoryPanel({
             onClick={() => setTab("history")}
             className="px-2 py-1 text-[11px] font-mono font-medium transition-all"
             style={tab === "history"
-              ? { borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
-              : { borderRadius: 0, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
+              ? { borderRadius: 8, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
+              : { borderRadius: 8, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
           >
             {t({ ko: "학습 이력", en: "Learning History", ja: "学習履歴", zh: "学习历史" })}
           </button>
@@ -280,8 +280,8 @@ export default function SkillHistoryPanel({
             onClick={() => setTab("available")}
             className="px-2 py-1 text-[11px] font-mono font-medium transition-all"
             style={tab === "available"
-              ? { borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
-              : { borderRadius: 0, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
+              ? { borderRadius: 8, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
+              : { borderRadius: 8, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
           >
             {t({ ko: "보유 스킬", en: "Available Skills", ja: "保有スキル", zh: "可用技能" })}
           </button>
@@ -290,7 +290,7 @@ export default function SkillHistoryPanel({
           type="button"
           onClick={() => void load()}
           className="px-2 py-1 text-[11px] font-mono transition-all"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
@@ -304,12 +304,12 @@ export default function SkillHistoryPanel({
             onClick={() => setFilterDropdownOpen((v) => !v)}
             className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono transition-all"
             style={{
-              borderRadius: 0,
+              borderRadius: 8,
               border: agentFilters.size > 0
-                ? "1px solid rgba(251,191,36,0.5)"
+                ? "1px solid var(--th-accent-focus)"
                 : "1px solid var(--th-border)",
               background: agentFilters.size > 0
-                ? "rgba(251,191,36,0.08)"
+                ? "var(--th-accent-bg-subtle)"
                 : "var(--th-bg-primary)",
               color: agentFilters.size > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
               minWidth: 130,
@@ -323,7 +323,7 @@ export default function SkillHistoryPanel({
             <div
               className="absolute left-0 top-full z-50 mt-1 py-1 shadow-xl"
               style={{
-                borderRadius: 0,
+                borderRadius: 8,
                 border: "1px solid var(--th-border-strong)",
                 background: "var(--th-bg-elevated)",
                 minWidth: 200,
@@ -337,7 +337,7 @@ export default function SkillHistoryPanel({
                 onClick={clearAgentFilters}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                 style={{
-                  background: agentFilters.size === 0 ? "rgba(251,191,36,0.1)" : "transparent",
+                  background: agentFilters.size === 0 ? "var(--th-accent-bg)" : "transparent",
                   color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
                   border: "none",
                 }}
@@ -345,7 +345,7 @@ export default function SkillHistoryPanel({
                 <span
                   className="flex items-center justify-center shrink-0"
                   style={{
-                    width: 14, height: 14, borderRadius: 0,
+                    width: 14, height: 14, borderRadius: 8,
                     border: agentFilters.size === 0
                       ? "1px solid var(--th-accent)"
                       : "1px solid var(--th-border-strong)",
@@ -369,7 +369,7 @@ export default function SkillHistoryPanel({
                     onClick={() => toggleAgentFilter(agent.id)}
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                     style={{
-                      background: checked ? "rgba(251,191,36,0.08)" : "transparent",
+                      background: checked ? "var(--th-accent-bg-subtle)" : "transparent",
                       color: checked ? "var(--th-accent)" : "var(--th-text-secondary)",
                       border: "none",
                     }}
@@ -377,7 +377,7 @@ export default function SkillHistoryPanel({
                     <span
                       className="flex items-center justify-center shrink-0"
                       style={{
-                        width: 14, height: 14, borderRadius: 0,
+                        width: 14, height: 14, borderRadius: 8,
                         border: checked
                           ? "1px solid var(--th-accent)"
                           : "1px solid var(--th-border-strong)",
@@ -400,7 +400,7 @@ export default function SkillHistoryPanel({
             type="button"
             onClick={clearAgentFilters}
             className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
           >
             ✕ {t({ ko: "초기화", en: "clear", ja: "クリア", zh: "清除" })}
           </button>
@@ -412,24 +412,24 @@ export default function SkillHistoryPanel({
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 기록 로딩중...", en: "Loading memory records...", ja: "記録を読み込み中...", zh: "加载记录中..." })}
           </div>
         )}
 
         {error && (
-          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)", color: "rgb(254,205,211)" }}>
+          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)", color: "rgb(254,205,211)" }}>
             {error}
           </div>
         )}
         {unlearnError && (
-          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)", color: "rgb(254,205,211)" }}>
+          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)", color: "rgb(254,205,211)" }}>
             {unlearnError}
           </div>
         )}
 
         {tab === "history" && filteredHistoryRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
         )}
@@ -447,14 +447,14 @@ export default function SkillHistoryPanel({
               <div
                 key={row.id}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</div>
                     <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.repo}</div>
                   </div>
-                  <span className={`px-1.5 py-0.5 text-[10px] font-mono ${statusClass(row.status)}`} style={{ borderRadius: 0 }}>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-mono ${statusClass(row.status)}`} style={{ borderRadius: 8 }}>
                     {statusLabel(row.status)}
                   </span>
                 </div>
@@ -463,7 +463,7 @@ export default function SkillHistoryPanel({
                     {rowAgents.length > 0 ? (
                       <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
                         {rowAgents.slice(0, 5).map((a) => (
-                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                             <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
                           </div>
                         ))}
@@ -475,7 +475,7 @@ export default function SkillHistoryPanel({
                         {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
                       </div>
                     ) : (
-                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                         <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
                         {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
                         {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
@@ -499,8 +499,8 @@ export default function SkillHistoryPanel({
                         disabled={isUnlearning}
                         className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all"
                         style={isUnlearning
-                          ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
-                          : { borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
+                          ? { borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                          : { borderRadius: 8, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                       >
                         {isUnlearning
                           ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
@@ -521,7 +521,7 @@ export default function SkillHistoryPanel({
               type="button"
               onClick={() => setHistoryExpanded((prev) => !prev)}
               className="px-2.5 py-1 text-[11px] font-mono transition-all"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {historyExpanded
               ? t({ ko: "접기", en: "Show less", ja: "折りたたむ", zh: "收起" })
@@ -531,7 +531,7 @@ export default function SkillHistoryPanel({
         )}
 
         {tab === "available" && filteredAvailableRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "보유 스킬이 없습니다", en: "No available skills.", ja: "保有スキルがありません", zh: "暂无可用技能" })}
           </div>
         )}
@@ -547,16 +547,16 @@ export default function SkillHistoryPanel({
               <div
                 key={`${row.provider}-${row.repo}-${row.skill_id}`}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
-                <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</div>
                 <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.repo}</div>
                 <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     {rowAgents.length > 0 ? (
                       <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
                         {rowAgents.slice(0, 5).map((a) => (
-                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                             <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
                           </div>
                         ))}
@@ -568,7 +568,7 @@ export default function SkillHistoryPanel({
                         {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
                       </div>
                     ) : (
-                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                         <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
                         {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
                         {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
@@ -591,8 +591,8 @@ export default function SkillHistoryPanel({
                       disabled={isUnlearning}
                       className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all"
                       style={isUnlearning
-                        ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
-                        : { borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
+                        ? { borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                        : { borderRadius: 8, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                     >
                       {isUnlearning
                         ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
@@ -607,7 +607,7 @@ export default function SkillHistoryPanel({
       </div>
       {centerBonk && (
         <div className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center">
-          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: 0, border: "1px solid rgba(251,113,133,0.3)", background: "var(--th-terminal-bg)" }}>
+          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: 8, border: "1px solid rgba(251,113,133,0.3)", background: "var(--th-terminal-bg)" }}>
             <div className="relative mx-auto h-20 w-20 overflow-visible">
               <div className="unlearn-avatar-hit">
                 <AgentAvatar agent={centerBonk.agent ?? undefined} agents={agents} size={80} rounded="xl" />

@@ -19,7 +19,7 @@ const SIZE_PADDING: Record<ButtonSize, string> = {
 const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
     background: "var(--th-accent-glow)",
-    border: "1px solid var(--th-accent-border)",
+    border: "1px solid #BFDBFE",
     color: "var(--th-accent)",
     fontWeight: 600,
   },
@@ -37,7 +37,7 @@ const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   },
   danger: {
     background: "transparent",
-    border: "1px solid var(--th-danger-border)",
+    border: "1px solid #FECACA",
     color: "var(--th-danger-text)",
     fontWeight: 500,
   },
@@ -45,9 +45,9 @@ const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
 
 const HOVER_CLASS: Record<ButtonVariant, string> = {
   primary: "hover:!bg-[var(--th-accent)] hover:!text-black hover:!border-[var(--th-accent)]",
-  secondary: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]",
-  ghost: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text-secondary)]",
-  danger: "hover:!bg-[var(--th-danger-bg)] hover:!border-[var(--th-danger-border)]",
+  secondary: "hover:!bg-[var(--th-bg-primary)] hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]",
+  ghost: "hover:!bg-[var(--th-bg-primary)] hover:!text-[var(--th-text-secondary)]",
+  danger: "hover:!bg-[#FEF2F2] hover:!border-[#FECACA]",
 };
 
 /**
@@ -61,7 +61,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`inline-flex items-center justify-center whitespace-nowrap transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${HOVER_CLASS[variant]} ${className}`}
         style={{
-          borderRadius: 0,
+          borderRadius: 8,
           fontFamily: mono,
           fontSize: "11px",
           letterSpacing: "0.04em",

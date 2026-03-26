@@ -106,7 +106,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
         alignItems: "flex-start",
         gap: "10px",
         padding: "10px 14px",
-        borderRadius: 0,
+        borderRadius: 8,
         border: `1px solid ${cfg.border}`,
         borderLeft: `3px solid ${cfg.accentBar}`,
         background: cfg.bg,

@@ -197,7 +197,7 @@ export default function DecisionInboxModal({
               cursor: "pointer",
               letterSpacing: "0.04em",
             }}
-            className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+            className="hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle" }}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>{" "}{t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
           </button>
@@ -298,7 +298,7 @@ export default function DecisionInboxModal({
                         {/* 이름 + 타입 */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-text-heading)" }}>
+                            <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-text-primary)" }}>
                               {agentName}
                             </span>
                             <span
@@ -408,7 +408,7 @@ export default function DecisionInboxModal({
                                 rows={2}
                                 placeholder={t({ ko: "추가 의견 (선택)", en: "Extra notes (optional)", ja: "追加意見（任意）", zh: "补充意见（可选）" })}
                                 className="w-full resize-y outline-none"
-                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                               />
                               <div className="flex items-center justify-end gap-2 pt-1">
                                 {skipOption && (

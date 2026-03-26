@@ -28,8 +28,8 @@ export function AgentFormModalCliBlock({
                 style={{
                   borderRadius: 6,
                   ...(active
-                    ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-border-accent)" }
-                    : { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }),
+                    ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-accent-border)" }
+                    : { borderColor: "var(--th-border)", color: "var(--th-text-muted)" }),
                 }}
               >
                 {p}
@@ -51,8 +51,8 @@ export function AgentFormModalCliBlock({
             style={{
               borderRadius: 6,
               ...(form.enable_planning_phase !== 0
-                ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-border-accent)" }
-                : { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }),
+                ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-accent-border)" }
+                : { borderColor: "var(--th-border)", color: "var(--th-text-muted)" }),
             }}
           >
             <span style={{ fontSize: 10 }}>{form.enable_planning_phase !== 0 ? "●" : "○"}</span>

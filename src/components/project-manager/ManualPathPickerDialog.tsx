@@ -98,7 +98,7 @@ export default function ManualPathPickerDialog({
       {/* Toolbar: current path + nav buttons */}
       <div
         className="flex flex-shrink-0 items-center gap-2 px-4 py-2"
-        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
       >
         <button
           type="button"
@@ -148,7 +148,7 @@ export default function ManualPathPickerDialog({
       {/* File list */}
       <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "var(--th-bg-elevated)" }}>
         {creating && (
-          <div style={{ padding: "6px 12px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}>
+          <div style={{ padding: "6px 12px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
               <input
@@ -205,7 +205,7 @@ export default function ManualPathPickerDialog({
               key={entry.path}
               type="button"
               onClick={() => void onLoadEntries(entry.path)}
-              className="w-full text-left transition-colors hover:bg-[var(--th-hover-bg)]"
+              className="w-full text-left transition-colors hover:bg-[var(--th-bg-primary)]"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -230,7 +230,7 @@ export default function ManualPathPickerDialog({
       {/* Footer */}
       <div
         className="flex flex-shrink-0 items-center justify-between px-4 py-3"
-        style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+        style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
       >
         <p style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>
           {t({ ko: "선택할 폴더로 이동 후 아래 버튼을 누르세요", en: "Navigate to folder, then confirm", ja: "フォルダに移動して確認", zh: "导航到文件夹后确认" })}

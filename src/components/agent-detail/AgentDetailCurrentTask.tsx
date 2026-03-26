@@ -34,20 +34,20 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
 
   const isRunning = task?.status === "in_progress";
 
-  const sectionBg     = isLight ? "rgba(0,0,0,0.02)"    : "rgba(255,255,255,0.015)";
-  const sectionBorder = isLight ? "rgba(0,0,0,0.07)"    : "rgba(255,255,255,0.06)";
-  const labelColor    = isLight ? "rgba(0,0,0,0.3)"     : "rgba(255,255,255,0.25)";
-  const emptyColor    = isLight ? "rgba(0,0,0,0.3)"     : "rgba(255,255,255,0.25)";
-  const taskTitleColor= isLight ? "rgba(0,0,0,0.82)"    : "rgba(255,255,255,0.85)";
-  const taskTimeColor = isLight ? "rgba(0,0,0,0.3)"     : "rgba(255,255,255,0.25)";
-  const idleDot       = isLight ? "rgba(0,0,0,0.3)"     : "rgba(255,255,255,0.3)";
-  const injectBtnBg   = isLight ? "rgba(0,0,0,0.04)"    : "rgba(255,255,255,0.05)";
-  const injectBtnBdr  = isLight ? "rgba(0,0,0,0.09)"    : "rgba(255,255,255,0.09)";
-  const injectBtnClr  = isLight ? "rgba(0,0,0,0.45)"    : "rgba(255,255,255,0.45)";
-  const injectPanelBorder = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)";
-  const textareaColor = isLight ? "rgba(0,0,0,0.75)"    : "rgba(255,255,255,0.75)";
-  const textareaBg    = isLight ? "rgba(0,0,0,0.02)"    : "rgba(255,255,255,0.04)";
-  const hintColor     = isLight ? "rgba(0,0,0,0.25)"    : "rgba(255,255,255,0.2)";
+  const sectionBg     = "var(--th-bg-surface)";
+  const sectionBorder = "var(--th-border)";
+  const labelColor    = "var(--th-text-muted)";
+  const emptyColor    = "var(--th-text-muted)";
+  const taskTitleColor= "var(--th-text-primary)";
+  const taskTimeColor = "var(--th-text-muted)";
+  const idleDot       = "var(--th-text-muted)";
+  const injectBtnBg   = "var(--th-bg-primary)";
+  const injectBtnBdr  = "var(--th-border)";
+  const injectBtnClr  = "var(--th-text-secondary)";
+  const injectPanelBorder = "var(--th-border)";
+  const textareaColor = "var(--th-text-primary)";
+  const textareaBg    = "var(--th-bg-elevated)";
+  const hintColor     = "var(--th-text-muted)";
 
   return (
     <div style={{
@@ -124,9 +124,9 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
                 style={{
                   flex: 1,
                   fontFamily: mono, fontSize: 10,
-                  background: "rgba(48,209,88,0.1)",
+                  background: "rgba(48,209,88,0.08)",
                   border: "1px solid rgba(48,209,88,0.2)",
-                  borderRadius: 6,
+                  borderRadius: 8,
                   color: "#30d158",
                   padding: "5px 0",
                   cursor: "pointer",
@@ -148,15 +148,15 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
                 style={{
                   flex: 1,
                   fontFamily: mono, fontSize: 10,
-                  background: showInject ? "rgba(245,158,11,0.15)" : injectBtnBg,
-                  border: `1px solid ${showInject ? "rgba(245,158,11,0.35)" : injectBtnBdr}`,
-                  borderRadius: 6,
-                  color: showInject ? "#f59e0b" : injectBtnClr,
+                  background: showInject ? "var(--th-accent-bg)" : injectBtnBg,
+                  border: `1px solid ${showInject ? "var(--th-accent-focus)" : injectBtnBdr}`,
+                  borderRadius: 8,
+                  color: showInject ? "var(--th-accent)" : injectBtnClr,
                   padding: "5px 0",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "rgba(245,158,11,0.22)" : (isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.1)"); }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "rgba(245,158,11,0.15)" : injectBtnBg; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "var(--th-accent-hover)" : "var(--th-border)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "var(--th-accent-bg)" : injectBtnBg; }}
               >
                 {t({ ko: "프롬프트 주입", en: "Inject prompt", ja: "プロンプト注入", zh: "注入提示" })}
               </button>
@@ -174,7 +174,7 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
         }}>
           <div style={{
             fontFamily: mono, fontSize: 9,
-            color: "rgba(245,158,11,0.6)",
+            color: "var(--th-accent-overlay)",
             letterSpacing: "0.08em",
             marginBottom: 6,
           }}>
@@ -189,8 +189,8 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
               width: "100%",
               fontFamily: mono, fontSize: 11,
               background: textareaBg,
-              border: "1px solid rgba(245,158,11,0.2)",
-              borderRadius: 6,
+              border: "1px solid var(--th-accent-border-subtle)",
+              borderRadius: 8,
               color: textareaColor,
               padding: "8px 10px",
               resize: "vertical",
@@ -211,10 +211,10 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
               disabled={!injectText.trim()}
               style={{
                 fontFamily: mono, fontSize: 10,
-                background: injectText.trim() ? "rgba(245,158,11,0.18)" : textareaBg,
-                border: `1px solid ${injectText.trim() ? "rgba(245,158,11,0.4)" : (isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)")}`,
-                borderRadius: 5,
-                color: injectText.trim() ? "#f59e0b" : hintColor,
+                background: injectText.trim() ? "var(--th-accent-bg)" : textareaBg,
+                border: `1px solid ${injectText.trim() ? "var(--th-accent-focus)" : "var(--th-border)"}`,
+                borderRadius: 8,
+                color: injectText.trim() ? "var(--th-accent)" : hintColor,
                 padding: "4px 12px",
                 cursor: injectText.trim() ? "pointer" : "not-allowed",
               }}

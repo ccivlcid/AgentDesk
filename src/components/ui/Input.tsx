@@ -4,9 +4,9 @@ const mono = "var(--th-font-mono)";
 
 const INPUT_INLINE: React.CSSProperties = {
   padding: "6px 10px",
-  background: "var(--th-input-bg)",
-  border: "1px solid var(--th-input-border)",
-  borderRadius: 0,
+  background: "var(--th-bg-elevated)",
+  border: "1px solid var(--th-border)",
+  borderRadius: 8,
   color: "var(--th-text-primary)",
   fontFamily: mono,
   fontSize: "12px",
@@ -37,7 +37,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           props.onFocus?.(e);
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-input-border)";
+          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-border)";
           props.onBlur?.(e);
         }}
         {...props}
@@ -71,7 +71,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           props.onFocus?.(e);
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-input-border)";
+          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-border)";
           props.onBlur?.(e);
         }}
         {...props}

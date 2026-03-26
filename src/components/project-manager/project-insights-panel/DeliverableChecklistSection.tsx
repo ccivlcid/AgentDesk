@@ -36,9 +36,9 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
   const doneCount = items.filter((i) => i.checked).length;
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "결과물 체크리스트", en: "Deliverables", ja: "成果物チェック", zh: "交付物清单" })}
         </h4>
         {!loading && items.length > 0 && (
@@ -55,7 +55,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
       ) : (
         <>
           {items.length > 0 && (
-            <div className="mb-3 h-1.5 w-full overflow-hidden" style={{ background: "var(--th-bg-surface-hover)" }}>
+            <div className="mb-3 h-1.5 w-full overflow-hidden" style={{ background: "var(--th-bg-primary)" }}>
               <div
                 className="h-full transition-all duration-500"
                 style={{ width: `${Math.round((doneCount / items.length) * 100)}%`, background: doneCount === items.length ? "#4ade80" : "var(--th-accent)" }}
@@ -78,7 +78,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
                     border: `1px solid ${item.checked ? "rgba(74,222,128,0.3)" : "var(--th-border)"}`,
                     background: item.checked ? "rgba(74,222,128,0.05)" : "var(--th-bg-elevated)",
                     cursor: isSaving ? "wait" : "pointer",
-                    borderRadius: 0,
+                    borderRadius: 8,
                     opacity: isSaving ? 0.7 : 1,
                   }}
                 >
@@ -86,7 +86,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
                     className="shrink-0 flex items-center justify-center"
                     style={{
                       width: 14, height: 14,
-                      border: `1.5px solid ${item.checked ? "#4ade80" : "var(--th-border-accent)"}`,
+                      border: `1.5px solid ${item.checked ? "#4ade80" : "var(--th-accent-border)"}`,
                       background: item.checked ? "#4ade80" : "transparent",
                     }}
                   >

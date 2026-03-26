@@ -29,8 +29,8 @@ export function AgentFormModalPmSection({
         <div
           className="flex items-start gap-2 mb-4 px-3 py-2.5"
           style={{
-            background: "rgba(245,158,11,0.06)",
-            border: "1px solid rgba(245,158,11,0.2)",
+            background: "var(--th-accent-bg)",
+            border: "1px solid var(--th-accent-border-subtle)",
             borderRadius: 6,
             borderLeft: "3px solid var(--th-accent)",
           }}
@@ -106,10 +106,10 @@ export function AgentFormModalPmSection({
                     ? {
                         background: "var(--th-accent-glow)",
                         color: "var(--th-accent)",
-                        borderColor: "var(--th-border-accent)",
+                        borderColor: "var(--th-accent-border)",
                       }
                     : {
-                        borderColor: "var(--th-input-border)",
+                        borderColor: "var(--th-border)",
                         color: "var(--th-text-muted)",
                       }),
                 }}

@@ -26,7 +26,7 @@ interface AgentsTabProps {
 function StatusBadge({ status }: { status: string }) {
   if (status === "working") {
     return (
-      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-status-success)" }}>● RUNNING</span>
+      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-success)" }}>● RUNNING</span>
     );
   }
   if (status === "offline") {
@@ -102,8 +102,8 @@ export default function AgentsTab({
             fontFamily: "var(--th-font-mono)",
             borderRadius: "6px 6px 0 0",
             fontSize: "0.75rem",
-            color: deptTab === "all" ? "var(--th-text-heading)" : "var(--th-text-muted)",
-            borderColor: deptTab === "all" ? "var(--th-accent, #f59e0b)" : "transparent",
+            color: deptTab === "all" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            borderColor: deptTab === "all" ? "var(--th-accent)" : "transparent",
             transition: "color 0.1s linear, border-color 0.1s linear",
           }}
         >
@@ -122,8 +122,8 @@ export default function AgentsTab({
               style={{
                 fontFamily: "var(--th-font-mono)",
                 fontSize: "0.75rem",
-                color: isActive ? "var(--th-text-heading)" : "var(--th-text-muted)",
-                borderColor: isActive ? "var(--th-accent, #f59e0b)" : "transparent",
+                color: isActive ? "var(--th-text-primary)" : "var(--th-text-muted)",
+                borderColor: isActive ? "var(--th-accent)" : "transparent",
                 transition: "color 0.1s linear, border-color 0.1s linear",
                 borderRadius: "6px 6px 0 0",
               }}
@@ -182,21 +182,21 @@ export default function AgentsTab({
                       }}
                     >
                       <span className="text-base shrink-0">{agent.avatar_emoji || "🤖"}</span>
-                      <span className="font-mono text-sm font-medium min-w-0 truncate" style={{ color: "var(--th-text-heading)", flex: "0 0 auto", maxWidth: "8rem" }}>
+                      <span className="font-mono text-sm font-medium min-w-0 truncate" style={{ color: "var(--th-text-primary)", flex: "0 0 auto", maxWidth: "8rem" }}>
                         {agentName}
                       </span>
                       {agent.role && (
-                        <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono uppercase" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 0 }}>
+                        <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono uppercase" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 8 }}>
                           {agent.role.slice(0, 3).toUpperCase()}
                         </span>
                       )}
                       {isTeamMember && (
-                        <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", borderRadius: 0 }}>
+                        <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "var(--th-accent-bg)", border: "1px solid var(--th-accent-focus)", color: "var(--th-accent)", borderRadius: 8 }}>
                           TEAM
                         </span>
                       )}
                       {agent.persona_id && (personasLoading
-                        ? <span style={{ width: 40, height: 16, background: "rgba(255,255,255,0.06)", borderRadius: 2, display: "inline-block" }} />
+                        ? <span style={{ width: 40, height: 16, background: "var(--th-bg-primary)", borderRadius: 8, display: "inline-block" }} />
                         : personaMap.has(agent.persona_id) && <PersonaBadge persona={personaMap.get(agent.persona_id)!} size="sm" />
                       )}
                       <span className="flex-1" />
@@ -211,7 +211,7 @@ export default function AgentsTab({
                           type="button"
                           onClick={() => onEditAgent(agent)}
                           className="px-2 py-1 text-[10px] font-mono transition"
-                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                         >
                           {tr("편집", "edit")}
                         </button>
@@ -222,7 +222,7 @@ export default function AgentsTab({
                               onClick={() => { onDeleteAgent(agent.id); setConfirmDeleteId(null); }}
                               disabled={saving}
                               className="px-2 py-1 text-[10px] font-mono"
-                              style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.1)", color: "#fb7185" }}
+                              style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.1)", color: "#fb7185" }}
                             >
                               {tr("확인", "confirm")}
                             </button>
@@ -230,7 +230,7 @@ export default function AgentsTab({
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-2 py-1 text-[10px] font-mono"
-                              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
                             >
                               {tr("취소", "cancel")}
                             </button>
@@ -240,9 +240,9 @@ export default function AgentsTab({
                             type="button"
                             onClick={() => setConfirmDeleteId(agent.id)}
                             className="px-2 py-1 text-[10px] font-mono transition"
-                            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
                           >
-                            ✕
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         )}
                       </div>

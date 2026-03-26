@@ -91,8 +91,8 @@ export function AgentFormModalBasicSection({
                 className={`flex flex-col items-center gap-1 px-2 py-2.5 text-xs font-mono font-medium border transition-all ${active ? ROLE_BADGE[r] : ""}`}
                 style={{
                   borderRadius: 6,
-                  ...(!active ? { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" } : {}),
-                  ...(isPm && active ? { boxShadow: "0 0 0 1px var(--th-accent), 0 0 8px rgba(245,158,11,0.15)" } : {}),
+                  ...(!active ? { borderColor: "var(--th-border)", color: "var(--th-text-muted)" } : {}),
+                  ...(isPm && active ? { boxShadow: "0 0 0 1px var(--th-accent), 0 0 8px var(--th-amber-glow)" } : {}),
                 }}
               >
                 {ROLE_ICON[r](active)}
@@ -113,8 +113,8 @@ export function AgentFormModalBasicSection({
           <div
             className="flex items-start gap-2 mt-3 px-3 py-2"
             style={{
-              background: "rgba(245,158,11,0.06)",
-              border: "1px solid rgba(245,158,11,0.2)",
+              background: "var(--th-accent-bg)",
+              border: "1px solid var(--th-accent-border-subtle)",
               borderRadius: 6,
               borderLeft: "3px solid var(--th-accent)",
             }}
@@ -180,7 +180,7 @@ export function AgentFormModalBasicSection({
             className="relative w-14 h-14 overflow-hidden flex items-center justify-center transition-all group"
             style={{
               background: "var(--th-bg-elevated)",
-              border: "2px solid var(--th-input-border)",
+              border: "2px solid var(--th-border)",
               borderRadius: 8,
             }}
             onClick={() => avatarInputRef.current?.click()}

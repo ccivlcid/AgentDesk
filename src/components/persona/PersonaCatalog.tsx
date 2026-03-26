@@ -38,7 +38,7 @@ export default function PersonaCatalog({ personas, selectedId, onSelect }: Perso
               "text-[10px] px-2 py-1 rounded border transition-colors",
               filter === cat
                 ? "bg-[var(--th-accent)] border-[var(--th-accent)] text-white"
-                : "border-[var(--th-border)] text-[var(--th-text-muted)] hover:border-[var(--th-border-accent)]",
+                : "border-[var(--th-border)] text-[var(--th-text-muted)] hover:border-[#BFDBFE]",
             ].join(" ")}
           >
             {CATEGORY_LABELS[cat] ?? cat}
@@ -62,7 +62,7 @@ export default function PersonaCatalog({ personas, selectedId, onSelect }: Perso
       {selectedId && (
         <button
           onClick={() => onSelect(null)}
-          className="text-[10px] text-[var(--th-text-muted)] hover:text-[var(--th-text)] underline underline-offset-2 text-center"
+          className="text-[10px] text-[var(--th-text-muted)] hover:text-[var(--th-text-primary)] underline underline-offset-2 text-center"
         >
           사고 방식 없이 사용하기
         </button>

@@ -74,8 +74,8 @@ export default function SnapFillSuggestion() {
       <div
         style={{
           pointerEvents: "auto",
-          background: "var(--th-panel-bg)",
-          backdropFilter: "blur(20px)",
+          background: "var(--th-bg-elevated)",
+          backdropFilter: "var(--th-glass-blur)",
           border: "1px solid var(--th-accent)",
           borderRadius: 12,
           padding: "12px 16px",

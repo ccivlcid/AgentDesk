@@ -46,7 +46,7 @@ export function CliWindowBottomBar({
         gap: 10,
         padding: "5px 12px",
         borderTop: "1px solid var(--th-border)",
-        background: "var(--th-bg-secondary)",
+        background: "var(--th-bg-surface)",
         flexShrink: 0,
         minHeight: 38,
       }}

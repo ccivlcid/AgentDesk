@@ -23,7 +23,7 @@ export default function AgentRulesHeader({
     <div
       className="border p-4"
       style={{
-        background: "var(--th-bg-panel)",
+        background: "var(--th-bg-elevated)",
         borderColor: "var(--th-border)",
         borderRadius: "10px 10px 0 0",
         backdropFilter: "blur(12px)",
@@ -32,7 +32,7 @@ export default function AgentRulesHeader({
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-primary)", textTransform: "uppercase" }}>
             {t({ ko: "에이전트 규칙", en: "AGENT RULES", ja: "エージェントルール", zh: "代理规则" })}
           </span>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-text-muted)" }}>
@@ -62,7 +62,7 @@ export default function AgentRulesHeader({
               zh: "搜索规则...（标题、描述、内容、范围）",
             })}
             className="w-full px-4 py-2 text-sm focus:outline-none"
-            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
+            style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
           />
           {search && (
             <button
@@ -79,7 +79,7 @@ export default function AgentRulesHeader({
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as RuleSortBy)}
           className="px-3 py-2 text-xs focus:outline-none"
-          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
+          style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
         >
           <option value="priority">
             {t({ ko: "우선순위순", en: "By Priority", ja: "優先順位順", zh: "按优先级" })}

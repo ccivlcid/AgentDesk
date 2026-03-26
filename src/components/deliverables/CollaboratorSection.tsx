@@ -42,7 +42,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (error) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", background: "var(--th-bg-surface)", color: "rgb(253,164,175)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", background: "var(--th-bg-surface)", color: "rgb(253,164,175)" }}>
         {t({ ko: "협업 정보를 불러올 수 없습니다", en: "Failed to load collaboration info", ja: "コラボ情報を取得できません", zh: "无法加载协作信息" })}
       </div>
     );
@@ -50,7 +50,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (collaborators === null) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "협업 정보 로딩중...", en: "Loading collaborators...", ja: "コラボ情報を読み込み中...", zh: "加载协作信息..." })}
       </div>
     );
@@ -67,9 +67,9 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
       case "review":
         return "border-amber-500/40 bg-amber-500/15 text-amber-300";
       case "in_progress":
-        return "border-[rgba(59,130,246,0.4)] bg-[rgba(59,130,246,0.15)] text-[#93c5fd]";
+        return "border-[var(--th-accent-overlay)] bg-[var(--th-amber-glow)] text-[#93c5fd]";
       default:
-        return "border-[var(--th-border)] bg-[var(--th-bg-elevated)] text-[var(--th-text-muted)]";
+        return "border-[var(--th-border)] bg-[#FFFFFF] text-[var(--th-text-muted)]";
     }
   };
 
@@ -87,11 +87,11 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
   };
 
   return (
-    <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+    <div className="overflow-hidden" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
       <button
         type="button"
         onClick={onToggleSection}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-surface-hover)] transition"
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-primary)] transition"
       >
         <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "협업 참여자", en: "Collaborators", ja: "コラボレーター", zh: "协作者" })}
@@ -122,10 +122,10 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
                 <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-heading)" }}>{name || "-"}</span>
+                    <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{name || "-"}</span>
                     {dept && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{dept}</span>}
                     {role && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {role}</span>}
-                    <span className={`ml-auto inline-flex items-center border px-1.5 py-0.5 text-[9px] font-medium font-mono ${statusCls(collab.status)}`} style={{ borderRadius: 0 }}>
+                    <span className={`ml-auto inline-flex items-center border px-1.5 py-0.5 text-[9px] font-medium font-mono ${statusCls(collab.status)}`} style={{ borderRadius: 8 }}>
                       {statusLabel(collab.status)}
                     </span>
                   </div>

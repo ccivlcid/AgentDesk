@@ -30,7 +30,7 @@ function lineColor(text: string, isLight: boolean): string {
   if (/error|fail|exception|fatal|traceback/i.test(t)) return "#ff453a";
   if (/warn/i.test(t)) return "#ffd60a";
   if (/success|done|complete|✓|✔/i.test(t)) return "#30d158";
-  return isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.7)";
+  return "var(--th-text-primary)";
 }
 
 export default function AgentLogsTab({ agentId: _agentId, taskId, t, isLight }: Props) {
@@ -76,9 +76,9 @@ export default function AgentLogsTab({ agentId: _agentId, taskId, t, isLight }: 
 
   const clear = useCallback(() => setLines([]), []);
 
-  const bg = isLight ? "rgba(0,0,0,0.03)" : "rgba(0,0,0,0.35)";
-  const border = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)";
-  const muted = isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)";
+  const bg = "var(--th-bg-surface)";
+  const border = "var(--th-border)";
+  const muted = "var(--th-text-muted)";
   const mono = "var(--th-font-mono, monospace)";
 
   if (!taskId) {
@@ -92,7 +92,7 @@ export default function AgentLogsTab({ agentId: _agentId, taskId, t, isLight }: 
         gap: 8,
         fontFamily: mono,
       }}>
-        <span style={{ fontSize: 22 }}>💤</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--th-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <span style={{ fontSize: 11, color: muted }}>
           {t({ ko: "실행 중인 태스크 없음", en: "No active task", ja: "実行中のタスクなし", zh: "无运行中任务" })}
         </span>

@@ -131,7 +131,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         style={{
           borderBottom: "1px solid var(--th-border)",
           padding: "12px 18px",
-          background: "var(--th-bg-panel)",
+          background: "var(--th-bg-elevated)",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -161,7 +161,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t({ ko: "검색 (제목, 에이전트, 프로젝트...)", en: "Search (title, agent, project...)", ja: "検索...", zh: "搜索..." })}
-          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text)", outline: "none" }}
+          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
         />
         <select
           value={sortBy}
@@ -202,9 +202,9 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
               onClick={() => setShowAllProjects((v) => !v)}
               style={{
                 ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                border: `1px solid ${showAllProjects ? "var(--th-info)" : "var(--th-border)"}`,
+                border: `1px solid ${showAllProjects ? "var(--th-accent)" : "var(--th-border)"}`,
                 background: showAllProjects ? "rgba(96,165,250,0.08)" : "transparent",
-                color: showAllProjects ? "var(--th-info)" : "var(--th-text-muted)",
+                color: showAllProjects ? "var(--th-accent)" : "var(--th-text-muted)",
                 cursor: "pointer",
               }}
             >

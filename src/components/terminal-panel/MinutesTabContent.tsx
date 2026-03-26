@@ -93,7 +93,7 @@ export function MinutesTabContent({
                   fontFamily: mono, fontSize: 10, fontWeight: isActive ? 700 : 500,
                   padding: "2px 10px",
                   borderRadius: 20,
-                  border: isActive ? "1px solid var(--th-border-accent)" : "1px solid var(--th-border)",
+                  border: isActive ? "1px solid #BFDBFE" : "1px solid var(--th-border)",
                   background: isActive ? "rgba(245,158,11,0.1)" : "transparent",
                   color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
                   cursor: "pointer",

@@ -29,7 +29,7 @@ export const STATUS_BADGES: Record<string, { label: LangText; color: string }> =
   },
   planned: {
     label: { ko: "예정", en: "Planned", ja: "予定", zh: "计划" },
-    color: "bg-[rgba(59,130,246,0.2)] text-[#60a5fa] border-[rgba(59,130,246,0.4)]",
+    color: "bg-[var(--th-accent-border-subtle)] text-[#60a5fa] border-[var(--th-accent-overlay)]",
   },
   cancelled: {
     label: { ko: "취소", en: "Cancelled", ja: "キャンセル", zh: "已取消" },

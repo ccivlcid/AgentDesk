@@ -12,7 +12,7 @@ export function FeatureGrid({ features }: FeatureGridProps) {
         <div key={f.label} style={{
           display: "flex", alignItems: "flex-start", gap: 10,
           padding: "7px 10px",
-          background: "var(--th-hover-overlay-subtle)",
+          background: "var(--th-bg-primary)",
           border: "1px solid var(--th-border)",
           borderRadius: 6,
         }}>

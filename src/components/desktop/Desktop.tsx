@@ -82,7 +82,7 @@ function KickoffStageOverlay() {
             border: "1px solid var(--th-border)",
             borderRadius: 12,
             padding: "12px 24px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+            boxShadow: "0 12px 40px var(--th-modal-overlay)",
             display: "flex",
             alignItems: "center",
             gap: 0,
@@ -99,7 +99,7 @@ function KickoffStageOverlay() {
                     height: 2,
                     borderRadius: 1,
                     background: state === "pending"
-                      ? "var(--th-text-muted, rgba(255,255,255,0.15))"
+                      ? "var(--th-text-muted)"
                       : "var(--th-success, #22c55e)",
                     transition: "background 0.3s ease",
                     margin: "0 4px",
@@ -125,10 +125,10 @@ function KickoffStageOverlay() {
                     /* Active: accent circle with spinner */
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      background: "var(--th-accent, #f59e0b)",
+                      background: "var(--th-accent)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: "0 0 8px var(--th-accent, #f59e0b)",
+                      boxShadow: "0 0 8px var(--th-accent)",
                       animation: "kickoff-pulse 1.5s ease-in-out infinite",
                       color: "#fff",
                     }}>
@@ -140,7 +140,7 @@ function KickoffStageOverlay() {
                     /* Pending: gray outline */
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      border: "2px solid var(--th-text-muted, rgba(255,255,255,0.2))",
+                      border: "2px solid var(--th-text-muted)",
                       background: "transparent",
                       flexShrink: 0,
                     }} />
@@ -153,8 +153,8 @@ function KickoffStageOverlay() {
                     color: state === "done"
                       ? "var(--th-success, #22c55e)"
                       : state === "active"
-                        ? "var(--th-accent, #f59e0b)"
-                        : "var(--th-text-muted, rgba(255,255,255,0.35))",
+                        ? "var(--th-accent)"
+                        : "var(--th-text-muted)",
                     whiteSpace: "nowrap",
                     transition: "color 0.3s ease",
                   }}>

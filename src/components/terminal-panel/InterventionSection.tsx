@@ -75,7 +75,7 @@ export function InterventionSection({
         disabled={busy}
         className="w-full border px-2 py-1.5 text-xs font-mono resize-y focus:outline-none"
         style={{
-          borderRadius: 0,
+          borderRadius: 8,
           borderColor: "var(--th-border)",
           background: "var(--th-bg-surface)",
           color: "var(--th-text-primary)",
@@ -101,7 +101,7 @@ export function InterventionSection({
             disabled={busy}
             className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
             style={{
-              borderRadius: 0,
+              borderRadius: 8,
               borderColor: "var(--th-border)",
               color: "var(--th-text-secondary)",
             }}
@@ -115,7 +115,7 @@ export function InterventionSection({
           disabled={busy || !prompt.trim() || !canAttemptInterrupt}
           className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-70 disabled:cursor-not-allowed"
           style={{
-            borderRadius: 0,
+            borderRadius: 8,
             borderColor: "var(--th-danger-border)",
             background: "var(--th-danger-bg)",
             color: "var(--th-danger-text)",
@@ -131,7 +131,7 @@ export function InterventionSection({
             disabled={busy}
             className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
             style={{
-              borderRadius: 0,
+              borderRadius: 8,
               borderColor: "var(--th-border)",
               color: "var(--th-text-secondary)",
             }}

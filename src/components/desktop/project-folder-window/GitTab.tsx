@@ -84,14 +84,14 @@ export function GitTab({ project }: { project: Project }) {
   const s: React.CSSProperties = { fontFamily: mono };
   const inputStyle: React.CSSProperties = {
     ...s, fontSize: 11, padding: "6px 10px",
-    background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+    background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
     borderRadius: 6, color: "var(--th-text-primary)", outline: "none", width: "100%",
   };
 
   if (step === "cloning") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
-        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
           {t({ ko: "클론 중...", en: "Cloning...", ja: "クローン中...", zh: "正在克隆..." })}
         </div>
         <div style={{ width: 280, height: 6, borderRadius: 3, background: "var(--th-border)", overflow: "hidden" }}>
@@ -111,7 +111,7 @@ export function GitTab({ project }: { project: Project }) {
             <path d="M13 22L19 28L31 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
           {t({ ko: "완료!", en: "Done!", ja: "完了!", zh: "完成!" })}
         </div>
         <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{project.project_path}</div>
@@ -134,7 +134,7 @@ export function GitTab({ project }: { project: Project }) {
       </div>
 
       {step === "error" && (
-        <div style={{ ...s, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", borderRadius: 6 }}>
+        <div style={{ ...s, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid #FECACA", borderRadius: 6 }}>
           {errorMsg}
         </div>
       )}
@@ -143,7 +143,7 @@ export function GitTab({ project }: { project: Project }) {
         {(["github", "gitlab"] as GitProvider[]).map((p) => {
           const active = provider === p;
           const isGh = p === "github";
-          const color      = isGh ? "var(--th-text-heading)" : "#fc6d26";
+          const color      = isGh ? "var(--th-text-primary)" : "#fc6d26";
           const activeBg   = isGh ? "var(--th-hover-overlay-subtle)" : "rgba(252,109,38,0.1)";
           const activeBorder = isGh ? "var(--th-border-strong)" : "rgba(252,109,38,0.5)";
           return (

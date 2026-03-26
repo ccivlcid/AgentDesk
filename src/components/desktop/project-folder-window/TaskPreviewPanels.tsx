@@ -43,7 +43,7 @@ export function LogsPane({ logs }: { logs: Array<{ kind: string; message: string
       {logs.map((log, i) => (
         <div key={i} style={{ display: "flex", gap: 10, fontSize: 10, color: "var(--th-text-secondary)" }}>
           <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 90 }}>{fmtTime(log.created_at)}</span>
-          <span style={{ color: log.kind === "error" ? "var(--th-danger, #ef4444)" : "var(--th-text-muted)", flexShrink: 0, width: 60 }}>[{log.kind}]</span>
+          <span style={{ color: log.kind === "error" ? "var(--th-danger-text)" : "var(--th-text-muted)", flexShrink: 0, width: 60 }}>[{log.kind}]</span>
           <span style={{ flex: 1, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{log.message}</span>
         </div>
       ))}
@@ -220,7 +220,7 @@ export function PendingPreview({ task }: { task: Task }) {
         {task.context_hint && <MetaChip label="Hint" value={task.context_hint} />}
       </div>
       {task.execution_error_summary && (
-        <div style={{ padding: "10px 12px", borderRadius: 6, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", fontSize: 11, color: "var(--th-danger-text, #f85149)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ padding: "10px 12px", borderRadius: 6, background: "var(--th-danger-bg)", border: "1px solid #FECACA", fontSize: 11, color: "var(--th-danger-text)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
           <span style={{ display: "inline-flex", flexShrink: 0, marginTop: 1 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />

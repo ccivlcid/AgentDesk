@@ -73,8 +73,8 @@ export function ProgressHintsStrip({
         flexShrink: 0,
         borderTop: `1px solid ${borderColor}`,
         background: bg,
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        backdropFilter: "var(--th-glass-blur)",
+        WebkitBackdropFilter: "var(--th-glass-blur)",
         padding: "7px 18px 8px",
         display: "flex",
         flexDirection: "column",
@@ -193,7 +193,7 @@ export function ProgressHintsStrip({
                     isError ? "rgba(253,164,175,0.25)"
                     : isOk   ? "rgba(74,222,128,0.22)"
                     : isActive ? hc.border
-                    : isLight   ? "rgba(0,0,0,0.08)"
+                    : isLight   ? "var(--th-glass-shadow)"
                     : "rgba(255,255,255,0.08)"
                   }`,
                   color: isError

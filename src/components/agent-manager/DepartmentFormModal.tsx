@@ -192,8 +192,8 @@ export default function DepartmentFormModal({
   const inputCls =
     "w-full px-3 py-2 border text-sm focus:outline-none transition-colors";
   const inputStyle = {
-    background: "var(--th-input-bg)",
-    borderColor: "var(--th-input-border)",
+    background: "var(--th-bg-elevated)",
+    borderColor: "var(--th-border)",
     color: "var(--th-text-primary)",
   };
 
@@ -398,7 +398,7 @@ export default function DepartmentFormModal({
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
             className="flex-1 px-4 py-2.5 text-sm font-medium font-mono transition-all disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            style={{ borderRadius: 10, background: "var(--th-accent)", color: "white" }}
           >
             {saving
               ? t({ ko: "처리 중...", en: "Saving...", ja: "処理中...", zh: "处理中..." })
@@ -413,14 +413,14 @@ export default function DepartmentFormModal({
                   onClick={handleDelete}
                   disabled={saving}
                   className="px-3 py-2.5 text-xs font-medium font-mono disabled:opacity-40 transition-colors"
-                  style={{ borderRadius: 0, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
+                  style={{ borderRadius: 8, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
                 >
                   {t({ ko: "삭제 확인", en: "Confirm", ja: "削除確認", zh: "确认删除" })}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
                   className="px-2 py-2.5 text-xs font-mono transition-colors"
-                  style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
+                  style={{ borderRadius: 8, color: "var(--th-text-muted)" }}
                 >
                   {t({ ko: "취소", en: "No", ja: "いいえ", zh: "取消" })}
                 </button>
@@ -429,15 +429,15 @@ export default function DepartmentFormModal({
               <button
                 onClick={() => setConfirmDelete(true)}
                 className="px-3 py-2.5 text-sm font-medium font-mono transition-all"
-                style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
+                style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
               >
                 {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
               </button>
             ))}
           <button
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+            className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-gray-100"
+            style={{ borderRadius: 10, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>

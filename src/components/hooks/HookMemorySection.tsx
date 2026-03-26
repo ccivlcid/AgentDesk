@@ -40,7 +40,7 @@ export default function HookMemorySection({
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </span>
-          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
+          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>
             {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
           </span>
         </div>

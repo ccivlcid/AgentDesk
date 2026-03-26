@@ -143,10 +143,10 @@ export default function CommandPalette({
         tabIndex={-1}
         style={{
           width: "min(680px, 92vw)",
-          background: "var(--th-glass-surface-active)",
+          background: "var(--th-bg-surface)",
           backdropFilter: "var(--th-glass-blur) saturate(180%)",
           WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
-          border: "1px solid var(--th-glass-border-strong)",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 22,
           boxShadow: "var(--th-glass-shadow-active)",
           overflow: "hidden",

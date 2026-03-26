@@ -73,8 +73,8 @@ export default function AppSwitcher() {
         alignItems: "center",
         justifyContent: "center",
         background: "rgba(0,0,0,0.35)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        backdropFilter: "var(--th-glass-blur)",
+        WebkitBackdropFilter: "var(--th-glass-blur)",
       }}
     >
       <div
@@ -86,7 +86,7 @@ export default function AppSwitcher() {
           background: "var(--th-bg-surface)",
           border: "1px solid var(--th-border)",
           borderRadius: 16,
-          boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+          boxShadow: "0 24px 64px var(--th-modal-overlay)",
         }}
       >
         {ordered.map((w, i) => {
@@ -118,7 +118,7 @@ export default function AppSwitcher() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "var(--th-bg-secondary)",
+                  background: "var(--th-bg-surface)",
                   color: "var(--th-text-primary)",
                 }}
               >

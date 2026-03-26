@@ -55,7 +55,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           WebkitBackdropFilter: "blur(32px) saturate(180%)",
           border: "1px solid var(--th-border-strong)",
           borderRadius: 16,
-          boxShadow: "0 32px 64px var(--th-glass-shadow), inset 0 1px 0 var(--th-glass-highlight)",
+          boxShadow: "0 32px 64px var(--th-glass-shadow), inset 0 1px 0 rgba(255,255,255,0.5)",
           overflow: "hidden",
         }}
       >
@@ -67,7 +67,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             gap: 8,
             padding: "10px 14px",
             borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-glass-bg)",
+            background: "var(--th-bg-elevated)",
           }}
         >
           <div style={{ display: "flex", gap: 5 }}>
@@ -165,7 +165,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
                         padding: "2px 8px 2px 4px",
                         borderRadius: 12,
                         background: "var(--th-accent-glow)",
-                        border: "1px solid var(--th-border-accent)",
+                        border: "1px solid #BFDBFE",
                         fontFamily: mono,
                         fontSize: 10,
                         color: "var(--th-text-primary)",

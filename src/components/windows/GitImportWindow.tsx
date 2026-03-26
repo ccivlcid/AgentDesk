@@ -116,9 +116,9 @@ function TrendingCard({
     <div
       style={{
         border: "1px solid var(--th-border)",
-        borderRadius: 8,
+        borderRadius: 16,
         padding: "14px 16px",
-        background: "var(--th-bg-surface)",
+        background: "var(--th-bg-elevated)",
         display: "flex",
         flexDirection: "column",
         gap: 8,
@@ -129,11 +129,11 @@ function TrendingCard({
     >
       {/* top row: stars + trend */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--th-accent)" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#F59E0B" }}>
           <StarIcon size={12} /> {formatNum(repo.stars)}
         </span>
         {repo.stars_today > 0 && (
-          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#30d158", fontSize: 10, fontWeight: 600 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--th-success)", fontSize: 10, fontWeight: 600 }}>
             <TrendUpIcon /> +{formatNum(repo.stars_today)}
           </span>
         )}
@@ -147,7 +147,7 @@ function TrendingCard({
 
       {/* name */}
       <div>
-        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", lineHeight: 1.2 }}>
+        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)", lineHeight: 1.2 }}>
           {repo.name}
         </div>
         <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginTop: 1 }}>
@@ -177,7 +177,7 @@ function TrendingCard({
       {/* download button */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto", gap: 8 }}>
         {isDone ? (
-          <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "#30d158", display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "var(--th-success)", display: "flex", alignItems: "center", gap: 4 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
@@ -192,7 +192,7 @@ function TrendingCard({
               type="button"
               onClick={onSelectInstalled}
               style={{
-                ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 4,
+                ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 10,
                 border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
                 cursor: "pointer",
               }}
@@ -212,8 +212,8 @@ function TrendingCard({
             type="button"
             onClick={onDownload}
             style={{
-              ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 4,
-              border: "1px solid rgba(255,69,58,0.4)", background: "rgba(255,69,58,0.1)", color: "#ff453a",
+              ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
+              border: "1px solid #FECACA", background: "var(--th-danger-bg)", color: "var(--th-danger-text)",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
             }}
           >
@@ -224,8 +224,8 @@ function TrendingCard({
             type="button"
             onClick={onDownload}
             style={{
-              ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 4,
-              border: "none", background: "var(--th-accent)", color: "#000",
+              ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 10,
+              border: "none", background: "var(--th-accent)", color: "var(--th-bg-elevated)",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
               transition: "opacity 0.12s",
             }}
@@ -383,7 +383,7 @@ export default function GitImportWindow() {
   }, [directUrl, startDownload]);
 
   const selectStyle: React.CSSProperties = {
-    ...mono, fontSize: 10, padding: "4px 6px", borderRadius: 4,
+    ...mono, fontSize: 10, padding: "4px 6px", borderRadius: 10,
     border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
     color: "var(--th-text-primary)", outline: "none", cursor: "pointer",
   };
@@ -411,7 +411,7 @@ export default function GitImportWindow() {
             onKeyDown={(e) => { if (e.key === "Enter") handleDirectDownload(); }}
             placeholder={t({ ko: "owner/repo 또는 GitHub URL 입력...", en: "owner/repo or GitHub URL...", ja: "owner/repo または GitHub URL...", zh: "owner/repo 或 GitHub URL..." })}
             style={{
-              ...mono, flex: 1, fontSize: 12, padding: "7px 10px", borderRadius: 6,
+              ...mono, flex: 1, fontSize: 12, padding: "7px 10px", borderRadius: 10,
               border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
               color: "var(--th-text-primary)", outline: "none",
             }}
@@ -421,9 +421,9 @@ export default function GitImportWindow() {
             onClick={handleDirectDownload}
             disabled={!directUrl.trim()}
             style={{
-              ...mono, fontSize: 11, fontWeight: 700, padding: "7px 16px", borderRadius: 6,
-              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "rgba(245,158,11,0.2)",
-              color: directUrl.trim() ? "#000" : "var(--th-text-muted)",
+              ...mono, fontSize: 11, fontWeight: 700, padding: "7px 16px", borderRadius: 10,
+              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "var(--th-accent-border-subtle)",
+              color: directUrl.trim() ? "var(--th-bg-elevated)" : "var(--th-text-muted)",
               cursor: directUrl.trim() ? "pointer" : "not-allowed",
               display: "flex", alignItems: "center", gap: 5,
             }}
@@ -444,7 +444,7 @@ export default function GitImportWindow() {
                   value={downloadPath}
                   onChange={(e) => setDownloadPath(e.target.value)}
                   style={{
-                    ...mono, flex: 1, fontSize: 11, padding: "4px 8px", borderRadius: 4,
+                    ...mono, flex: 1, fontSize: 11, padding: "4px 8px", borderRadius: 10,
                     border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
                     color: "var(--th-text-primary)", outline: "none",
                   }}
@@ -456,8 +456,8 @@ export default function GitImportWindow() {
                     await pathTools.loadManualPathEntries(downloadPath || undefined);
                   }}
                   style={{
-                    ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 4,
-                    border: "1px solid var(--th-border)", background: "var(--th-bg-surface)",
+                    ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
                     color: "var(--th-text-primary)", cursor: "pointer", flexShrink: 0,
                     display: "flex", alignItems: "center", gap: 4,
                   }}

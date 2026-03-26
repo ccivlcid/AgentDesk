@@ -17,8 +17,8 @@ function formatDuration(ms: number | null): string {
 function statusBadgeStyle(status: string): React.CSSProperties {
   const styles: Record<string, React.CSSProperties> = {
     done: { background: "rgba(52,211,153,0.2)", color: "rgb(110,231,183)" },
-    review: { background: "rgba(251,191,36,0.2)", color: "var(--th-accent)" },
-    in_progress: { background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" },
+    review: { background: "var(--th-accent-bg)", color: "var(--th-accent)" },
+    in_progress: { background: "var(--th-accent-bg)", color: "var(--th-accent)" },
     inbox: { background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" },
     planned: { background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" },
   };
@@ -114,11 +114,11 @@ function DailyBarChart({ data, t }: { data: ReturnType<typeof buildDailyChart>; 
       </svg>
       <div className="flex items-center gap-3 mt-1">
         <span className="flex items-center gap-1 text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          <span className="inline-block w-2 h-2" style={{ background: "rgba(52,211,153,0.7)", borderRadius: 0 }} />
+          <span className="inline-block w-2 h-2" style={{ background: "rgba(52,211,153,0.7)", borderRadius: 8 }} />
           {t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}
         </span>
         <span className="flex items-center gap-1 text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          <span className="inline-block w-2 h-2" style={{ background: "rgba(244,63,94,0.55)", borderRadius: 0 }} />
+          <span className="inline-block w-2 h-2" style={{ background: "rgba(244,63,94,0.55)", borderRadius: 8 }} />
           {t({ ko: "실패", en: "Failed", ja: "失敗", zh: "失败" })}
         </span>
       </div>
@@ -181,7 +181,7 @@ export default function AgentPerformancePanel({ agentId, t }: Props) {
       </div>
 
       {/* 7-day activity chart */}
-      <div className="border p-3" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 0 }}>
+      <div className="border p-3" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 8 }}>
         <h4 className="mb-2 text-xs font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "7일 작업 히스토리", en: "7-Day Activity", ja: "7日間の活動", zh: "7日活动" })}
         </h4>
@@ -221,11 +221,11 @@ export default function AgentPerformancePanel({ agentId, t }: Props) {
               <div
                 key={task.id}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm"
-                style={{ borderRadius: 0, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+                style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
               >
                 <span
                   className="inline-block px-1.5 py-0.5 text-[10px] font-mono font-medium"
-                  style={{ borderRadius: 0, ...statusBadgeStyle(task.status) }}
+                  style={{ borderRadius: 8, ...statusBadgeStyle(task.status) }}
                 >
                   {task.status}
                 </span>

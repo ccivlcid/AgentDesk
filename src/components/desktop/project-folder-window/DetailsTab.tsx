@@ -22,13 +22,13 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
   if (confirming) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 10, color: "var(--th-danger-text, #f85149)", fontFamily: "var(--th-font-mono)" }}>
+        <span style={{ fontSize: 10, color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)" }}>
           &ldquo;{projectName}&rdquo; {t({ ko: "삭제?", en: "Delete?", ja: "削除?", zh: "删除?" })}
         </span>
         <button
           type="button"
           onClick={onConfirm}
-          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger, #ef4444)", border: "none", color: "#fff", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}
+          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger-text)", border: "none", color: "#fff", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}
         >
           {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
         </button>
@@ -47,7 +47,7 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", color: "var(--th-danger-text, #f85149)", cursor: "pointer", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}
+      style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger-bg)", border: "1px solid #FECACA", color: "var(--th-danger-text)", cursor: "pointer", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}
     >
       🗑 {t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" })}
     </button>
@@ -80,8 +80,8 @@ export function DetailsTab({ project, taskCount, agentCount, onDelete }: { proje
         </div>
       ))}
 
-      <div style={{ margin: "20px 16px 12px", padding: "14px 16px", borderRadius: 8, border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", background: "var(--th-danger-bg, rgba(239,68,68,0.06))" }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--th-danger-text, #f85149)", marginBottom: 8 }}>{t({ ko: "위험 구역", en: "Danger Zone", ja: "危険ゾーン", zh: "危险区域" })}</div>
+      <div style={{ margin: "20px 16px 12px", padding: "14px 16px", borderRadius: 8, border: "1px solid #FECACA", background: "var(--th-danger-bg)" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--th-danger-text)", marginBottom: 8 }}>{t({ ko: "위험 구역", en: "Danger Zone", ja: "危険ゾーン", zh: "危险区域" })}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
             {t({ ko: "이 프로젝트를 삭제합니다. 되돌릴 수 없습니다.", en: "This action permanently deletes the project.", ja: "このプロジェクトを削除します。元に戻せません。", zh: "此操作将永久删除该项目。" })}

@@ -7,8 +7,8 @@ interface StageRailProps {
 const STAGES = [
   { id: "meeting", label: "MEETING", icon: meetingIcon },
   { id: "planning", label: "PLANNING", icon: planningIcon },
-  { id: "assigning", label: "ASSIGNING", icon: assigningIcon },
-  { id: "executing", label: "EXECUTING", icon: executingIcon },
+  { id: "assigning", label: "ASSIGN", icon: assigningIcon },
+  { id: "executing", label: "EXECUTE", icon: executingIcon },
   { id: "review", label: "REVIEW", icon: reviewIcon },
 ] as const;
 
@@ -21,21 +21,32 @@ export default function StageRail({ stage }: StageRailProps) {
     <div style={{
       display: "flex",
       flexDirection: "column",
-      width: 64,
-      borderRight: "1px solid var(--th-border)",
-      background: "var(--th-bg-primary)",
-      padding: "12px 0",
+      width: 72,
+      background: "var(--th-bg-elevated)",
+      borderRight: "1px solid rgba(0, 0, 0, 0.05)",
+      padding: "16px 0",
       gap: 4,
       flexShrink: 0,
     }}>
       {STAGES.map((s, i) => {
         const isCurrent = s.id === stage;
         const isDone = activeIdx >= 0 && i < activeIdx;
-        const isPending = activeIdx < 0 || i > activeIdx;
 
-        let color = "var(--th-text-muted)";
-        if (isCurrent) color = "var(--th-accent)";
-        else if (isDone) color = "var(--th-text-code)";
+        let iconBg = "var(--th-bg-surface)";
+        let iconColor = "var(--th-text-muted)";
+        let textColor = "var(--th-text-muted)";
+        let borderLeftColor = "transparent";
+
+        if (isCurrent) {
+          iconBg = "var(--th-accent-glow)";
+          iconColor = "var(--th-accent)";
+          textColor = "var(--th-accent)";
+          borderLeftColor = "var(--th-accent)";
+        } else if (isDone) {
+          iconBg = "#ECFDF5";
+          iconColor = "var(--th-success)";
+          textColor = "var(--th-success)";
+        }
 
         return (
           <div
@@ -44,24 +55,33 @@ export default function StageRail({ stage }: StageRailProps) {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 4,
+              gap: 6,
               padding: "8px 4px",
-              borderLeft: isCurrent ? "3px solid var(--th-accent)" : "3px solid transparent",
+              borderLeft: `3px solid ${borderLeftColor}`,
               cursor: "default",
-              transition: "border-color 0.2s",
+              transition: "all 0.2s",
             }}
           >
-            <div style={{ color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {s.icon(color)}
+            <div style={{
+              padding: 5,
+              background: iconBg,
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s",
+            }}>
+              {s.icon(iconColor)}
             </div>
             <span style={{
               fontFamily: mono,
               fontSize: 8,
-              fontWeight: isCurrent ? 700 : 500,
-              color,
-              letterSpacing: 0.5,
+              fontWeight: isCurrent ? 800 : 600,
+              color: textColor,
+              letterSpacing: "0.05em",
               textAlign: "center",
               lineHeight: 1.2,
+              textTransform: "uppercase" as const,
             }}>
               {s.label}
             </span>
@@ -72,10 +92,10 @@ export default function StageRail({ stage }: StageRailProps) {
   );
 }
 
-// Stage icons (inline SVG, 18x18)
+// Stage icons (inline SVG, 16x16)
 function meetingIcon(color: string) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -86,7 +106,7 @@ function meetingIcon(color: string) {
 
 function planningIcon(color: string) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
@@ -95,7 +115,7 @@ function planningIcon(color: string) {
 
 function assigningIcon(color: string) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <line x1="19" y1="8" x2="19" y2="14" />
@@ -106,7 +126,7 @@ function assigningIcon(color: string) {
 
 function executingIcon(color: string) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="4 17 10 11 4 5" />
       <line x1="12" y1="19" x2="20" y2="19" />
     </svg>
@@ -115,7 +135,7 @@ function executingIcon(color: string) {
 
 function reviewIcon(color: string) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="9 11 12 14 22 4" />
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>

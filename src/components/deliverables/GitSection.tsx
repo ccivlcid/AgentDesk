@@ -29,7 +29,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   if (loading) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "Git 정보 로딩중...", en: "Loading Git info...", ja: "Git情報を読み込み中...", zh: "加载Git信息..." })}
       </div>
     );
@@ -92,11 +92,11 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   return (
     <>
-      <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="overflow-hidden" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <button
           type="button"
           onClick={onToggleSection}
-          className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-surface-hover)] transition"
+          className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-primary)] transition"
         >
           <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "Git 변경사항", en: "Git Changes", ja: "Git変更", zh: "Git变更" })}
@@ -120,7 +120,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
                 type="button"
                 onClick={() => setShowDiff(true)}
                 className="px-2.5 py-1 text-[11px] font-mono transition"
-                style={{ borderRadius: 0, border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}
+                style={{ borderRadius: 8, border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}
               >
                 {t({ ko: "Diff 보기", en: "View Diff", ja: "Diff表示", zh: "查看Diff" })}
               </button>
@@ -129,7 +129,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
                 onClick={() => void handleMerge()}
                 disabled={merging}
                 className="px-2.5 py-1 text-[11px] font-mono transition disabled:opacity-50"
-                style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.4)", background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)" }}
+                style={{ borderRadius: 8, border: "1px solid rgba(52,211,153,0.4)", background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)" }}
               >
                 {merging
                   ? t({ ko: "병합중...", en: "Merging...", ja: "マージ中...", zh: "合并中..." })
@@ -140,7 +140,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
                 onClick={() => void handleDiscard()}
                 disabled={discarding}
                 className="px-2.5 py-1 text-[11px] font-mono transition disabled:opacity-50"
-                style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
+                style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
               >
                 {discarding
                   ? t({ ko: "폐기중...", en: "Discarding...", ja: "破棄中...", zh: "丢弃中..." })

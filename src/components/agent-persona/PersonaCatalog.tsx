@@ -32,7 +32,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
               className="font-mono text-[9px] uppercase transition-colors"
               style={{
                 border: active ? "1px solid var(--th-accent, #f59e0b)" : "1px solid var(--th-border)",
-                borderRadius: 0,
+                borderRadius: 8,
                 padding: "2px 6px",
                 background: active ? "rgba(245,158,11,0.1)" : "var(--th-bg-primary)",
                 color: active ? "#f59e0b" : "var(--th-text-muted)",
@@ -50,7 +50,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
             className="font-mono text-[9px] uppercase transition-colors ml-auto"
             style={{
               border: "1px solid rgba(248,113,113,0.3)",
-              borderRadius: 0,
+              borderRadius: 8,
               padding: "2px 6px",
               background: "rgba(248,113,113,0.08)",
               color: "#f87171",

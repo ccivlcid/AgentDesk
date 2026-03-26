@@ -65,11 +65,11 @@ export default function ProjectFolderWindow({
         display: "flex",
         flexDirection: "column",
         background: "var(--th-bg-surface)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        backdropFilter: "var(--th-glass-blur)",
+        WebkitBackdropFilter: "var(--th-glass-blur)",
         border: "1px solid var(--th-border-strong)",
         borderRadius: 12,
-        boxShadow: "0 24px 64px rgba(0,0,0,0.45)",
+        boxShadow: "0 24px 64px var(--th-glass-shadow)",
         fontFamily: "var(--th-font-mono)",
         overflow: "hidden",
       }}
@@ -83,7 +83,7 @@ export default function ProjectFolderWindow({
           padding: "0 12px",
           height: 40,
           flexShrink: 0,
-          background: "var(--th-glass-bg)",
+          background: "var(--th-bg-elevated)",
           borderBottom: "1px solid var(--th-border)",
           cursor: "default",
           userSelect: "none",
@@ -93,7 +93,7 @@ export default function ProjectFolderWindow({
       >
         <TrafficLights onClose={onClose} />
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, flexShrink: 0 }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {project.name}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }} onMouseDown={(e) => e.stopPropagation()}>
@@ -105,7 +105,7 @@ export default function ProjectFolderWindow({
             <button
               type="button"
               onClick={() => { onSelectProject(project.id); setCurrentProjectId(project.id); }}
-              style={{ fontSize: 10, padding: "3px 10px", background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)", display: "inline-flex", alignItems: "center", gap: 5 }}
+              style={{ fontSize: 10, padding: "3px 10px", background: "var(--th-accent-glow)", border: "1px solid #BFDBFE", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)", display: "inline-flex", alignItems: "center", gap: 5 }}
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <polygon points="5 3 19 12 5 21 5 3" />

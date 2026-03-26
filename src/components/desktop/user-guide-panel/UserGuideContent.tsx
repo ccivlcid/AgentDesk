@@ -23,7 +23,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
         </div>
         <h2 style={{
           margin: 0, fontSize: 15, fontWeight: 700,
-          color: "var(--th-text-heading)", fontFamily: MONO_FONT,
+          color: "var(--th-text-primary)", fontFamily: MONO_FONT,
         }}>
           {chapter.title}
         </h2>
@@ -45,14 +45,14 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
           {sec.keys && sec.keys.length > 0 && (
             <div style={{
               border: "1px solid var(--th-border)",
-              borderRadius: 7, overflow: "hidden",
+              borderRadius: 8, overflow: "hidden",
               marginBottom: sec.body ? 12 : 0,
             }}>
               {sec.keys.map(({ keys, desc }, ki) => (
                 <div key={ki} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "7px 12px", gap: 12,
-                  background: ki % 2 === 0 ? "transparent" : "var(--th-hover-overlay-subtle)",
+                  background: ki % 2 === 0 ? "transparent" : "var(--th-bg-primary)",
                   borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid var(--th-border)" : "none",
                 }}>
                   <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: MONO_FONT, flex: 1, minWidth: 0 }}>{desc}</span>

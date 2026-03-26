@@ -52,8 +52,8 @@ export default function ProjectInsightsPanel({
       )}
 
       {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
-        <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+        <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "번다운 차트", en: "Burndown Chart", ja: "バーンダウンチャート", zh: "燃尽图" })}
           </h4>
           <BurndownChart projectId={selectedProject.id} t={t} />

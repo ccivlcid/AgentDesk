@@ -133,7 +133,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
   if (step === "cloning") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "40px 0" }}>
-        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
           {t({ ko: "클론 중...", en: "Cloning...", ja: "クローン中...", zh: "正在克隆..." })}
         </div>
         <div style={{ width: 280, height: 6, borderRadius: 3, background: "var(--th-border)", overflow: "hidden" }}>
@@ -148,7 +148,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* 에러 */}
       {step === "error" && (
-        <div style={{ ...mono, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", borderRadius: 4 }}>
+        <div style={{ ...mono, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid #FECACA", borderRadius: 4 }}>
           {errorMsg}
         </div>
       )}

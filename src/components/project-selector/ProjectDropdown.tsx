@@ -40,7 +40,7 @@ export default function ProjectDropdown({
     <div
       ref={ref}
       className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-none
-                 border border-[var(--th-border-strong)] bg-[var(--th-bg-elevated)]"
+                 border border-[var(--th-border-strong)] bg-[#FFFFFF]"
       style={{ fontFamily: "var(--th-font-mono)" }}
     >
       {/* 프로젝트 목록 */}
@@ -60,8 +60,8 @@ export default function ProjectDropdown({
                 className={[
                   "w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors",
                   isActive
-                    ? "bg-[var(--th-active-bg)] text-[var(--th-text)]"
-                    : "hover:bg-[var(--th-bg-surface)] text-[var(--th-text)]",
+                    ? "bg-[#EBF5FF] text-[var(--th-text-primary)]"
+                    : "hover:bg-[var(--th-bg-surface)] text-[var(--th-text-primary)]",
                 ].join(" ")}
               >
                 <span className="flex-1 truncate font-medium">{project.name}</span>

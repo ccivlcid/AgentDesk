@@ -32,7 +32,7 @@ export default function ProjectSelector({
         onClick={onCreateNew}
         title="프로젝트"
         className="w-8 h-8 flex items-center justify-center rounded
-                   bg-[var(--th-bg-surface)] hover:bg-[var(--th-bg-elevated)]
+                   bg-[var(--th-bg-surface)] hover:bg-[#FFFFFF]
                    border border-[var(--th-border)] transition-colors mx-auto"
       >
         <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -50,7 +50,7 @@ export default function ProjectSelector({
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2 rounded-none border border-[var(--th-border)] bg-transparent
                    px-2.5 py-1.5 text-left
-                   hover:border-[var(--th-border-strong)] hover:bg-[var(--th-hover-bg)]
+                   hover:border-[var(--th-border-strong)] hover:bg-[var(--th-bg-primary)]
                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--th-accent)]"
         style={{ transition: "border-color 0.15s, background 0.15s" }}
       >
@@ -74,7 +74,7 @@ export default function ProjectSelector({
             <>
               <span
                 className="min-w-0 truncate text-[11px] font-semibold leading-tight"
-                style={{ color: "var(--th-text-heading)" }}
+                style={{ color: "var(--th-text-primary)" }}
               >
                 {currentProject.name}
               </span>

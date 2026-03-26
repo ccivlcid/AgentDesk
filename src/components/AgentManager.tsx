@@ -351,15 +351,15 @@ export default function AgentManager({
         display: "flex", 
         alignItems: "center", 
         justifyContent: "space-between",
-        borderBottom: "1px solid var(--th-glass-border-subtle)",
-        background: "rgba(255,255,255,0.01)"
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-surface)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ padding: 10, background: "var(--th-accent)", borderRadius: 14, color: "black" }}>
+          <div style={{ padding: 10, background: "var(--th-accent)", borderRadius: 14, color: "white" }}>
             <Users size={20} />
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--th-text-heading)", letterSpacing: "-0.02em" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "-0.02em" }}>
               {tr("인재 관리", "Talent Management", "タレント管理", "人才管理")}
             </div>
             <div style={{ fontSize: 11, color: "var(--th-text-muted)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
@@ -373,24 +373,24 @@ export default function AgentManager({
           <button
             onClick={openCreateDept}
             style={{
-              padding: "8px 16px", borderRadius: 12, border: "1px solid var(--th-glass-border-strong)",
-              background: "rgba(255,255,255,0.03)", color: "var(--th-text-primary)", 
+              padding: "8px 16px", borderRadius: 10, border: "1px solid var(--th-border-strong)",
+              background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
               fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--th-bg-primary)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--th-bg-elevated)")}
           >
             <Plus size={14} /> {tr("전문 분야", "Add Specialty", "専門分野", "专业领域")}
           </button>
           <button
             onClick={openCreate}
             style={{
-              padding: "8px 18px", borderRadius: 12, border: "none",
-              background: "var(--th-accent)", color: "black", 
+              padding: "8px 18px", borderRadius: 10, border: "none",
+              background: "var(--th-accent)", color: "white",
               fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8,
-              boxShadow: "0 4px 12px rgba(245,158,11,0.3)"
+              boxShadow: "0 4px 12px var(--th-accent-focus)"
             }}
             onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
             onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
@@ -403,8 +403,8 @@ export default function AgentManager({
       {/* ── Search & Filter Bar ── */}
       <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ 
-          flex: 1, display: "flex", alignItems: "center", gap: 12, 
-          background: "var(--th-glass-surface)", border: "1px solid var(--th-glass-border-strong)",
+          flex: 1, display: "flex", alignItems: "center", gap: 12,
+          background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-strong)",
           borderRadius: 14, padding: "0 16px", height: 42
         }}>
           <Search size={16} className="text-muted opacity-50" />
@@ -419,15 +419,15 @@ export default function AgentManager({
 
         {/* Sub-Tab Toggle */}
         <div style={{ 
-          display: "flex", background: "rgba(255,255,255,0.03)", 
-          padding: 2, borderRadius: 12, border: "1px solid var(--th-glass-border-subtle)" 
+          display: "flex", background: "var(--th-bg-primary)",
+          padding: 2, borderRadius: 12, border: "1px solid var(--th-border)" 
         }}>
           <button
             onClick={() => setSubTab("agents")}
             style={{
               padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
               cursor: "pointer", transition: "all 0.2s",
-              background: subTab === "agents" ? "rgba(255,255,255,0.08)" : "transparent",
+              background: subTab === "agents" ? "var(--th-bg-elevated)" : "transparent",
               color: subTab === "agents" ? "var(--th-text-primary)" : "var(--th-text-muted)",
             }}
           >
@@ -438,7 +438,7 @@ export default function AgentManager({
             style={{
               padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
               cursor: "pointer", transition: "all 0.2s",
-              background: subTab === "departments" ? "rgba(255,255,255,0.08)" : "transparent",
+              background: subTab === "departments" ? "var(--th-bg-elevated)" : "transparent",
               color: subTab === "departments" ? "var(--th-text-primary)" : "var(--th-text-muted)",
             }}
           >

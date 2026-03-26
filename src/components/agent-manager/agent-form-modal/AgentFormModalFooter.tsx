@@ -21,7 +21,7 @@ export function AgentFormModalFooter({
   return (
     <>
       {saveError && (
-        <p style={{ color: "var(--th-error, #ef4444)", fontSize: 12, flex: "1 1 100%", margin: "0 0 6px" }}>
+        <p style={{ color: "var(--th-danger-text)", fontSize: 12, flex: "1 1 100%", margin: "0 0 6px" }}>
           {saveError}
         </p>
       )}

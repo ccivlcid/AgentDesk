@@ -77,7 +77,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         flexDirection: "column",
         overflow: "hidden",
         pointerEvents: "auto",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        boxShadow: "0 8px 32px var(--th-modal-overlay)",
       }}>
         {/* Title bar */}
         <div
@@ -96,7 +96,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         >
           <TrafficLights onClose={onCancel} onMinimize={() => {}} onMaximize={() => {}} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: "var(--th-text-heading)", fontWeight: 600 }}>
+            <div style={{ fontSize: 12, color: "var(--th-text-primary)", fontWeight: 600 }}>
               {t({ ko: "새 폴더 만들기", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" })}
             </div>
           </div>
@@ -118,9 +118,9 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               style={{
                 width: "100%",
                 boxSizing: "border-box",
-                background: "var(--th-input-bg)",
+                background: "var(--th-bg-elevated)",
                 border: "1px solid var(--th-border)",
-                borderRadius: 0,
+                borderRadius: 8,
                 color: "var(--th-text-primary)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
@@ -144,9 +144,9 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); else if (e.key === "Escape") onCancel(); }}
                 style={{
                   flex: 1,
-                  background: "var(--th-input-bg)",
+                  background: "var(--th-bg-elevated)",
                   border: "1px solid var(--th-border)",
-                  borderRadius: 0,
+                  borderRadius: 8,
                   color: "var(--th-text-primary)",
                   fontFamily: "var(--th-font-mono)",
                   fontSize: 11,
@@ -160,7 +160,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 style={{
                   background: "transparent",
                   border: "1px solid var(--th-border)",
-                  borderRadius: 0,
+                  borderRadius: 8,
                   color: "var(--th-text-muted)",
                   fontFamily: "var(--th-font-mono)",
                   fontSize: 9,
@@ -205,7 +205,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               style={{
                 background: "transparent",
                 border: "1px solid var(--th-border)",
-                borderRadius: 0,
+                borderRadius: 8,
                 color: "var(--th-text-secondary)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
@@ -221,8 +221,8 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               style={{
                 background: (!name.trim() || !basePath.trim()) ? "var(--th-bg-surface)" : "var(--th-accent)",
                 border: "none",
-                borderRadius: 0,
-                color: (!name.trim() || !basePath.trim()) ? "var(--th-text-muted)" : "var(--th-accent-text)",
+                borderRadius: 8,
+                color: (!name.trim() || !basePath.trim()) ? "var(--th-text-muted)" : "var(--th-bg-elevated)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
                 padding: "7px 16px",

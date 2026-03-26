@@ -36,7 +36,7 @@ export function AgentsTab({ agents, projectTasks }: { agents: Agent[]; projectTa
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--th-text-heading)", lineHeight: 1 }}>{agentTasks.length}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--th-text-primary)", lineHeight: 1 }}>{agentTasks.length}</div>
               <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>{t({ ko: "태스크", en: "tasks", ja: "タスク", zh: "任务" })}</div>
             </div>
           </div>

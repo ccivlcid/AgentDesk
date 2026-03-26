@@ -34,21 +34,31 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
   }, []);
 
   return (
-    <div style={{ padding: 16, fontFamily: mono }}>
+    <div style={{ fontFamily: mono }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: 0.5 }}>
-            TEAM_AGENTS
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)", display: "flex", alignItems: "center" }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
           </div>
-          <div style={{ fontSize: 11, color: "var(--th-text-muted)", marginTop: 2 }}>
-            ACTIVE INSTANCES: {String(activeCount).padStart(2, "0")} / TOTAL NODES: {agents.length}
+          <div>
+            <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", color: "#374151", margin: 0 }}>
+              Team Agents
+            </h3>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 2, fontWeight: 600 }}>
+              ACTIVE: {String(activeCount).padStart(2, "0")} / TOTAL: {agents.length}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Metrics bar */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
         <MetricBar
           label="TOKEN_THROUGHPUT"
           value={`${totalDone} tasks done`}
@@ -59,7 +69,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
           label="COST_EFFICIENCY"
           value={costEfficiency !== "--" ? `${costEfficiency}% success` : "--"}
           percent={costEfficiency !== "--" ? parseFloat(costEfficiency) : 0}
-          color="var(--th-text-code)"
+          color="var(--th-success)"
         />
       </div>
 
@@ -68,35 +78,39 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
         display: "grid",
         gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
         gap: 8,
-        padding: "8px 12px",
-        borderBottom: "1px solid var(--th-border)",
+        padding: "10px 16px",
+        background: "var(--th-bg-surface)",
+        borderRadius: "12px 12px 0 0",
+        border: "1px solid var(--th-border)",
+        borderBottom: "none",
         fontSize: 10,
         color: "var(--th-text-muted)",
-        letterSpacing: 0.5,
+        fontWeight: 800,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase" as const,
       }}>
-        <span>AGENT / IDENTITY</span>
-        <span>ROLE / DOMAIN</span>
-        <span>STATUS</span>
-        <span>CURRENT_PROCESS</span>
-        <span>FITNESS_METRICS</span>
-        <span>ACTION</span>
+        <span>Agent / Identity</span>
+        <span>Role / Domain</span>
+        <span>Status</span>
+        <span>Current Process</span>
+        <span>Fitness Metrics</span>
+        <span>Action</span>
       </div>
 
       {/* Agent rows */}
+      <div style={{ border: "1px solid var(--th-border)", borderRadius: "0 0 12px 12px", overflow: "hidden" }}>
       {agents.map((agent) => {
         const agentTasks = tasks.filter((t) => t.assigned_agent_id === agent.id);
         const currentTask = agentTasks.find((t) => t.status === "in_progress");
         const dept = departments.find((d) => d.id === agent.department_id);
 
-        const roleLabel = agent.role === "team_leader" ? "PROJECT MANAGER"
-          : agent.role === "senior" ? "SENIOR ENG"
-          : "JUNIOR ENG";
+        const roleLabel = agent.role === "team_leader" ? "PM"
+          : agent.role === "senior" ? "SENIOR"
+          : "JUNIOR";
 
         const domainLabel = dept?.name ? dept.name.toUpperCase() : roleLabel;
 
-        const statusDot = agent.status === "working" ? "var(--th-accent)"
-          : agent.status === "idle" ? "var(--th-text-muted)"
-          : "#60a5fa";
+        const isWorking = agent.status === "working";
 
         const perf = perfMap.get(agent.id);
         const fitnessByType = perf?.fitness_by_type ?? [];
@@ -106,15 +120,20 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             display: "grid",
             gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
             gap: 8,
-            padding: "12px",
-            borderBottom: "1px solid var(--th-border)",
+            padding: "14px 16px",
+            borderBottom: "1px solid var(--th-bg-primary)",
             alignItems: "start",
             fontSize: 12,
             position: "relative",
-          }}>
+            background: "var(--th-bg-elevated)",
+            transition: "background 0.15s",
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#FAFBFC"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--th-bg-elevated)"; }}
+          >
             {/* Identity */}
             <div>
-              <div style={{ color: "var(--th-text-primary)", fontWeight: 600 }}>
+              <div style={{ color: "var(--th-text-primary)", fontWeight: 700 }}>
                 {agent.name.toUpperCase().replace(/\s+/g, "_")}
               </div>
               <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
@@ -125,17 +144,18 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             {/* Role / Domain */}
             <div>
               <span style={{
-                fontSize: 9, fontWeight: 600, letterSpacing: 0.5,
-                color: "var(--th-bg-primary)",
-                background: agent.role === "team_leader" ? "var(--th-accent)" : "#4ade80",
-                padding: "2px 8px",
+                fontSize: 9, fontWeight: 800, letterSpacing: "0.05em",
+                color: "var(--th-bg-elevated)",
+                background: agent.role === "team_leader" ? "var(--th-accent)" : "var(--th-success)",
+                padding: "3px 8px",
+                borderRadius: 6,
                 display: "inline-block",
                 width: "fit-content",
               }}>
                 {roleLabel}
               </span>
               {dept && (
-                <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>
+                <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 4 }}>
                   {domainLabel}
                 </div>
               )}
@@ -145,45 +165,52 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: "50%",
-                background: statusDot,
+                background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
+                boxShadow: isWorking ? "0 0 6px rgba(5,150,105,0.3)" : "none",
               }} />
-              <span style={{ fontSize: 11, color: "var(--th-text-secondary)" }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                color: isWorking ? "var(--th-success)" : "var(--th-text-muted)",
+              }}>
                 {agent.status.toUpperCase()}
               </span>
             </div>
 
             {/* Current process */}
             <div>
-              <div style={{ fontSize: 11, color: "var(--th-text-primary)", marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: "var(--th-text-primary)", marginBottom: 4, fontWeight: 500 }}>
                 {currentTask ? currentTask.title : (
-                  <span style={{ fontStyle: "italic", color: "var(--th-text-muted)" }}>
-                    No active task in queue...
+                  <span style={{ fontStyle: "italic", color: "var(--th-border-strong)" }}>
+                    No active task...
                   </span>
                 )}
               </div>
               {currentTask && (
-                <div style={{ height: 3, background: "var(--th-border)", width: "100%" }}>
-                  <div style={{ height: 3, background: "var(--th-accent)", width: `${getTaskProgress(currentTask)}%`, transition: "width 0.3s" }} />
+                <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
+                  <div style={{ height: 4, background: "var(--th-accent)", width: `${getTaskProgress(currentTask)}%`, transition: "width 0.3s", borderRadius: 2 }} />
                 </div>
               )}
             </div>
 
-            {/* Fitness Metrics — task_type breakdown */}
+            {/* Fitness Metrics */}
             <div style={{ fontSize: 10 }}>
               {fitnessByType.length > 0 ? (
                 fitnessByType.slice(0, 4).map((f) => (
-                  <div key={f.task_type} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-                    <span style={{ color: "var(--th-text-muted)", width: 36, flexShrink: 0, textTransform: "uppercase" }}>
+                  <div key={f.task_type} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
+                    <span style={{ color: "var(--th-text-muted)", width: 36, flexShrink: 0, textTransform: "uppercase" as const, fontWeight: 600 }}>
                       {f.task_type.slice(0, 4)}:
                     </span>
-                    <span style={{ color: f.success_rate >= 80 ? "var(--th-text-code)" : f.success_rate >= 50 ? "var(--th-accent)" : "#ef4444", fontWeight: 600 }}>
+                    <span style={{
+                      color: f.success_rate >= 80 ? "var(--th-success)" : f.success_rate >= 50 ? "#D97706" : "var(--th-danger-text)",
+                      fontWeight: 800,
+                    }}>
                       {f.success_rate}%
                     </span>
-                    <span style={{ color: "var(--th-text-muted)", fontSize: 9 }}>({f.total})</span>
+                    <span style={{ color: "var(--th-border-strong)", fontSize: 9 }}>({f.total})</span>
                   </div>
                 ))
               ) : (
-                <div style={{ color: "var(--th-text-code)" }}>
+                <div style={{ color: "var(--th-accent)", fontWeight: 700 }}>
                   FITNESS: {perf?.success_rate != null ? `${Math.round(perf.success_rate)}%` : "--"}
                 </div>
               )}
@@ -196,8 +223,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
                 onClick={() => handleToggleMenu(agent.id)}
                 style={{
                   background: "transparent", border: "none", cursor: "pointer",
-                  color: "var(--th-text-muted)", fontSize: 16, padding: 4,
+                  color: "var(--th-text-muted)", padding: 4,
+                  borderRadius: 8,
+                  transition: "all 0.15s",
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-bg-primary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <circle cx="12" cy="5" r="2" />
@@ -215,9 +246,10 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
           </div>
         );
       })}
+      </div>
 
       {agents.length === 0 && (
-        <div style={{ padding: 32, textAlign: "center", color: "var(--th-text-muted)", fontSize: 12 }}>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--th-text-muted)", fontSize: 12, background: "var(--th-bg-elevated)", borderRadius: 16, border: "1px dashed var(--th-border)" }}>
           No agents assigned to this project.
         </div>
       )}
@@ -225,7 +257,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
   );
 }
 
-/* ── Action Menu ── */
+/* -- Action Menu -- */
 
 function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => void }) {
   const actions = [
@@ -240,18 +272,20 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
         position: "absolute",
         right: 0,
         top: 28,
-        width: 160,
-        background: "var(--th-bg-surface)",
+        width: 170,
+        background: "var(--th-bg-elevated)",
         border: "1px solid var(--th-border)",
+        borderRadius: 14,
         zIndex: 100,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
+        overflow: "hidden",
       }}
       onMouseLeave={onClose}
     >
       <div style={{
-        fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)",
-        padding: "6px 10px", borderBottom: "1px solid var(--th-border)",
-        letterSpacing: 0.5,
+        fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 800,
+        padding: "8px 14px", borderBottom: "1px solid var(--th-bg-primary)",
+        letterSpacing: "0.05em", textTransform: "uppercase" as const,
       }}>
         {agentName.toUpperCase().replace(/\s+/g, "_")}
       </div>
@@ -265,26 +299,28 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
             alignItems: "center",
             gap: 8,
             width: "100%",
-            padding: "8px 10px",
+            padding: "10px 14px",
             fontFamily: mono,
             fontSize: 11,
-            color: action.icon === "stop" ? "#ef4444" : "var(--th-text-secondary)",
+            fontWeight: 600,
+            color: action.icon === "stop" ? "var(--th-danger-text)" : "var(--th-text-secondary)",
             background: "transparent",
             border: "none",
             cursor: "pointer",
             textAlign: "left",
+            transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-bg-hover)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-bg-surface)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
           {action.icon === "log" && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
           )}
           {action.icon === "reassign" && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8" /><line x1="4" y1="20" x2="21" y2="3" /><polyline points="21 16 21 21 16 21" /><line x1="15" y1="15" x2="21" y2="21" /><line x1="4" y1="4" x2="9" y2="9" /></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8" /><line x1="4" y1="20" x2="21" y2="3" /><polyline points="21 16 21 21 16 21" /><line x1="15" y1="15" x2="21" y2="21" /><line x1="4" y1="4" x2="9" y2="9" /></svg>
           )}
           {action.icon === "stop" && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><rect x="9" y="9" width="6" height="6" /></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><rect x="9" y="9" width="6" height="6" /></svg>
           )}
           {action.label}
         </button>
@@ -293,17 +329,23 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
   );
 }
 
-/* ── Metric Bar ── */
+/* -- Metric Bar -- */
 
 function MetricBar({ label, value, percent, color }: { label: string; value: string; percent: number; color: string }) {
   return (
-    <div style={{ flex: 1, background: "var(--th-bg-surface)", padding: "8px 12px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ fontSize: 10, color: "var(--th-text-muted)", letterSpacing: 0.5 }}>{label}</span>
-        <span style={{ fontSize: 11, color, fontWeight: 600 }}>{value}</span>
+    <div style={{
+      flex: 1,
+      background: "var(--th-bg-elevated)",
+      border: "1px solid var(--th-border)",
+      borderRadius: 14,
+      padding: "12px 16px",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{label}</span>
+        <span style={{ fontSize: 11, color, fontWeight: 700 }}>{value}</span>
       </div>
-      <div style={{ height: 3, background: "var(--th-border)", width: "100%" }}>
-        <div style={{ height: 3, background: color, width: `${Math.min(percent, 100)}%`, transition: "width 0.3s" }} />
+      <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
+        <div style={{ height: 4, background: color, width: `${Math.min(percent, 100)}%`, transition: "width 0.3s", borderRadius: 2 }} />
       </div>
     </div>
   );

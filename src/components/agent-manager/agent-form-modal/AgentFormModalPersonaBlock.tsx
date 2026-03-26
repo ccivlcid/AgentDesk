@@ -36,7 +36,7 @@ export function AgentFormModalPersonaBlock({
               size="sm"
               disabled={generatingPersona || !form.name.trim()}
               onClick={handleGeneratePersona}
-              style={{ borderColor: "var(--th-border-accent)", background: "var(--th-accent-glow)", color: "var(--th-accent)" }}
+              style={{ borderColor: "var(--th-accent-border)", background: "var(--th-accent-glow)", color: "var(--th-accent)" }}
             >
               {generatingPersona
                 ? tr("생성 중...", "Generating...")

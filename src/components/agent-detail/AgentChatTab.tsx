@@ -132,7 +132,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
                   </span>
                   <span
                     className="px-1 py-px"
-                    style={{ borderRadius: 0, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+                    style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
                   >
                     {typeLabel}
                   </span>
@@ -142,9 +142,9 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
                 <div
                   className="max-w-[85%] px-2.5 py-1.5 text-xs font-mono leading-relaxed whitespace-pre-wrap break-words"
                   style={{
-                    borderRadius: 0,
-                    background: isCeo ? "rgba(251,191,36,0.12)" : "var(--th-bg-elevated)",
-                    border: `1px solid ${isCeo ? "rgba(251,191,36,0.3)" : "var(--th-border)"}`,
+                    borderRadius: 12,
+                    background: isCeo ? "var(--th-accent-bg)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${isCeo ? "var(--th-accent-border-subtle)" : "var(--th-border)"}`,
                     color: "var(--th-text-primary)",
                   }}
                 >
@@ -166,6 +166,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
           style={{
             border: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
+            borderRadius: 8,
           }}
         >
           <div
@@ -209,7 +210,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
           <button
             onClick={() => void fetchMessages()}
             className="px-2 py-1 text-[10px] font-mono border transition hover:opacity-80"
-            style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)" }}
+            style={{ borderRadius: 8, borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)" }}
             title={tr("새로고침", "Refresh")}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -218,7 +219,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             onClick={() => void handleSend()}
             disabled={!content.trim() || sending}
             className="px-3 py-1 text-[10px] font-mono font-bold transition disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)" }}
           >
             {sending ? tr("전송 중...", "sending...") : tr("전송 ↵", "SEND ↵")}
           </button>

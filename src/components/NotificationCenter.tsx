@@ -492,7 +492,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           display: "flex", alignItems: "center",
           padding: "0 14px",
           height: 44,
-          background: "var(--th-glass-bg)",
+          background: "var(--th-bg-elevated)",
           borderBottom: "1px solid var(--th-border)",
           borderTopLeftRadius: 12,
           flexShrink: 0,
@@ -502,7 +502,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
 
           <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
             <span style={{ color: "var(--th-text-muted)", display: "flex" }}><IconBell size={13} /></span>
-            <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+            <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)" }}>
               알림
             </span>
             {unreadCount > 0 && (

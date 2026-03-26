@@ -31,7 +31,7 @@ export default function TextPreviewModal({ taskId, artifact, onClose }: TextPrev
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 20px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 13, fontWeight: 600, color: "var(--th-text-heading)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{artifact.title}</div>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 13, fontWeight: 600, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{artifact.title}</div>
             <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginTop: 2 }}>{artifact.relativePath}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>

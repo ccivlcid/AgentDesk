@@ -128,7 +128,7 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
             void handleSaveCli();
           }}
           className="text-[10px] px-1.5 py-0.5 font-mono font-bold uppercase transition-colors disabled:opacity-50"
-          style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+          style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)" }}
         >
           {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
         </button>
@@ -137,9 +137,9 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
           onClick={handleCancelCliEdit}
           className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
           style={{
-            borderRadius: 0,
+            borderRadius: 8,
             border: "1px solid var(--th-border)",
-            background: "var(--th-bg-surface-hover)",
+            background: "var(--th-bg-surface)",
             color: "var(--th-text-secondary)",
           }}
         >

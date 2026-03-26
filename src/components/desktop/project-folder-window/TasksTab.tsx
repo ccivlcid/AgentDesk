@@ -60,7 +60,7 @@ function TaskPreview({ task, allAgents }: { task: Task; allAgents: Agent[] }) {
       <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--th-text-heading)", lineHeight: 1.3, wordBreak: "break-word" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--th-text-primary)", lineHeight: 1.3, wordBreak: "break-word" }}>
               {task.title}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>

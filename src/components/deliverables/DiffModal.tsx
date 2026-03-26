@@ -110,13 +110,13 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
       style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>
+      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px var(--th-modal-overlay)" }}>
         {/* Header (macOS) */}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{
             borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-bg-panel)",
+            background: "var(--th-bg-elevated)",
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
             backdropFilter: "blur(12px)",
@@ -124,7 +124,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
           }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
+            <span className="text-lg font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>
               {t({ ko: "Git 변경사항", en: "Git Diff", ja: "Git 差分", zh: "Git 差异" })}
             </span>
             {diffData?.branchName && (

@@ -577,7 +577,7 @@ export function useTerminalPanelData({
       queued: { label: "QUEUED", style: { background: "rgba(6,182,212,0.12)", color: "#67e8f9", borderColor: "rgba(6,182,212,0.28)" } },
       running: { label: "RUNNING", style: { background: "rgba(34,197,94,0.12)", color: "#86efac", borderColor: "rgba(34,197,94,0.28)" } },
       awaiting_review: { label: "AWAITING REVIEW", style: { background: "rgba(167,139,250,0.12)", color: "#c4b5fd", borderColor: "rgba(167,139,250,0.28)" } },
-      blocked: { label: "BLOCKED", style: { background: "rgba(251,191,36,0.12)", color: "#fcd34d", borderColor: "rgba(251,191,36,0.28)" } },
+      blocked: { label: "BLOCKED", style: { background: "var(--th-accent-bg)", color: "#fcd34d", borderColor: "var(--th-accent-border-subtle)" } },
       stalled: { label: "STALLED", style: { background: "rgba(244,63,94,0.12)", color: "#fda4af", borderColor: "rgba(244,63,94,0.28)" } },
       succeeded: { label: "SUCCEEDED", style: { background: "rgba(34,197,94,0.12)", color: "#86efac", borderColor: "rgba(34,197,94,0.28)" } },
       failed: { label: "FAILED", style: { background: "rgba(244,63,94,0.12)", color: "#fda4af", borderColor: "rgba(244,63,94,0.28)" } },

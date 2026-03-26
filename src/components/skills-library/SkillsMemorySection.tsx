@@ -36,7 +36,7 @@ export default function SkillsMemorySection({
       >
         <div className="flex items-center gap-2">
           <span style={{ fontSize: 9, color: "var(--th-text-muted)", transition: "transform 0.18s", display: "inline-block", transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>▾</span>
-          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
+          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>
             {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
           </span>
         </div>

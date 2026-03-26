@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 
 export const agentFormSelectStyle: CSSProperties = {
-  background: "var(--th-input-bg)",
-  borderColor: "var(--th-input-border)",
+  background: "var(--th-bg-elevated)",
+  borderColor: "var(--th-border)",
   color: "var(--th-text-primary)",
   borderRadius: 6,
 };

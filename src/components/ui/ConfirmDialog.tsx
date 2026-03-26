@@ -100,7 +100,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
       ? { background: "transparent", border: "1px solid rgba(248,81,73,0.4)", color: "#f85149" }
       : variant === "info"
         ? { background: "transparent", border: "1px solid var(--th-border-strong)", color: "var(--th-text-secondary)" }
-        : { background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", color: "var(--th-accent)" };
+        : { background: "var(--th-accent-glow)", border: "1px solid #BFDBFE", color: "var(--th-accent)" };
 
   return createPortal(
     <div
@@ -133,7 +133,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           gap: 12,
           padding: "10px 16px",
           borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-panel)",
+          background: "var(--th-bg-elevated)",
           borderTopLeftRadius: 10,
           borderTopRightRadius: 10,
           cursor: "grab",
@@ -152,7 +152,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
           <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
         </div>
-        <span id="confirm-title" style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)", fontFamily: mono }}>
+        <span id="confirm-title" style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-primary)", fontFamily: mono }}>
           {options.title}
         </span>
       </div>
@@ -187,7 +187,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           style={{
             background: "transparent",
             border: "1px solid var(--th-border-strong)",
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "4px 14px",
             fontFamily: mono,
             fontSize: "11px",
@@ -198,7 +198,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
             cursor: "pointer",
             transition: "color 0.1s",
           }}
-          className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+          className="hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]"
         >
           {cancelLabel}
         </button>
@@ -207,7 +207,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
           onClick={() => onClose(true)}
           style={{
             ...confirmStyle,
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "4px 14px",
             fontFamily: mono,
             fontSize: "11px",

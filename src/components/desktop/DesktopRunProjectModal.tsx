@@ -117,7 +117,7 @@ export function RunProjectModal({
           background: "var(--th-bg-elevated)",
           border: "1px solid var(--th-border)",
           borderRadius: 12,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+          boxShadow: "0 20px 60px var(--th-modal-overlay)",
           overflow: "hidden",
         }}
       >
@@ -128,7 +128,7 @@ export function RunProjectModal({
             gap: 10,
             padding: "12px 16px",
             borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-bg-panel)",
+            background: "var(--th-bg-elevated)",
           }}
         >
           <div style={{ display: "flex", gap: 6 }}>
@@ -149,7 +149,7 @@ export function RunProjectModal({
           <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "#22c55e", display: "inline-flex" }}>
             <IconPlay size={14} />
           </span>
-          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)" }}>
             {t({ ko: "앱 실행", en: "Run App", ja: "アプリ実行", zh: "运行应用" })}
           </span>
         </div>
@@ -159,7 +159,7 @@ export function RunProjectModal({
             style={{
               padding: "12px 14px",
               borderRadius: 8,
-              background: "var(--th-bg-panel)",
+              background: "var(--th-bg-elevated)",
               border: "1px solid var(--th-border)",
             }}
           >
@@ -168,7 +168,7 @@ export function RunProjectModal({
                 ...mono,
                 fontSize: 13,
                 fontWeight: 700,
-                color: "var(--th-text-heading)",
+                color: "var(--th-text-primary)",
                 marginBottom: 4,
                 display: "flex",
                 alignItems: "center",

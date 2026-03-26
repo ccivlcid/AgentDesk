@@ -85,7 +85,7 @@ export function CommandPaletteSearchSection({
             onClick={() => setQuery("")}
             style={{
               width: 20, height: 20, borderRadius: "50%",
-              background: "var(--th-hover-bg)",
+              background: "var(--th-bg-primary)",
               border: "none", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "var(--th-text-muted)", fontSize: 12, flexShrink: 0,
@@ -99,7 +99,7 @@ export function CommandPaletteSearchSection({
               ...sf,
               fontSize: 11,
               color: "var(--th-text-muted)",
-              background: "var(--th-bg-panel)",
+              background: "var(--th-bg-elevated)",
               border: "1px solid var(--th-border)",
               borderRadius: 5,
               padding: "2px 7px",

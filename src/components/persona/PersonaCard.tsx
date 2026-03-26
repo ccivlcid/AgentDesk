@@ -13,8 +13,8 @@ export default function PersonaCard({ persona, selected, onSelect }: PersonaCard
       className={[
         "w-full text-left p-3 rounded border transition-all",
         selected
-          ? "border-l-4 bg-[var(--th-bg-elevated)]"
-          : "border-[var(--th-border)] bg-[var(--th-bg-surface)] hover:border-[var(--th-border-accent)]",
+          ? "border-l-4 bg-[#FFFFFF]"
+          : "border-[var(--th-border)] bg-[var(--th-bg-surface)] hover:border-[#BFDBFE]",
       ].join(" ")}
       style={selected ? { borderLeftColor: persona.accent_color, borderColor: `${persona.accent_color}60` } : {}}
     >

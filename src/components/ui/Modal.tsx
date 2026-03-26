@@ -102,7 +102,7 @@ export default function Modal({
           border: "1px solid var(--th-border-strong)",
           background: "var(--th-bg-elevated)",
           fontFamily: mono,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+          boxShadow: "0 20px 50px var(--th-modal-overlay)",
         }}
       >
         {children}
@@ -128,7 +128,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       className="flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
       style={{
         borderBottom: "1px solid var(--th-border)",
-        background: "var(--th-bg-panel)",
+        background: "var(--th-bg-elevated)",
         fontFamily: mono,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
@@ -140,7 +140,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       <div className="flex min-w-0 flex-1 flex-col">
         <h2
           className="truncate text-[12px] font-semibold"
-          style={{ color: "var(--th-text-heading)", fontFamily: mono }}
+          style={{ color: "var(--th-text-primary)", fontFamily: mono }}
         >
           {children}
         </h2>
@@ -158,14 +158,14 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
             flexShrink: 0,
             background: "transparent",
             border: "1px solid var(--th-border)",
-            borderRadius: 0,
+            borderRadius: 8,
             padding: "2px 8px",
             fontFamily: mono,
             fontSize: "12px",
             color: "var(--th-text-muted)",
             cursor: "pointer",
           }}
-          className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+          className="hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]"
         >
           ✕
         </button>

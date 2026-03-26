@@ -526,9 +526,9 @@ export default function AppWindow({
         top: 0,
         width: size.w,
         height: size.h,
-        background: isFrontmost ? "#FFFFFF" : "rgba(250, 250, 250, 0.98)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        background: isFrontmost ? "var(--th-bg-elevated)" : "rgba(250, 250, 250, 0.98)",
+        backdropFilter: "var(--th-glass-blur)",
+        WebkitBackdropFilter: "var(--th-glass-blur)",
         border: isFrontmost ? "1px solid rgba(0, 0, 0, 0.15)" : "1px solid rgba(0, 0, 0, 0.08)",
         borderRadius: 14,
         display: "flex",
@@ -571,7 +571,7 @@ export default function AppWindow({
         {/* Title — centered (drag area) */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none", cursor: "grab" }}>
           <span style={{ display: "flex", alignItems: "center", fontSize: 13 }}>{emoji}</span>
-          <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "#111827", letterSpacing: "0.01em" }}>
+          <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: "0.01em" }}>
             {title}
           </span>
         </div>
@@ -612,8 +612,8 @@ export default function AppWindow({
                   fontWeight: active ? 800 : 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  background: active ? "#FFFFFF" : "transparent",
-                  color: active ? "#111827" : "#6B7280",
+                  background: active ? "var(--th-bg-elevated)" : "transparent",
+                  color: active ? "var(--th-text-primary)" : "var(--th-text-secondary)",
                   border: active ? "1px solid rgba(0, 0, 0, 0.05)" : "none",
                   borderRadius: 8,
                   cursor: "pointer",

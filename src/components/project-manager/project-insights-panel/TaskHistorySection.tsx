@@ -11,8 +11,8 @@ interface TaskHistorySectionProps {
 
 export function TaskHistorySection({ t, selectedProject, groupedTaskCards, handleOpenTaskDetail }: TaskHistorySectionProps) {
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "작업 이력", en: "Task History", ja: "作業履歴", zh: "任务历史" })}
       </h4>
       {!selectedProject ? (
@@ -29,7 +29,7 @@ export function TaskHistorySection({ t, selectedProject, groupedTaskCards, handl
               type="button"
               onClick={() => void handleOpenTaskDetail(group.root.id)}
               className="w-full min-w-0 overflow-hidden px-3 py-2 text-left transition"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
             >
               <p className="whitespace-pre-wrap break-all text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{group.root.title}</p>
               <p className="mt-1 break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>

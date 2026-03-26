@@ -113,8 +113,8 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
   const sectionStyle: React.CSSProperties = {
     borderRadius: 24,
     padding: "24px",
-    background: "#FFFFFF",
-    border: "1px solid #E5E7EB",
+    background: "var(--th-bg-elevated)",
+    border: "1px solid var(--th-border)",
     transition: "all 0.2s",
   };
 
@@ -128,9 +128,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     letterSpacing: "0.05em",
     transition: "all 0.2s",
     cursor: "pointer",
-    border: variant === "secondary" ? "1px solid #E5E7EB" : "none",
-    background: variant === "primary" ? "#3B82F6" : variant === "danger" ? "#EF4444" : "#FFFFFF",
-    color: variant === "secondary" ? "#4B5563" : "#FFFFFF",
+    border: variant === "secondary" ? "1px solid var(--th-border)" : "none",
+    background: variant === "primary" ? "var(--th-accent)" : variant === "danger" ? "#EF4444" : "var(--th-bg-elevated)",
+    color: variant === "secondary" ? "#4B5563" : "var(--th-bg-elevated)",
     boxShadow: variant === "secondary" ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
   });
 
@@ -138,7 +138,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     <div className="data-settings-tab space-y-6">
       {/* Intro */}
       <div className="p-5 flex items-center gap-4" style={{ borderRadius: 24, background: "#F0F7FF", border: "1px solid rgba(59, 130, 246, 0.1)" }}>
-        <div style={{ padding: 10, background: "#FFFFFF", borderRadius: 14, color: "#3B82F6", boxShadow: "0 2px 4px rgba(59, 130, 246, 0.1)" }}>
+        <div style={{ padding: 10, background: "var(--th-bg-elevated)", borderRadius: 14, color: "var(--th-accent)", boxShadow: "0 2px 4px rgba(59, 130, 246, 0.1)" }}>
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7M16 19h6M19 16l3 3-3 3"/></svg>
         </div>
         <div>
@@ -150,9 +150,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       {/* Backup */}
       <div style={sectionStyle} className="hover:shadow-sm">
         <div className="flex items-center gap-4 mb-6">
-          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilBackup /></div>
+          <div style={{ padding: 10, background: "var(--th-bg-surface)", borderRadius: 12, color: "var(--th-text-secondary)" }}><SigilBackup /></div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "시스템 백업", en: "System Backup", ja: "システムバックアップ", zh: "系统备份" })}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--th-text-primary)" }}>{t({ ko: "시스템 백업", en: "System Backup", ja: "システムバックアップ", zh: "系统备份" })}</div>
             <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.", en: "Download the entire SQLite database file.", ja: "SQLiteデータベース全体をダウンロード.", zh: "下载整个SQLite数据库文件." })}</p>
           </div>
         </div>
@@ -164,9 +164,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       {/* Restore */}
       <div style={sectionStyle} className="hover:shadow-sm">
         <div className="flex items-center gap-4 mb-6">
-          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilRestore /></div>
+          <div style={{ padding: 10, background: "var(--th-bg-surface)", borderRadius: 12, color: "var(--th-text-secondary)" }}><SigilRestore /></div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "데이터 복원", en: "Data Restore", ja: "データ復元", zh: "数据恢复" })}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--th-text-primary)" }}>{t({ ko: "데이터 복원", en: "Data Restore", ja: "データ復元", zh: "数据恢复" })}</div>
             <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "백업된 SQLite 파일을 업로드하여 복원합니다. (서버 재시작 필요)", en: "Upload SQLite file to restore. (Restart required)", ja: "SQLiteファイルをアップロードして復元. (再起動が必要)", zh: "上传SQLite文件以恢复. (需要重启)" })}</p>
           </div>
         </div>
@@ -184,9 +184,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       {/* Export */}
       <div style={sectionStyle} className="hover:shadow-sm">
         <div className="flex items-center gap-4 mb-6">
-          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilExport /></div>
+          <div style={{ padding: 10, background: "var(--th-bg-surface)", borderRadius: 12, color: "var(--th-text-secondary)" }}><SigilExport /></div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "태스크 내보내기", en: "Export Tasks", ja: "タスクエクスポート", zh: "导出任务" })}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--th-text-primary)" }}>{t({ ko: "태스크 내보내기", en: "Export Tasks", ja: "タスクエクスポート", zh: "导出任务" })}</div>
             <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.", en: "Export all tasks in CSV or JSON format.", ja: "すべてのタスクをCSVまたはJSONでエクスポート.", zh: "将所有任务导出为CSV或JSON." })}</p>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
 
       {/* Feedback */}
       {feedback && (
-        <div role="alert" className="px-5 py-4 text-xs font-bold font-mono" style={{ borderRadius: 16, border: feedback.type === "success" ? "1px solid #A7F3D0" : "1px solid #FECACA", background: feedback.type === "success" ? "#ECFDF5" : "#FEF2F2", color: feedback.type === "success" ? "#059669" : "#DC2626", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+        <div role="alert" className="px-5 py-4 text-xs font-bold font-mono" style={{ borderRadius: 16, border: feedback.type === "success" ? "1px solid #A7F3D0" : "1px solid #FECACA", background: feedback.type === "success" ? "#ECFDF5" : "var(--th-danger-bg)", color: feedback.type === "success" ? "var(--th-success)" : "var(--th-danger-text)", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
           <span className="mr-2">{feedback.type === "success" ? "✓" : "✗"}</span>
           {feedback.message}
         </div>

@@ -24,7 +24,7 @@ export function UserGuideSidebar({
       width: 168, flexShrink: 0,
       borderRight: "1px solid var(--th-border)",
       display: "flex", flexDirection: "column",
-      background: "var(--th-bg-sidebar)",
+      background: "var(--th-bg-surface)",
     }}>
       <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
@@ -42,13 +42,13 @@ export function UserGuideSidebar({
               width: "100%", boxSizing: "border-box",
               fontFamily: MONO_FONT, fontSize: 10,
               padding: "5px 8px 5px 22px",
-              background: "var(--th-hover-overlay-subtle)",
+              background: "var(--th-bg-primary)",
               border: "1px solid var(--th-border)",
-              borderRadius: 5,
+              borderRadius: 8,
               color: "var(--th-text-primary)",
               outline: "none",
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(10,132,255,0.5)"; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "var(--th-accent)"; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
           />
         </div>

@@ -39,7 +39,7 @@ export function PaletteRow({
             position: "absolute",
             inset: "2px 6px",
             borderRadius: 8,
-            background: "var(--th-hover-bg)",
+            background: "var(--th-bg-primary)",
             border: "1px solid var(--th-border)",
             pointerEvents: "none",
           }}

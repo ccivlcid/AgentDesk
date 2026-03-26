@@ -47,7 +47,7 @@ function ProjectPickerDropdown({
       <div style={{ position: "fixed", inset: 0, zIndex: 9999 }} onClick={onClose} />
       <div style={{
         position: "absolute", bottom: "100%", left: 0, right: 0, zIndex: 10000,
-        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
+        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 10,
         maxHeight: 240, overflowY: "auto", marginBottom: 4, fontFamily: "var(--th-font-mono)",
       }}>
         <div style={{ padding: 8, borderBottom: "1px solid var(--th-border)" }}>
@@ -55,8 +55,8 @@ function ProjectPickerDropdown({
             autoFocus type="text" value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder={t({ ko: "프로젝트 검색...", en: "Search projects...", ja: "プロジェクト検索...", zh: "搜索项目..." })}
             style={{
-              width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)",
-              border: "1px solid var(--th-border)", color: "var(--th-text-primary)",
+              width: "100%", boxSizing: "border-box", background: "var(--th-bg-elevated)",
+              border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6,
               fontFamily: "var(--th-font-mono)", fontSize: 10, padding: "5px 8px", outline: "none",
             }}
           />
@@ -69,7 +69,7 @@ function ProjectPickerDropdown({
             <button key={p.id} onClick={() => { onAdd(p.id); onClose(); }}
               style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px",
                 background: "transparent", border: "none", borderBottom: "1px solid var(--th-border)",
-                cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
+                cursor: "pointer", fontFamily: "var(--th-font-mono)", borderRadius: 6 }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
@@ -120,8 +120,8 @@ function FsTreeNode({ entry, depth, folderProjects }: {
           display: "flex", alignItems: "center", gap: 4,
           padding: "3px 6px 3px", paddingLeft: 6 + indent,
           cursor: entry.type === "dir" ? "pointer" : "default",
-          borderRadius: 0,
-          background: isProject ? "rgba(245,158,11,0.08)" : "transparent",
+          borderRadius: 6,
+          background: isProject ? "var(--th-accent-bg)" : "transparent",
           borderLeft: isProject ? "2px solid var(--th-accent)" : "2px solid transparent",
         }}
         onClick={toggle}
@@ -149,8 +149,8 @@ function FsTreeNode({ entry, depth, folderProjects }: {
         </span>
         {isProject && (
           <span style={{
-            fontSize: 8, background: "rgba(245,158,11,0.15)", color: "var(--th-accent)",
-            padding: "1px 4px", borderRadius: 0, border: "1px solid rgba(245,158,11,0.3)",
+            fontSize: 8, background: "var(--th-amber-glow)", color: "var(--th-accent)",
+            padding: "1px 4px", borderRadius: 8, border: "1px solid var(--th-accent-focus)",
             flexShrink: 0,
           }}>
             PROJECT
@@ -303,8 +303,8 @@ function MergeTab({ folder, onProjectCreated }: {
 
   if (result?.ok) return (
     <div style={{ padding: 24, textAlign: "center" }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-      <div style={{ fontSize: 13, color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", fontWeight: 600, marginBottom: 6 }}>
+      <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+      <div style={{ fontSize: 13, color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontWeight: 600, marginBottom: 6 }}>
         {t({ ko: "통합 프로젝트 생성 완료", en: "Integrated project created", ja: "統合プロジェクト作成完了", zh: "集成项目已创建" })}
       </div>
       <div style={{ fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", marginBottom: 16 }}>
@@ -312,7 +312,7 @@ function MergeTab({ folder, onProjectCreated }: {
       </div>
       <div style={{
         fontSize: 10, color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)",
-        background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)",
+        background: "var(--th-accent-bg)", border: "1px solid var(--th-accent-border-subtle)", borderRadius: 10,
         padding: "10px 14px", textAlign: "left",
       }}>
         {t({
@@ -340,8 +340,9 @@ function MergeTab({ folder, onProjectCreated }: {
                 return (
                   <label key={p.id} style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", cursor: "pointer",
-                    border: `1px solid ${checked ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
-                    background: checked ? "rgba(245,158,11,0.07)" : "var(--th-bg-surface)",
+                    border: `1px solid ${checked ? "var(--th-accent-overlay)" : "var(--th-border)"}`,
+                    background: checked ? "var(--th-accent-bg)" : "var(--th-bg-surface)",
+                    borderRadius: 10,
                   }}>
                     <input type="checkbox" checked={checked} onChange={() => toggleProject(p.id)}
                       style={{ accentColor: "var(--th-accent)", width: 14, height: 14, cursor: "pointer" }} />
@@ -367,7 +368,7 @@ function MergeTab({ folder, onProjectCreated }: {
             <div key={t(label)}>
               <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{t(label)} *</label>
               <input type="text" value={value} onChange={(e) => set(e.target.value)}
-                style={{ width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", outline: "none" }}
+                style={{ width: "100%", boxSizing: "border-box", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", borderRadius: 6, outline: "none" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")} />
             </div>
@@ -377,17 +378,18 @@ function MergeTab({ folder, onProjectCreated }: {
           <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{t({ ko: "핵심 목표", en: "Core goal", ja: "コアゴール", zh: "核心目标" })} *</label>
           <textarea value={coreGoal} onChange={(e) => setCoreGoal(e.target.value)} rows={3}
             placeholder={t({ ko: "예: 디자인·리서치·개발 산출물을 통합하여 제품 출시 준비", en: "e.g. Integrate design, research, and development outputs for product launch", ja: "例: デザイン・開発成果物を統合して製品リリースを準備", zh: "例如：整合各项目成果，准备产品发布" })}
-            style={{ width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", outline: "none", resize: "vertical" }}
+            style={{ width: "100%", boxSizing: "border-box", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", borderRadius: 6, outline: "none", resize: "vertical" }}
             onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
             onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")} />
         </div>
-        {error && <div style={{ fontSize: 10, color: "var(--th-danger-text)", padding: "6px 10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
+        {error && <div style={{ fontSize: 10, color: "var(--th-danger-text)", padding: "6px 10px", background: "var(--th-danger-bg)", border: "1px solid #FECACA", borderRadius: 8 }}>{error}</div>}
         <button onClick={() => { void handleCreate(); }} disabled={submitting || overLimit || folder.projects.length === 0}
           style={{
             width: "100%", padding: "9px 0", fontSize: 11, fontFamily: "var(--th-font-mono)", fontWeight: 600,
-            background: (submitting || overLimit) ? "transparent" : "rgba(245,158,11,0.12)",
+            background: (submitting || overLimit) ? "transparent" : "var(--th-accent-hover)",
             color: (submitting || overLimit) ? "var(--th-text-muted)" : "var(--th-accent)",
-            border: `1px solid ${(submitting || overLimit) ? "var(--th-border)" : "rgba(245,158,11,0.4)"}`,
+            border: `1px solid ${(submitting || overLimit) ? "var(--th-border)" : "var(--th-accent-overlay)"}`,
+            borderRadius: 8,
             cursor: (submitting || overLimit) ? "not-allowed" : "pointer",
           }}>
           {submitting ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." }) : t({ ko: "⊕ 통합 프로젝트 생성", en: "⊕ Create Integrated Project", ja: "⊕ 統合プロジェクトを作成", zh: "⊕ 创建集成项目" })}
@@ -489,7 +491,7 @@ function ChangelogTab({ folder }: { folder: ProjectFolder }) {
               padding: "4px 0 4px 8px",
             }}>
               <span style={{
-                fontSize: 8, padding: "1px 4px",
+                fontSize: 8, padding: "1px 4px", borderRadius: 4,
                 background: `${entryTypeColor(entry.entry_type)}20`,
                 color: entryTypeColor(entry.entry_type),
                 border: `1px solid ${entryTypeColor(entry.entry_type)}40`,
@@ -623,7 +625,8 @@ export default function FolderWindow({
     >
       <div style={{
         position: "absolute", left: pos.x, top: pos.y, width: pos.w, height: pos.h,
-        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 10,
+        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 16,
+        boxShadow: "0 4px 24px var(--th-glass-shadow)",
         display: "flex", flexDirection: "column", pointerEvents: "auto", overflow: "hidden",
         fontFamily: "var(--th-font-mono)",
       }}>
@@ -636,7 +639,7 @@ export default function FolderWindow({
           <TrafficLights onClose={handleClose} onMinimize={() => {}} onMaximize={() => {}} />
           <span style={{ fontSize: 22 }}>{folder.icon ?? "📁"}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, color: "var(--th-text-heading)", fontWeight: 600 }}>{folder.name}</div>
+            <div style={{ fontSize: 13, color: "var(--th-text-primary)", fontWeight: 600 }}>{folder.name}</div>
             <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 1 }}>
               {folder.base_path} · {t({ ko: `${folder.projects.length}개 프로젝트`, en: `${folder.projects.length} projects`, ja: `${folder.projects.length}件`, zh: `${folder.projects.length}个项目` })}
             </div>
@@ -644,14 +647,17 @@ export default function FolderWindow({
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 4, padding: "6px 10px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", flexShrink: 0 }}>
           {TABS.map((tb) => (
             <button key={tb.id} onClick={() => setTab(tb.id)} style={{
-              flex: 1, padding: "8px 0", fontSize: 11, fontFamily: "var(--th-font-mono)",
-              background: "transparent", border: "none",
-              borderBottom: tab === tb.id ? "2px solid var(--th-accent)" : "2px solid transparent",
+              flex: 1, padding: "6px 0", fontSize: 11, fontFamily: "var(--th-font-mono)",
+              background: tab === tb.id ? "var(--th-bg-elevated)" : "transparent",
+              border: tab === tb.id ? "1px solid var(--th-border)" : "1px solid transparent",
+              borderRadius: 8,
+              boxShadow: tab === tb.id ? "0 1px 3px var(--th-hover-overlay)" : "none",
               color: tab === tb.id ? "var(--th-accent)" : "var(--th-text-muted)",
-              cursor: "pointer", transition: "color 0.15s",
+              cursor: "pointer", transition: "all 0.15s",
+              fontWeight: tab === tb.id ? 600 : 400,
             }}>
               {tb.icon} {t(tb.label)}
             </button>
@@ -663,8 +669,8 @@ export default function FolderWindow({
           <div style={{ flex: 1, padding: 16, overflowY: "auto" }}>
             {ejectMsg && (
               <div style={{
-                fontSize: 10, padding: "6px 10px", marginBottom: 10,
-                background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+                fontSize: 10, padding: "6px 10px", marginBottom: 10, borderRadius: 8,
+                background: "var(--th-accent-bg)", border: "1px solid var(--th-accent-border-subtle)",
                 color: "var(--th-accent)", fontFamily: "var(--th-font-mono)",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
@@ -682,19 +688,22 @@ export default function FolderWindow({
                   <div key={p.id}
                     style={{
                       width: 150, minHeight: 130, background: "var(--th-bg-elevated)",
-                      border: "1px solid var(--th-border)", padding: "12px 8px",
+                      border: "1px solid var(--th-border)", borderRadius: 16, padding: "12px 8px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                      cursor: "pointer", transition: "background 0.1s, border-color 0.1s",
+                      cursor: "pointer", transition: "background 0.1s, border-color 0.1s, box-shadow 0.1s",
                     }}
                     onClick={() => setCurrentProjectId(p.id)}
                     onDoubleClick={() => setCurrentProjectId(p.id)}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "var(--th-bg-surface)";
-                      e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)";
+                      e.currentTarget.style.borderColor = "var(--th-accent-overlay)";
+                      e.currentTarget.style.boxShadow = "0 2px 8px var(--th-glass-shadow)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "var(--th-bg-elevated)";
                       e.currentTarget.style.borderColor = "var(--th-border)";
+                      e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
                     }}
                   >
                     <div style={{ fontSize: 28, display: "flex", justifyContent: "center" }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg></div>
@@ -708,8 +717,8 @@ export default function FolderWindow({
                     {versionMap[p.id] && (
                       <span style={{
                         fontSize: 9, fontFamily: "var(--th-font-mono)", fontWeight: 600,
-                        color: "var(--th-accent)", background: "rgba(245,158,11,0.1)",
-                        padding: "1px 6px", border: "1px solid rgba(245,158,11,0.25)",
+                        color: "var(--th-accent)", background: "var(--th-accent-bg)",
+                        padding: "1px 6px", borderRadius: 6, border: "1px solid var(--th-accent-border-subtle)",
                       }}>
                         v{versionMap[p.id]}
                       </span>
@@ -725,12 +734,12 @@ export default function FolderWindow({
                         onClick={(e) => { e.stopPropagation(); void handleRemove(p.id); }}
                         disabled={busyProjectId === p.id}
                         style={{
-                          background: "transparent", border: "1px solid var(--th-danger-border)",
+                          background: "var(--th-danger-bg)", border: "1px solid #FECACA",
                           color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)",
-                          fontSize: 9, padding: "3px 6px", cursor: "pointer",
+                          fontSize: 9, padding: "3px 6px", borderRadius: 8, cursor: "pointer",
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-danger-border)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "var(--th-danger-bg)")}
                       >
                         {busyProjectId === p.id
                           ? t({ ko: "이동 중...", en: "Moving...", ja: "移動中...", zh: "移动中..." })
@@ -745,11 +754,11 @@ export default function FolderWindow({
             <div style={{ position: "relative", marginTop: 16 }}>
               <button onClick={() => setPickerOpen((v) => !v)} style={{
                 width: "100%", height: 40, background: "transparent",
-                border: "1px dashed var(--th-border)", color: "var(--th-text-muted)",
+                border: "1px dashed var(--th-accent)", color: "var(--th-text-muted)", borderRadius: 12,
                 fontFamily: "var(--th-font-mono)", fontSize: 11, cursor: "pointer",
               }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--th-accent)"; e.currentTarget.style.color = "var(--th-accent)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-muted)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-accent)"; e.currentTarget.style.color = "var(--th-text-muted)"; }}
               >
                 {t({ ko: "+ 프로젝트 추가", en: "+ Add Project", ja: "+ プロジェクト追加", zh: "+ 添加项目" })}
               </button>

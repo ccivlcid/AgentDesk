@@ -64,7 +64,7 @@ export default function ExportModal({ onClose }: Props) {
     display: "block", width: "100%", fontFamily: mono, fontSize: 11,
     padding: "6px 9px", background: "var(--th-bg-elevated)",
     border: "1px solid var(--th-border)", borderRadius: 5,
-    color: "var(--th-text)", outline: "none",
+    color: "var(--th-text-primary)", outline: "none",
   };
 
   return (
@@ -73,14 +73,14 @@ export default function ExportModal({ onClose }: Props) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
         borderRadius: 10, width: 500, maxWidth: "92vw", maxHeight: "88vh",
         display: "flex", flexDirection: "column", overflow: "hidden",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+        boxShadow: "0 20px 60px var(--th-modal-overlay)",
       }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
-          <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+          <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> {t({ ko: "데이터 내보내기", en: "Export Data", ja: "データエクスポート", zh: "数据导出" })}
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", padding: 4, display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg></button>
@@ -97,14 +97,14 @@ export default function ExportModal({ onClose }: Props) {
                   onClick={() => setExportType(et.id)}
                   style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                    background: exportType === et.id ? "var(--th-accent-glow, var(--th-bg-elevated))" : "var(--th-bg-elevated)",
+                    background: exportType === et.id ? "var(--th-accent-glow, #FFFFFF)" : "var(--th-bg-elevated)",
                     border: `1px solid ${exportType === et.id ? "var(--th-accent)" : "var(--th-border)"}`,
                     borderRadius: 6, cursor: "pointer", textAlign: "left",
                   }}
                 >
                   <span style={{ fontSize: 18, flexShrink: 0 }}>{et.icon}</span>
                   <div>
-                    <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: exportType === et.id ? "var(--th-accent)" : "var(--th-text)" }}>
+                    <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: exportType === et.id ? "var(--th-accent)" : "var(--th-text-primary)" }}>
                       {t({ ko: et.labelKo, en: et.labelEn, ja: et.labelEn, zh: et.labelEn })}
                     </div>
                     <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 1 }}>{et.desc}</div>

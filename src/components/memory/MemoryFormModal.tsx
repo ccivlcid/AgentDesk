@@ -129,7 +129,7 @@ export default function MemoryFormModal({
               zh: "例如: 项目架构概览",
             })}
             className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function MemoryFormModal({
               zh: "简要说明此内存的必要性",
             })}
             className="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function MemoryFormModal({
               zh: "以 Markdown 格式输入将传达给代理的内存内容",
             })}
             className="w-full px-3 py-2 text-sm focus:outline-none resize-none font-mono"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
           />
           <div className="flex items-center justify-between mt-1.5">
             <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -185,7 +185,7 @@ export default function MemoryFormModal({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+                style={{ borderRadius: 8, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
               >
                 {t({ ko: "파일에서 불러오기", en: "Load from file", ja: "ファイルから読込", zh: "从文件加载" })}
               </button>
@@ -223,7 +223,7 @@ export default function MemoryFormModal({
             </div>
           </div>
           {fileName && content && (
-            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
               <pre className="text-[10px] whitespace-pre-wrap break-all font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {content.slice(0, 500)}{content.length > 500 && "..."}
               </pre>
@@ -241,7 +241,7 @@ export default function MemoryFormModal({
               value={category}
               onChange={(e) => setCategory(e.target.value as MemoryCategory)}
               className="w-full px-3 py-2 text-sm font-mono outline-none"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
             >
               {MEMORY_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>{categoryLabel(cat, t)}</option>
@@ -259,14 +259,14 @@ export default function MemoryFormModal({
               value={priority}
               onChange={(e) => setPriority(Math.max(1, Math.min(100, Number(e.target.value) || 50)))}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
             />
           </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
+          <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
             {error}
           </div>
         )}
@@ -277,7 +277,7 @@ export default function MemoryFormModal({
             onClick={onClose}
             disabled={submitting}
             className="px-3 py-1.5 text-xs font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -286,8 +286,8 @@ export default function MemoryFormModal({
             disabled={!canSubmit || submitting}
             className="px-4 py-1.5 text-xs font-mono border transition flex items-center gap-1.5"
             style={!canSubmit
-              ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
-              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-text-primary)" }}
+              ? { borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+              : { borderRadius: 8, border: "1px solid var(--th-accent-focus)", background: "var(--th-accent-bg)", color: "var(--th-text-primary)" }}
           >
             {submitting ? (
               <>

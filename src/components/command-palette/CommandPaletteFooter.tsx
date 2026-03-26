@@ -18,7 +18,7 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        background: "var(--th-bg-panel)",
+        background: "var(--th-bg-elevated)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
