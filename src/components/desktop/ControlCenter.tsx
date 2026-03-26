@@ -193,7 +193,7 @@ export default function ControlCenter({
         {/* 2×2 그리드 아이콘 — 활성 토글에 따라 불투명도 변경 */}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <rect x="1" y="1" width="6" height="6" rx="1.5" opacity={doNotDisturb ? 1 : 0.35} />
-          <rect x="9" y="1" width="6" height="6" rx="1.5" opacity={!!yoloMode ? 1 : 0.35} />
+          <rect x="9" y="1" width="6" height="6" rx="1.5" opacity={yoloMode ? 1 : 0.35} />
           <rect x="1" y="9" width="6" height="6" rx="1.5" opacity={autoAssign ? 1 : 0.35} />
           <rect x="9" y="9" width="6" height="6" rx="1.5" opacity={autoUpdate ? 1 : 0.35} />
         </svg>

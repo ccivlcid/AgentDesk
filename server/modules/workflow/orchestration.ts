@@ -1,6 +1,6 @@
 import type { RuntimeContext, WorkflowOrchestrationExports } from "../../types/runtime-context.ts";
 import { castSqliteRow } from "../../lib/sqlite-row-cast.ts";
-import type { AgentRow } from "./core/conversation-types.ts";
+import type { AgentRow , MeetingTranscriptEntry } from "./core/conversation-types.ts";
 import type { Lang } from "../../types/lang.ts";
 import fs from "node:fs";
 import os from "node:os";
@@ -55,7 +55,6 @@ import {
   upsertReportFlowValue,
 } from "./orchestration/report-flow-helpers.ts";
 
-import type { MeetingTranscriptEntry } from "./core/conversation-types.ts";
 
 export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrationExports {
   const __ctx: RuntimeContext = ctx;

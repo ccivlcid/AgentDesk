@@ -118,7 +118,7 @@ export function DesktopIconArea({
     
     if (groupDragInitialPositions) {
       // Final snap for all icons in the group
-      let nextLayout = { ...current };
+      const nextLayout = { ...current };
       Object.keys(groupDragInitialPositions).forEach(id => {
         const currentPos = nextLayout[id];
         if (currentPos) {

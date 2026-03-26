@@ -3,7 +3,7 @@
  */
 
 /** No-op: Slack receiver removed. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function startSlackReceiver(_opts: { db: unknown }): { stop: () => void } {
   return { stop: () => {} };
 }

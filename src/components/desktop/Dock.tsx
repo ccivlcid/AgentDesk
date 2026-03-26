@@ -2,14 +2,13 @@ import { useRef, useState } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useTaskStore } from "../../store/taskStore";
-import { IconDecisions } from "./DesktopIcons";
-import { useTheme } from "../../ThemeContext";
-import { useI18n } from "../../i18n";
-import {
+import { IconDecisions ,
   IconDockLibrary, IconDockSettings, IconRepoStore,
   IconAgents,
   IconFileTree, IconRepl,
 } from "./DesktopIcons";
+import { useTheme } from "../../ThemeContext";
+import { useI18n } from "../../i18n";
 import DockBadge from "./DockBadge";
 
 /** Dock에 없지만 최소화될 수 있는 창들의 아이콘/레이블 */

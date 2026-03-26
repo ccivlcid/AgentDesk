@@ -15,7 +15,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
   state = { hasError: false, error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console
+     
     console.error("[AgentDesk] Uncaught UI error:", error, info.componentStack);
   }
   render() {

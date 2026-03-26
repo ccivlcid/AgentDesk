@@ -8,7 +8,7 @@ import { createCrossDeptCooperationTools } from "./coordination/cross-dept-coope
 import { createReportRoutingTools } from "./coordination/report-routing.ts";
 import type { AgentRow, DelegationOptions } from "../shared/types.ts";
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+ 
 export function initializeCollabCoordination(ctx: RuntimeContext) {
   const __ctx: RuntimeContext = ctx;
   const db = __ctx.db;

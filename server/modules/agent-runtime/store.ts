@@ -54,7 +54,7 @@ export function updateRunUsage(
   `).run(inputTokens, outputTokens, toolCallsCount, runId);
 }
 
-let seqCounter = new Map<string, number>();
+const seqCounter = new Map<string, number>();
 
 export function appendEvent(
   db: DatabaseSync,

@@ -250,7 +250,7 @@ export function useRealtimeSync({
         if (typeof rxTaskId !== "string" || typeof rxData !== "string") return;
         // alias for downstream code
         p.task_id = rxTaskId;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (p as any).data = rxData;
         const threadMap = codexThreadToSubAgentIdRef.current;
         const threadTsMap = codexThreadBindingTsRef.current;
