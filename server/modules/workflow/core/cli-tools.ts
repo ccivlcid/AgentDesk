@@ -50,9 +50,9 @@ export function createCliTools(deps: CreateCliToolsDeps) {
     provider: string,
     model?: string,
     reasoningLevel?: string,
-    opts: { noTools?: boolean } = {},
+    opts: { noTools?: boolean; maxTurns?: number } = {},
   ): string[] {
-    const { noTools = false } = opts;
+    const { noTools = false, maxTurns } = opts;
     switch (provider) {
       case "codex": {
         const args = ["codex"];
@@ -65,6 +65,7 @@ export function createCliTools(deps: CreateCliToolsDeps) {
         return args;
       }
       case "claude": {
+        const turns = String(maxTurns ?? 200);
         const args = [
           "claude",
           "--dangerously-skip-permissions",
@@ -73,7 +74,7 @@ export function createCliTools(deps: CreateCliToolsDeps) {
           "--output-format=stream-json",
           "--include-partial-messages",
           "--max-turns",
-          "200",
+          turns,
         ];
         if (model) args.push("--model", model);
         // Keep no-tools as a single argv token so empty value is preserved across shells.

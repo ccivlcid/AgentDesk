@@ -45,7 +45,7 @@ type CreateOneShotRunnerDeps = {
   normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
   hasStructuredJsonLines: (raw: string) => boolean;
   normalizeConversationReply: (raw: string, maxChars?: number, opts?: { maxSentences?: number }) => string;
-  buildAgentArgs: (provider: string, model?: string, reasoningLevel?: string, opts?: { noTools?: boolean }) => string[];
+  buildAgentArgs: (provider: string, model?: string, reasoningLevel?: string, opts?: { noTools?: boolean; maxTurns?: number }) => string[];
   withCliPathFallback: (pathValue: string | undefined) => string;
 };
 
@@ -223,7 +223,8 @@ export function createOneShotRunner(deps: CreateOneShotRunnerDeps) {
         if (!rawOutput.trim() && fs.existsSync(logPath)) rawOutput = fs.readFileSync(logPath, "utf8");
       } else {
         // CLI mode — model + reasoningLevel already resolved by resolveProviderForAgent
-        const args = buildAgentArgs(resolved.cliProvider, resolved.model, resolved.reasoningLevel, { noTools });
+        // Oneshot calls use maxTurns=3 (review retry room) instead of task execution's 200
+        const args = buildAgentArgs(resolved.cliProvider, resolved.model, resolved.reasoningLevel, { noTools, maxTurns: 3 });
 
         await new Promise<void>((resolve, reject) => {
           const cleanEnv = { ...process.env };
