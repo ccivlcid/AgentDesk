@@ -64,7 +64,7 @@ export function AgentFormModalPersonaBlock({
         </p>
       </div>
 
-      <div style={{ borderTop: "1px solid var(--th-border)" }}>
+      <div style={{ borderTop: "1px solid #E5E7EB" }}>
         <button
           type="button"
           onClick={() => setShowPersonaCatalog((v) => !v)}

@@ -61,7 +61,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
     return (
       <div
         className="py-8 text-center text-xs"
-        style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-muted)" }}
+        style={{ fontFamily: "var(--th-font-mono)", color: "#9CA3AF" }}
       >
         {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
       </div>

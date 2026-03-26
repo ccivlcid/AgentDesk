@@ -18,7 +18,7 @@ export function AgentFormModalPmSection({
 
   return (
     <div>
-      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
+      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
         <span style={agentFormSectionLabelStyle}>
           {t({ ko: "역량 설정", en: "CAPABILITIES", ja: "能力設定", zh: "能力设置" })}
         </span>
@@ -29,10 +29,10 @@ export function AgentFormModalPmSection({
         <div
           className="flex items-start gap-2 mb-4 px-3 py-2.5"
           style={{
-            background: "rgba(245,158,11,0.06)",
-            border: "1px solid rgba(245,158,11,0.2)",
+            background: "rgba(59,130,246,0.06)",
+            border: "1px solid rgba(59,130,246,0.2)",
             borderRadius: 6,
-            borderLeft: "3px solid var(--th-accent)",
+            borderLeft: "3px solid #3B82F6",
           }}
         >
           <svg
@@ -44,7 +44,7 @@ export function AgentFormModalPmSection({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ color: "var(--th-accent)", flexShrink: 0, marginTop: 1 }}
+            style={{ color: "#3B82F6", flexShrink: 0, marginTop: 1 }}
           >
             <path d="M12 2L2 7l10 5 10-5-10-5z" />
             <path d="M2 17l10 5 10-5" />
@@ -53,7 +53,7 @@ export function AgentFormModalPmSection({
           <div>
             <div
               className="text-[11px] font-mono font-semibold mb-0.5"
-              style={{ color: "var(--th-accent)" }}
+              style={{ color: "#3B82F6" }}
             >
               {t({
                 ko: "PM 에이전트",
@@ -64,7 +64,7 @@ export function AgentFormModalPmSection({
             </div>
             <div
               className="text-[10px] font-mono"
-              style={{ color: "var(--th-text-muted)", lineHeight: 1.4 }}
+              style={{ color: "#9CA3AF", lineHeight: 1.4 }}
             >
               {t({
                 ko: "이 에이전트는 태스크를 배정하고 리뷰합니다. 직접 코딩하지 않습니다.",
@@ -81,7 +81,7 @@ export function AgentFormModalPmSection({
       <div className="mb-4">
         <label
           className="block text-xs mb-1.5 font-medium"
-          style={{ color: "var(--th-text-secondary)" }}
+          style={{ color: "#6B7280" }}
         >
           {t({
             ko: "자율도",
@@ -105,12 +105,12 @@ export function AgentFormModalPmSection({
                   ...(active
                     ? {
                         background: "var(--th-accent-glow)",
-                        color: "var(--th-accent)",
+                        color: "#3B82F6",
                         borderColor: "var(--th-border-accent)",
                       }
                     : {
                         borderColor: "var(--th-input-border)",
-                        color: "var(--th-text-muted)",
+                        color: "#9CA3AF",
                       }),
                 }}
               >
@@ -124,7 +124,7 @@ export function AgentFormModalPmSection({
                 </span>
                 <span
                   className="text-[9px] mt-0.5"
-                  style={{ color: active ? "var(--th-accent)" : "var(--th-text-muted)", opacity: 0.7 }}
+                  style={{ color: active ? "#3B82F6" : "#9CA3AF", opacity: 0.7 }}
                 >
                   {t({
                     ko: label.desc_ko,
