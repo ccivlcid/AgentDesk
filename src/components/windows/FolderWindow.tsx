@@ -625,35 +625,39 @@ export default function FolderWindow({
     >
       <div style={{
         position: "absolute", left: pos.x, top: pos.y, width: pos.w, height: pos.h,
-        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 10,
+        background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 16,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         display: "flex", flexDirection: "column", pointerEvents: "auto", overflow: "hidden",
         fontFamily: "var(--th-font-mono)",
       }}>
         {/* Header */}
         <div onMouseDown={handleHeaderMouseDown} style={{
           display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
-          borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)",
+          borderBottom: "1px solid #E5E7EB", background: "#F9FAFB",
           cursor: dragging ? "grabbing" : "grab", userSelect: "none", flexShrink: 0,
         }}>
           <TrafficLights onClose={handleClose} onMinimize={() => {}} onMaximize={() => {}} />
           <span style={{ fontSize: 22 }}>{folder.icon ?? "📁"}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, color: "var(--th-text-heading)", fontWeight: 600 }}>{folder.name}</div>
-            <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 1 }}>
+            <div style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{folder.name}</div>
+            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
               {folder.base_path} · {t({ ko: `${folder.projects.length}개 프로젝트`, en: `${folder.projects.length} projects`, ja: `${folder.projects.length}件`, zh: `${folder.projects.length}个项目` })}
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 4, padding: "6px 10px", borderBottom: "1px solid #E5E7EB", background: "#F9FAFB", flexShrink: 0 }}>
           {TABS.map((tb) => (
             <button key={tb.id} onClick={() => setTab(tb.id)} style={{
-              flex: 1, padding: "8px 0", fontSize: 11, fontFamily: "var(--th-font-mono)",
-              background: "transparent", border: "none",
-              borderBottom: tab === tb.id ? "2px solid var(--th-accent)" : "2px solid transparent",
-              color: tab === tb.id ? "var(--th-accent)" : "var(--th-text-muted)",
-              cursor: "pointer", transition: "color 0.15s",
+              flex: 1, padding: "6px 0", fontSize: 11, fontFamily: "var(--th-font-mono)",
+              background: tab === tb.id ? "#FFFFFF" : "transparent",
+              border: tab === tb.id ? "1px solid #E5E7EB" : "1px solid transparent",
+              borderRadius: 8,
+              boxShadow: tab === tb.id ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+              color: tab === tb.id ? "#3B82F6" : "#9CA3AF",
+              cursor: "pointer", transition: "all 0.15s",
+              fontWeight: tab === tb.id ? 600 : 400,
             }}>
               {tb.icon} {t(tb.label)}
             </button>
@@ -665,9 +669,9 @@ export default function FolderWindow({
           <div style={{ flex: 1, padding: 16, overflowY: "auto" }}>
             {ejectMsg && (
               <div style={{
-                fontSize: 10, padding: "6px 10px", marginBottom: 10,
-                background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
-                color: "var(--th-accent)", fontFamily: "var(--th-font-mono)",
+                fontSize: 10, padding: "6px 10px", marginBottom: 10, borderRadius: 8,
+                background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)",
+                color: "#3B82F6", fontFamily: "var(--th-font-mono)",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <span>{ejectMsg}</span>
