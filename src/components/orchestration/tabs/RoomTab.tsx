@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import type { Task, Agent, Project } from "../../../types";
 import { getTaskProgress } from "../task-progress";
+import { getProjectTeamBoard, type TeamBoardEntry } from "../../../api/organization-projects";
 
 const mono = "var(--th-font-mono)";
 
@@ -7,11 +9,21 @@ interface RoomTabProps {
   tasks: Task[];
   agents: Agent[];
   project: Project | null;
+  projectId?: string;
 }
 
-export default function RoomTab({ tasks, agents, project }: RoomTabProps) {
+export default function RoomTab({ tasks, agents, project, projectId }: RoomTabProps) {
   const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned"].includes(t.status));
   const doneTasks = tasks.filter((t) => t.status === "done");
+
+  const [boardEntries, setBoardEntries] = useState<TeamBoardEntry[]>([]);
+
+  useEffect(() => {
+    if (!projectId) { setBoardEntries([]); return; }
+    getProjectTeamBoard(projectId)
+      .then((res) => setBoardEntries(res.entries ?? []))
+      .catch(() => setBoardEntries([]));
+  }, [projectId]);
 
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
@@ -42,14 +54,45 @@ export default function RoomTab({ tasks, agents, project }: RoomTabProps) {
           </span>
         </div>
 
-        {/* Feed content placeholder */}
+        {/* Feed content */}
         <div style={{ flex: 1, overflow: "auto", padding: 16 }}>
-          {activeTasks.length === 0 && (
+          {/* Team board entries from file */}
+          {boardEntries.length > 0 && boardEntries.map((entry, i) => (
+            <div key={`board-${i}`} style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4 }}>
+                <span style={{ color: "var(--th-accent)", fontWeight: 600 }}>
+                  {entry.sender.toUpperCase().replace(/\s+/g, "_")}
+                </span>
+                {" "}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle" }}>
+                  <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                </svg>
+                {" "}
+                <span style={{ color: "var(--th-text-secondary)" }}>{entry.target.toUpperCase()}</span>
+                <span style={{ color: "var(--th-text-muted)", marginLeft: 8, fontSize: 9 }}>{entry.timestamp}</span>
+              </div>
+              <div style={{
+                fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
+                background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
+                padding: "10px 14px",
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 11, color: "var(--th-text-code)" }}>
+                  {entry.subject}
+                </div>
+                <div style={{ whiteSpace: "pre-wrap", fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.5 }}>
+                  {entry.body.length > 300 ? `${entry.body.slice(0, 297)}...` : entry.body}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Active tasks as live status (fallback when no board entries) */}
+          {boardEntries.length === 0 && activeTasks.length === 0 && (
             <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)", textAlign: "center", paddingTop: 32 }}>
               No active orchestration. Start a kickoff to see team communication.
             </div>
           )}
-          {activeTasks.map((task) => {
+          {boardEntries.length === 0 && activeTasks.map((task) => {
             const agent = agents.find((a) => a.id === task.assigned_agent_id);
             return (
               <div key={task.id} style={{ marginBottom: 12 }}>

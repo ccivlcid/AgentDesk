@@ -88,6 +88,7 @@ export default function OrchestrationWindow() {
                 <LogsTab
                   tasks={projectTasks}
                   agents={projectAgents}
+                  projectId={currentProjectId ?? undefined}
                 />
               )}
               {activeTab === "agents" && (
@@ -103,6 +104,7 @@ export default function OrchestrationWindow() {
                   tasks={projectTasks}
                   agents={projectAgents}
                   project={currentProject}
+                  projectId={currentProjectId ?? undefined}
                 />
               )}
             </div>

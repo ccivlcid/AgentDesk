@@ -838,3 +838,21 @@ export async function getProjectVersion(projectId: string): Promise<string> {
   );
   return res.version ?? "0.1.0";
 }
+
+// ── Team Board (Phase 7) ──
+
+export interface TeamBoardEntry {
+  timestamp: string;
+  sender: string;
+  target: string;
+  subject: string;
+  body: string;
+}
+
+export async function getProjectTeamBoard(projectId: string): Promise<{ content: string | null; entries: TeamBoardEntry[] }> {
+  return request(`/api/projects/${projectId}/team-board`);
+}
+
+export async function getTaskReportMd(projectId: string, taskId: string): Promise<{ content: string | null }> {
+  return request(`/api/projects/${projectId}/tasks/${taskId}/report-md`);
+}

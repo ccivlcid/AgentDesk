@@ -15,6 +15,11 @@ You are the Project Manager (PM). An agent completed a task. Perform a structure
 {{previousRevisions}}
 {{/previousRevisions}}
 
+{{#teamCommunication}}
+## Team Communication (recent)
+{{teamCommunication}}
+{{/teamCommunication}}
+
 ---
 
 ## Review Checklist

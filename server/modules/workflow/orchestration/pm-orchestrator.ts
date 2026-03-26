@@ -7,6 +7,8 @@
  * - 모든 결정은 LLM 호출 또는 즉시 실행 (B등급).
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { eventBus, type TaskStatusEvent } from "../../../lib/event-bus.ts";
 import { loadPrompt, loadPromptSection } from "../../../lib/prompt-loader.ts";
@@ -19,6 +21,106 @@ import { runInternalAddTasksPipeline } from "../../routes/core/projects/kickoff.
 import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
 import type { AgentRow } from "../core/conversation-types.ts";
+
+// ── Phase 7: Shared .md team communication utilities ──
+
+function formatTimestamp(): string {
+  return new Date().toISOString().slice(0, 16).replace("T", " ");
+}
+
+function ensureDocsDir(projectPath: string): string {
+  const docsDir = path.join(projectPath, "docs");
+  if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
+  return docsDir;
+}
+
+/**
+ * Append an entry to `{projectPath}/docs/team-board.md`.
+ * Creates the file if it doesn't exist. Append-only.
+ */
+function appendTeamBoard(
+  projectPath: string,
+  sender: string,
+  target: string,
+  subject: string,
+  content: string,
+): void {
+  try {
+    const docsDir = ensureDocsDir(projectPath);
+    const boardPath = path.join(docsDir, "team-board.md");
+    const ts = formatTimestamp();
+    const entry = `\n---\n\n## [${ts}] ${sender} → ${target} | ${subject}\n${content}\n`;
+
+    if (fs.existsSync(boardPath)) {
+      fs.appendFileSync(boardPath, entry, "utf-8");
+    } else {
+      fs.writeFileSync(boardPath, `# Team Board\n${entry}`, "utf-8");
+    }
+  } catch (err) {
+    logger.warn({ err, projectPath }, "[pm-orchestrator] team-board.md write failed");
+  }
+}
+
+/**
+ * Write or append a PM review round to `{projectPath}/docs/tasks/{taskId}-report.md`.
+ * First call creates the file with task metadata header; subsequent calls append rounds.
+ */
+function writeTaskReportMd(
+  projectPath: string,
+  taskId: string,
+  task: { title: string; description?: string | null; task_type?: string | null; assigned_agent_name?: string },
+  round: number,
+  decision: string,
+  checklist: { scopeMatch: boolean; errorsDetected: boolean; minimalScope: boolean; completeness: boolean },
+  reviewResponse: string,
+): void {
+  try {
+    const tasksDir = path.join(ensureDocsDir(projectPath), "tasks");
+    if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
+
+    const reportPath = path.join(tasksDir, `${taskId}-report.md`);
+    const checklistStr = [
+      `scope ${checklist.scopeMatch ? "PASS" : "FAIL"}`,
+      `errors ${checklist.errorsDetected ? "FAIL" : "PASS"}`,
+      `minimal ${checklist.minimalScope ? "PASS" : "FAIL"}`,
+      `completeness ${checklist.completeness ? "PASS" : "FAIL"}`,
+    ].join(" / ");
+
+    const roundEntry = `\n### Round ${round}\n- Decision: ${decision}\n- Checklist: ${checklistStr}\n- PM feedback:\n${reviewResponse}\n`;
+
+    if (fs.existsSync(reportPath)) {
+      fs.appendFileSync(reportPath, roundEntry, "utf-8");
+    } else {
+      const header = [
+        `# Task Report: ${task.title}`,
+        "",
+        "## Info",
+        `- Task ID: ${taskId}`,
+        `- Agent: ${task.assigned_agent_name ?? "(unassigned)"}`,
+        `- Type: ${task.task_type ?? "general"}`,
+        "",
+        "## PM Review",
+      ].join("\n");
+      fs.writeFileSync(reportPath, header + roundEntry, "utf-8");
+    }
+  } catch (err) {
+    logger.warn({ err, projectPath, taskId }, "[pm-orchestrator] task-report.md write failed");
+  }
+}
+
+/**
+ * Count existing PM review rounds for a task from its report file.
+ */
+function countReviewRounds(projectPath: string, taskId: string): number {
+  try {
+    const reportPath = path.join(projectPath, "docs", "tasks", `${taskId}-report.md`);
+    if (!fs.existsSync(reportPath)) return 0;
+    const content = fs.readFileSync(reportPath, "utf-8");
+    return (content.match(/^### Round \d+/gm) ?? []).length;
+  } catch {
+    return 0;
+  }
+}
 
 /** Adapter: findApiProvider compatible with error-analysis deps interface */
 function findApiProviderCompat(db: DatabaseSync, _scope: string): ResolvedProvider | null {
@@ -243,12 +345,37 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         ? previousRevisions.map((r) => r.message.slice(0, 300)).join("\n---\n")
         : "";
 
+      let projectPath = "";
+      try { projectPath = resolveProjectPath(projectId); } catch { /* optional */ }
+
+      // Phase 7: Read file-based context for PM review (team board + previous report rounds)
+      let teamCommunication = "";
+      let fileBasedPreviousReviews = "";
+      if (projectPath) {
+        try {
+          const boardPath = path.join(projectPath, "docs", "team-board.md");
+          if (fs.existsSync(boardPath)) {
+            const board = fs.readFileSync(boardPath, "utf-8");
+            const sections = board.split(/^---$/m).filter((s) => s.trim());
+            const recent = sections.slice(-5).join("\n---\n").trim();
+            if (recent) teamCommunication = recent;
+          }
+        } catch { /* best effort */ }
+        try {
+          const reportPath = path.join(projectPath, "docs", "tasks", `${taskId}-report.md`);
+          if (fs.existsSync(reportPath)) {
+            fileBasedPreviousReviews = fs.readFileSync(reportPath, "utf-8");
+          }
+        } catch { /* best effort */ }
+      }
+
       const prompt = loadPrompt("pm/review-task", {
         taskTitle: task.title,
         taskDescription: task.description ?? "",
         taskResult: resultTail || "(no output captured)",
         executionLogSummary,
-        previousRevisions: previousRevisionsText,
+        previousRevisions: fileBasedPreviousReviews || previousRevisionsText,
+        teamCommunication,
         lang,
       });
 
@@ -256,9 +383,6 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_prompt_missing" });
         return;
       }
-
-      let projectPath = "";
-      try { projectPath = resolveProjectPath(projectId); } catch { /* optional */ }
 
       const response = await runAgentOneShot(pm, prompt, {
         projectPath,
@@ -331,6 +455,20 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           agent_id: pm.id as string,
         });
 
+        // Phase 7: Write task report + team board entry
+        if (projectPath) {
+          const agentName = task.assigned_agent_id
+            ? (db.prepare("SELECT name FROM agents WHERE id = ?").get(task.assigned_agent_id) as { name: string } | undefined)?.name
+            : undefined;
+          const round = countReviewRounds(projectPath, taskId) + 1;
+          writeTaskReportMd(projectPath, taskId, { ...task, assigned_agent_name: agentName }, round, "APPROVE", checklist, text);
+          appendTeamBoard(
+            projectPath, pm.name ?? "PM", "ALL",
+            `Review: ${task.title}`,
+            `APPROVE — ${text.slice(0, 300)}${text.length > 300 ? "..." : ""}\nFull review: docs/tasks/${taskId}-report.md`,
+          );
+        }
+
         // PM 검토 승인 직후 → progress.md 작성
         void pmWriteProgress(pm, taskId, projectId, {
           title: task.title,
@@ -389,6 +527,21 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           metadata: pmMeta,
           createdAt: reviewStartMs,
         });
+
+        // Phase 7: Write task report + team board entry for revision
+        if (projectPath) {
+          const agentName = task.assigned_agent_id
+            ? (db.prepare("SELECT name FROM agents WHERE id = ?").get(task.assigned_agent_id) as { name: string } | undefined)?.name
+            : undefined;
+          const round = countReviewRounds(projectPath, taskId) + 1;
+          writeTaskReportMd(projectPath, taskId, { ...task, assigned_agent_name: agentName }, round, "REVISE", checklist, text);
+          appendTeamBoard(
+            projectPath, pm.name ?? "PM", agentName ?? "Agent",
+            `Revision: ${task.title}`,
+            `REVISE${checksLabel} — ${text.slice(0, 300)}${text.length > 300 ? "..." : ""}\nFull review: docs/tasks/${taskId}-report.md`,
+          );
+        }
+
         db.prepare("UPDATE tasks SET status = 'planned', updated_at = ? WHERE id = ? AND status = 'review'").run(nowMs(), taskId);
         broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
 
