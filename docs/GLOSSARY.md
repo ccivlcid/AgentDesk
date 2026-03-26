@@ -177,6 +177,19 @@ project > agent > department > workflow_pack > global
 | **Cross-Dept Delivery** | —                         | Task handoff between agents of different departments                                                                          |
 | **Client Office Call**  | —                         | Meeting room interaction during kickoff/review phases                                                                         |
 
+### Messenger Channels
+
+Supported external messenger channel types (`MessengerChannelType` in `src/types/index.ts`):
+
+| Channel       | Key            | Notes                              |
+| ------------- | -------------- | ---------------------------------- |
+| Telegram      | `telegram`     | Bot API integration                |
+| WhatsApp      | `whatsapp`     | Business API                       |
+| Discord       | `discord`      | Bot / webhook                      |
+| Google Chat   | `googlechat`   | Workspace integration              |
+| Slack         | `slack`        | Bot / webhook                      |
+| Signal        | `signal`       | Signal CLI bridge                  |
+| iMessage      | `imessage`     | macOS-only bridge                  |
 
 ---
 

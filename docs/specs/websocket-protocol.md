@@ -213,6 +213,49 @@ A department (specialty area) was created, updated, or deleted.
 
 ---
 
+### new_message
+
+A new message was created in the message feed.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Message ID |
+| `sender_type` | `string` | `"system"`, `"client"`, `"agent"` |
+| `content` | `string?` | Message text |
+| `message_type` | `string?` | Message category |
+| `task_id` | `string?` | Related task ID |
+
+**Emitted by:** Subtask delegation, progress notifications, inbox routes, messenger send.
+
+---
+
+### announcement
+
+A broadcast announcement was posted.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Message ID |
+| `content` | `string` | Announcement text |
+| `sender_type` | `string` | `"client"` |
+
+**Emitted by:** Directives inbox, announcement delegation routes.
+
+---
+
+### chat_stream
+
+Streaming chat response chunks (reserved for real-time agent chat).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `taskId` | `string?` | Task ID |
+| `chunk` | `string?` | Text chunk |
+
+**Emitted by:** Reserved — not yet broadcast by server.
+
+---
+
 ### cli_output
 
 Streaming process stdout/stderr from a running task. **Subscription-filtered** -- only delivered to clients that have subscribed to the task via `subscribe_task`.
@@ -614,15 +657,17 @@ export type WSEventType =
   | "agent_created"
   | "agent_deleted"
   | "departments_changed"
+  | "new_message"
+  | "announcement"
   | "cli_output"
   | "cli_usage_update"
   | "subtask_update"
   | "cross_dept_delivery"
   | "client_office_call"
+  | "chat_stream"
   | "task_report"
   | "notification"
   | "queue_status"
-  | "pm_activity"
   | "connected"
   | "skill_learn_job_update"
   | "memory_learn_job_update"
