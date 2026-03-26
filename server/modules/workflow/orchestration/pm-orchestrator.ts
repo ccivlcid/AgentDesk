@@ -66,6 +66,33 @@ interface PmOrchestratorDeps {
 /** In-flight guard: prevent concurrent PM calls for the same key */
 const pmInFlight = new Set<string>();
 
+/**
+ * Multi-pattern review decision parser.
+ * Handles diverse LLM output formats across providers (Claude, GPT, Gemini, Llama, etc.)
+ * Returns UNKNOWN when no pattern matches — system never makes an arbitrary decision.
+ */
+function parseReviewDecision(text: string): "APPROVE" | "REVISE" | "UNKNOWN" {
+  const approvePatterns = [
+    /^APPROVE[:\s]/im,
+    /\bAPPROVED?\b/i,
+    /승인|합격|통과|lgtm/i,
+    /decision[:\s]*approve/i,
+    /verdict[:\s]*approve/i,
+  ];
+  const revisePatterns = [
+    /^REVISE[:\s]/im,
+    /\bREVISED?\b/i,
+    /\bREJECT/i,
+    /수정\s*요청|반려|재작업/i,
+    /decision[:\s]*revise/i,
+    /needs?\s+(more\s+)?work/i,
+  ];
+
+  if (approvePatterns.some((p) => p.test(text))) return "APPROVE";
+  if (revisePatterns.some((p) => p.test(text))) return "REVISE";
+  return "UNKNOWN";
+}
+
 function findProjectPm(db: DatabaseSync, projectId: string): AgentRow | undefined {
   return db.prepare(
     `SELECT a.* FROM project_agents pa JOIN agents a ON a.id = pa.agent_id
@@ -178,9 +205,12 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       }
 
       const lang = getPreferredLanguage();
+      const RESULT_TAIL_LENGTH = 4000;
       let resultTail = event.resultTail ?? "";
       if (!resultTail && task.result) {
-        resultTail = task.result.length > 2000 ? "..." + task.result.slice(-2000) : task.result;
+        resultTail = task.result.length > RESULT_TAIL_LENGTH
+          ? "..." + task.result.slice(-RESULT_TAIL_LENGTH)
+          : task.result;
       }
 
       // Scope drift pre-check: count distinct file paths mentioned in the result
@@ -192,10 +222,33 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         logger.warn({ taskId, fileTouchCount }, "[pm-orchestrator] high file-touch count detected in task result");
       }
 
+      // Phase 4: Execution log summary for PM context
+      const recentLogs = db.prepare(
+        `SELECT kind, message, created_at FROM task_logs
+         WHERE task_id = ? AND kind IN ('system', 'error', 'pm_oversight')
+         ORDER BY created_at DESC LIMIT 15`,
+      ).all(taskId) as { kind: string; message: string; created_at: number }[];
+      const executionLogSummary = recentLogs.length > 0
+        ? recentLogs.reverse().map((l) => `[${l.kind}] ${l.message.slice(0, 120)}`).join("\n")
+        : "(no execution logs)";
+
+      // Phase 4: Previous revision feedback for continuity
+      const previousRevisions = db.prepare(
+        `SELECT message FROM task_logs
+         WHERE task_id = ? AND kind = 'pm_oversight'
+           AND (message LIKE '%REVISE%' OR message LIKE '%revision%')
+         ORDER BY created_at DESC LIMIT 3`,
+      ).all(taskId) as { message: string }[];
+      const previousRevisionsText = previousRevisions.length > 0
+        ? previousRevisions.map((r) => r.message.slice(0, 300)).join("\n---\n")
+        : "";
+
       const prompt = loadPrompt("pm/review-task", {
         taskTitle: task.title,
         taskDescription: task.description ?? "",
         taskResult: resultTail || "(no output captured)",
+        executionLogSummary,
+        previousRevisions: previousRevisionsText,
         lang,
       });
 
@@ -221,31 +274,44 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       }
 
       const text = response.text ?? "";
-      const isApprove = /^APPROVE[:\s]/im.test(text) || /승인|합격|통과|lgtm|approve/i.test(text);
+      const decision = parseReviewDecision(text);
+      const reviewStartMs = nowMs();
 
       // Parse structured checklist signals from PM response
-      const hasScopeDrift = /scope\s*(match|drift).*FAIL/i.test(text) || /scope drift/i.test(text);
-      const hasErrors = /obvious\s*errors.*FAIL/i.test(text) || /clear\s*error/i.test(text);
-      const isIncomplete = /completeness.*FAIL/i.test(text) || /partial|incomplete|stub/i.test(text);
-      const excessiveScope = /minimal\s*scope.*FAIL/i.test(text) || /excessive\s*scope/i.test(text);
-      const hasEvidence = /evidence:/i.test(text);
-
+      const checklist = {
+        scopeMatch: !(/scope\s*(match|drift).*FAIL/i.test(text) || /scope drift/i.test(text)),
+        errorsDetected: /obvious\s*errors.*FAIL/i.test(text) || /clear\s*error/i.test(text),
+        minimalScope: !(/minimal\s*scope.*FAIL/i.test(text) || /excessive\s*scope/i.test(text)),
+        completeness: !(/completeness.*FAIL/i.test(text) || /partial|incomplete|stub/i.test(text)),
+      };
       const reviewFlags = {
-        scopeDrift: hasScopeDrift,
-        errorsDetected: hasErrors,
-        incomplete: isIncomplete,
-        excessiveScope: excessiveScope || fileTouchCount >= 10,
-        evidenceCited: hasEvidence,
+        scopeDrift: !checklist.scopeMatch,
+        errorsDetected: checklist.errorsDetected,
+        excessiveScope: !checklist.minimalScope || fileTouchCount >= 10,
+        evidenceCited: /evidence:/i.test(text),
         fileTouchCount,
       };
 
-      logger.info({ taskId, decision: isApprove ? "approve" : "revise", reviewFlags, yolo: isYolo }, "[pm-orchestrator] structured review completed");
+      // Structured metadata for all PM events
+      const pmMeta = {
+        checklist,
+        flags: reviewFlags,
+        reasoning: text.slice(0, 500),
+        provider: pm.cli_provider ?? "unknown",
+        resultTailLength: resultTail.length,
+      };
 
-      if (isApprove) {
-        const flagSummary = hasScopeDrift || excessiveScope
-          ? ` [WARN: ${hasScopeDrift ? "scope-drift" : ""}${excessiveScope ? " excessive-scope" : ""}]`
+      logger.info({ taskId, decision, reviewFlags, yolo: isYolo }, "[pm-orchestrator] structured review completed");
+
+      if (decision === "APPROVE") {
+        const flagSummary = reviewFlags.scopeDrift || reviewFlags.excessiveScope
+          ? ` [WARN: ${reviewFlags.scopeDrift ? "scope-drift" : ""}${reviewFlags.excessiveScope ? " excessive-scope" : ""}]`
           : "";
-        appendTaskLog(taskId, "pm_oversight", `PM approved${isYolo ? " (YOLO)" : ""}${flagSummary}: ${text.slice(0, 200)}`);
+        appendTaskLog(taskId, "pm_oversight", JSON.stringify({
+          action: "APPROVE",
+          ...pmMeta,
+          yolo: isYolo,
+        }));
         finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: isYolo ? "pm_yolo" : "pm_agent" });
         recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
           taskId,
@@ -253,7 +319,8 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           fromState: "review",
           toState: "done",
           summary: `PM approved${flagSummary}: ${text.slice(0, 200)}`,
-          createdAt: nowMs(),
+          metadata: pmMeta,
+          createdAt: reviewStartMs,
         });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
         insertNotification({
@@ -272,26 +339,55 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           task_type: task.task_type ?? "general",
           assigned_agent_id: task.assigned_agent_id,
         });
+      } else if (decision === "UNKNOWN") {
+        // Parse failed — do not make an arbitrary decision. Keep in review, notify user.
+        appendTaskLog(taskId, "pm_oversight", JSON.stringify({
+          action: "PARSE_FAILED",
+          ...pmMeta,
+        }));
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_parse_failed",
+          fromState: "review",
+          toState: "review",
+          summary: `PM review parse failed — task remains in review: ${text.slice(0, 200)}`,
+          metadata: pmMeta,
+          createdAt: reviewStartMs,
+        });
+        broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+        insertNotification({
+          type: "pm_parse_failed",
+          title: `PM review parse failed: ${task.title}`,
+          body: `Could not determine APPROVE/REVISE from PM response. Manual review required.`,
+          task_id: taskId,
+          agent_id: pm.id as string,
+        });
+        logger.warn({ taskId, textHead: text.slice(0, 200) }, "[pm-orchestrator] UNKNOWN decision — task stays in review");
       } else {
-        // 수정 요청: 상태 재확인 후 변경
+        // REVISE: 상태 재확인 후 변경
         const recheck = db.prepare("SELECT status FROM tasks WHERE id = ?").get(taskId) as { status: string } | undefined;
         if (recheck?.status !== "review") return;
 
         const failedChecks: string[] = [];
-        if (hasScopeDrift) failedChecks.push("scope-drift");
-        if (hasErrors) failedChecks.push("errors");
-        if (isIncomplete) failedChecks.push("incomplete");
-        if (excessiveScope) failedChecks.push("excessive-scope");
+        if (reviewFlags.scopeDrift) failedChecks.push("scope-drift");
+        if (checklist.errorsDetected) failedChecks.push("errors");
+        if (!checklist.completeness) failedChecks.push("incomplete");
+        if (reviewFlags.excessiveScope) failedChecks.push("excessive-scope");
         const checksLabel = failedChecks.length > 0 ? ` [FAILED: ${failedChecks.join(", ")}]` : "";
 
-        appendTaskLog(taskId, "pm_oversight", `PM requested revision${checksLabel}: ${text.slice(0, 200)}`);
+        appendTaskLog(taskId, "pm_oversight", JSON.stringify({
+          action: "REVISE",
+          failedChecks,
+          ...pmMeta,
+        }));
         recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
           taskId,
           eventType: "pm_revision_requested",
           fromState: "review",
           toState: "planned",
           summary: `PM requested revision${checksLabel}: ${text.slice(0, 200)}`,
-          createdAt: nowMs(),
+          metadata: pmMeta,
+          createdAt: reviewStartMs,
         });
         db.prepare("UPDATE tasks SET status = 'planned', updated_at = ? WHERE id = ? AND status = 'review'").run(nowMs(), taskId);
         broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
