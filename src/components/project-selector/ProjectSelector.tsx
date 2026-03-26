@@ -58,9 +58,9 @@ export default function ProjectSelector({
         <span
           className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-none"
           style={{
-            backgroundColor: currentCategory ? `${currentCategory.color}20` : "#F9FAFB",
-            border: `1px solid ${currentCategory ? `${currentCategory.color}50` : "#E5E7EB"}`,
-            color: currentCategory?.color ?? "#9CA3AF",
+            backgroundColor: currentCategory ? `${currentCategory.color}20` : "var(--th-bg-surface)",
+            border: `1px solid ${currentCategory ? `${currentCategory.color}50` : "var(--th-border)"}`,
+            color: currentCategory?.color ?? "var(--th-text-muted)",
           }}
         >
           <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -74,7 +74,7 @@ export default function ProjectSelector({
             <>
               <span
                 className="min-w-0 truncate text-[11px] font-semibold leading-tight"
-                style={{ color: "#111827" }}
+                style={{ color: "var(--th-text-primary)" }}
               >
                 {currentProject.name}
               </span>
@@ -88,7 +88,7 @@ export default function ProjectSelector({
               )}
             </>
           ) : (
-            <span className="text-[11px]" style={{ color: "#9CA3AF" }}>
+            <span className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
               프로젝트 선택
             </span>
           )}
@@ -103,7 +103,7 @@ export default function ProjectSelector({
           stroke="currentColor"
           strokeWidth="2"
           className={`flex-shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
-          style={{ color: "#9CA3AF" }}
+          style={{ color: "var(--th-text-muted)" }}
         >
           <path d="M6 8l4 4 4-4" />
         </svg>

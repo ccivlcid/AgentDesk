@@ -36,36 +36,36 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
   const doneCount = items.filter((i) => i.checked).length;
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "#F9FAFB" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "var(--th-bg-surface)" }}>
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#111827", fontFamily: "var(--th-font-mono)" }}>
+        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "결과물 체크리스트", en: "Deliverables", ja: "成果物チェック", zh: "交付物清单" })}
         </h4>
         {!loading && items.length > 0 && (
-          <span className="text-[11px] font-mono" style={{ color: doneCount === items.length ? "#4ade80" : "#9CA3AF" }}>
+          <span className="text-[11px] font-mono" style={{ color: doneCount === items.length ? "#4ade80" : "var(--th-text-muted)" }}>
             {doneCount}/{items.length}
           </span>
         )}
       </div>
 
       {loading ? (
-        <p className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+        <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
         </p>
       ) : (
         <>
           {items.length > 0 && (
-            <div className="mb-3 h-1.5 w-full overflow-hidden" style={{ background: "#F3F4F6" }}>
+            <div className="mb-3 h-1.5 w-full overflow-hidden" style={{ background: "var(--th-bg-primary)" }}>
               <div
                 className="h-full transition-all duration-500"
-                style={{ width: `${Math.round((doneCount / items.length) * 100)}%`, background: doneCount === items.length ? "#4ade80" : "#3B82F6" }}
+                style={{ width: `${Math.round((doneCount / items.length) * 100)}%`, background: doneCount === items.length ? "#4ade80" : "var(--th-accent)" }}
               />
             </div>
           )}
 
           <div className="space-y-1.5">
             {items.map((item) => {
-              const color = TYPE_COLOR[item.type] ?? "#9CA3AF";
+              const color = TYPE_COLOR[item.type] ?? "var(--th-text-muted)";
               const isSaving = saving === item.key;
               return (
                 <button
@@ -75,8 +75,8 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
                   onClick={() => void toggle(item)}
                   className="w-full flex items-center gap-2.5 px-2 py-1.5 text-left transition-colors"
                   style={{
-                    border: `1px solid ${item.checked ? "rgba(74,222,128,0.3)" : "#E5E7EB"}`,
-                    background: item.checked ? "rgba(74,222,128,0.05)" : "#FFFFFF",
+                    border: `1px solid ${item.checked ? "rgba(74,222,128,0.3)" : "var(--th-border)"}`,
+                    background: item.checked ? "rgba(74,222,128,0.05)" : "var(--th-bg-elevated)",
                     cursor: isSaving ? "wait" : "pointer",
                     borderRadius: 0,
                     opacity: isSaving ? 0.7 : 1,
@@ -86,7 +86,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
                     className="shrink-0 flex items-center justify-center"
                     style={{
                       width: 14, height: 14,
-                      border: `1.5px solid ${item.checked ? "#4ade80" : "#BFDBFE"}`,
+                      border: `1.5px solid ${item.checked ? "#4ade80" : "var(--th-accent-border)"}`,
                       background: item.checked ? "#4ade80" : "transparent",
                     }}
                   >
@@ -97,7 +97,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
                     )}
                   </span>
 
-                  <span className="flex-1 min-w-0 text-[11px] font-mono" style={{ color: item.checked ? "#9CA3AF" : "#111827", textDecoration: item.checked ? "line-through" : "none" }}>
+                  <span className="flex-1 min-w-0 text-[11px] font-mono" style={{ color: item.checked ? "var(--th-text-muted)" : "var(--th-text-primary)", textDecoration: item.checked ? "line-through" : "none" }}>
                     {item.label}
                   </span>
 

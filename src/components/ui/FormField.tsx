@@ -28,12 +28,12 @@ export default function FormField({
       {/* // field-name label */}
       <label
         className="flex items-center gap-1.5 mb-1.5"
-        style={{ fontFamily: mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#9CA3AF" }}
+        style={{ fontFamily: mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--th-text-muted)" }}
       >
         <span style={{ opacity: 0.6 }}>//</span>
         <span>{label}</span>
         {required && (
-          <span style={{ color: "#3B82F6", fontWeight: 700 }} aria-hidden="true">*</span>
+          <span style={{ color: "var(--th-accent)", fontWeight: 700 }} aria-hidden="true">*</span>
         )}
         {suffix && (
           <span style={{ fontWeight: 400, opacity: 0.6, textTransform: "none" as const }}>
@@ -43,7 +43,7 @@ export default function FormField({
       </label>
 
       {hint && (
-        <p className="mb-1.5 text-[11px]" style={{ fontFamily: mono, color: "#9CA3AF", lineHeight: 1.5 }}>
+        <p className="mb-1.5 text-[11px]" style={{ fontFamily: mono, color: "var(--th-text-muted)", lineHeight: 1.5 }}>
           {hint}
         </p>
       )}

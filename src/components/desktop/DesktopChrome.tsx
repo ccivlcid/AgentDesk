@@ -35,7 +35,7 @@ export function DesktopChrome({
       style={{
         position: "fixed",
         inset: 0,
-        background: "#F3F4F6",
+        background: "var(--th-bg-primary)",
         overflow: "hidden",
         fontFamily: "var(--th-font-mono)",
         transition: "background 0.4s ease",

@@ -22,14 +22,14 @@ function KickoffIndicator() {
     <div style={{
       display: "flex", alignItems: "center", gap: 6,
       padding: "3px 14px",
-      background: "#EBF5FF",
+      background: "var(--th-accent-glow)",
       border: "1px solid rgba(245,158,11,0.18)",
       borderRadius: 8,
     }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}>
         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
       </svg>
-      <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "#3B82F6", whiteSpace: "nowrap" }}>
+      <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "var(--th-accent)", whiteSpace: "nowrap" }}>
         {t({ ko: "업무 계획 중...", en: "Planning...", ja: "計画中...", zh: "计划中..." })}
       </span>
     </div>
@@ -100,21 +100,21 @@ function ProjectProgressIndicator() {
         </span>
       )}
       {runningCount > 0 && (
-        <span style={{ color: "#9CA3AF", fontSize: 10 }}>
+        <span style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
           {"\u00B7"}
         </span>
       )}
       {/* Done fraction */}
       <span style={{
         fontFamily: mono, fontSize: 11, fontWeight: 500,
-        color: "#6B7280", whiteSpace: "nowrap",
+        color: "var(--th-text-secondary)", whiteSpace: "nowrap",
       }}>
         {doneCount}/{total} done
       </span>
       {/* Progress bar */}
       <div style={{
         width: 60, height: 3,
-        background: "#E5E7EB",
+        background: "var(--th-border)",
         borderRadius: 2,
         overflow: "hidden",
         flexShrink: 0,
@@ -122,7 +122,7 @@ function ProjectProgressIndicator() {
         <div style={{
           width: `${pct}%`,
           height: "100%",
-          background: "#3B82F6",
+          background: "var(--th-accent)",
           borderRadius: 2,
           transition: "width 0.3s ease",
         }} />
@@ -130,7 +130,7 @@ function ProjectProgressIndicator() {
       {/* Percentage */}
       <span style={{
         fontFamily: mono, fontSize: 10, fontWeight: 600,
-        color: "#9CA3AF", whiteSpace: "nowrap",
+        color: "var(--th-text-muted)", whiteSpace: "nowrap",
         minWidth: 24, textAlign: "right",
       }}>
         {pct}%
@@ -261,7 +261,7 @@ export default function MenuBar({
     border: "none",
     fontFamily: mono,
     fontSize: 12,
-    color: "#111827",
+    color: "var(--th-text-primary)",
     cursor: "pointer",
     textAlign: "left",
     gap: 24,
@@ -287,9 +287,9 @@ export default function MenuBar({
         right: 0,
         height: 44,
         zIndex: 1000,
-        background: "#F9FAFB",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        background: "var(--th-bg-surface)",
+        backdropFilter: "var(--th-glass-blur) saturate(180%)",
+        WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
         borderBottom: "1px solid #E5E7EB",
         display: "flex",
         alignItems: "center",
@@ -305,9 +305,9 @@ export default function MenuBar({
         <button
           onClick={() => setAppMenuOpen((v) => !v)}
           style={{
-            background: appMenuOpen ? "rgba(0,0,0,0.06)" : "none",
+            background: appMenuOpen ? "var(--th-hover-overlay)" : "none",
             border: "none",
-            color: "#111827",
+            color: "var(--th-text-primary)",
             fontFamily: "var(--th-font-display)",
             fontSize: 13,
             fontWeight: 700,
@@ -320,11 +320,11 @@ export default function MenuBar({
             gap: 8,
             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
-          onMouseEnter={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.03)"; }}
+          onMouseEnter={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
           onMouseLeave={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
         >
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="22" height="22" rx="5" fill="#3B82F6" />
+            <rect width="22" height="22" rx="5" fill="var(--th-accent)" />
             <rect x="0.5" y="0.5" width="21" height="21" rx="4.5" stroke="rgba(255,255,255,0.15)" />
             <text x="11" y="15.5" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontSize="13" fontWeight="700" fill="white">A</text>
           </svg>
@@ -338,18 +338,18 @@ export default function MenuBar({
               top: "calc(100% + 6px)",
               left: 0,
               minWidth: 220,
-              background: "#F9FAFB",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
+              background: "var(--th-bg-surface)",
+              backdropFilter: "var(--th-glass-blur)",
+              WebkitBackdropFilter: "var(--th-glass-blur)",
               border: "1px solid #D1D5DB",
               borderRadius: 12,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+              boxShadow: "var(--th-glass-shadow-active)",
               padding: "4px 0",
               zIndex: 2000,
             }}
           >
             {/* About */}
-            <div style={{ padding: "7px 14px 4px", fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>
+            <div style={{ padding: "7px 14px 4px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
               AgentDesk v1.0
             </div>
             <div style={menuSepStyle} />
@@ -358,7 +358,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(toggleTheme)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{theme === "dark"
@@ -374,7 +374,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenUserGuide)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>📖 {t({ ko: "유저 가이드", en: "User Guide", ja: "ユーザーガイド", zh: "用户指南" })}</span>
@@ -384,7 +384,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenExportModal)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -401,11 +401,11 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenMissionControl)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{t({ ko: "미션 컨트롤", en: "Mission Control", ja: "ミッションコントロール", zh: "调度中心" })}</span>
-              <span style={{ fontSize: 10, color: "#9CA3AF" }}>Ctrl ↑</span>
+              <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>Ctrl ↑</span>
             </button>
 
             <div style={menuSepStyle} />
@@ -414,7 +414,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => setDockAutoHide(!dockAutoHide)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{t({ ko: "Dock 자동 숨기기", en: "Auto-hide Dock", ja: "Dockを自動的に隠す", zh: "自动隐藏Dock" })}</span>
@@ -431,7 +431,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => setDoNotDisturb(!doNotDisturb)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>🌙 {t({ ko: "방해 금지 모드", en: "Do Not Disturb", ja: "おやすみモード", zh: "勿扰模式" })}</span>
@@ -449,7 +449,7 @@ export default function MenuBar({
 
       {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
       {!connected && (
-        <span style={{ color: "#DC2626", fontSize: 10, display: "inline-flex", alignItems: "center" }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/></svg></span>
+        <span style={{ color: "var(--th-danger-text)", fontSize: 10, display: "inline-flex", alignItems: "center" }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/></svg></span>
       )}
 
       {/* 프로젝트 선택 */}
@@ -477,10 +477,10 @@ export default function MenuBar({
         onClick={onOpenCommandPalette}
         title={t({ ko: "검색  ⌘K", en: "Search  ⌘K", ja: "検索  ⌘K", zh: "搜索  ⌘K" })}
         style={{
-          background: "rgba(0,0,0,0.03)",
+          background: "var(--th-hover-overlay-subtle)",
           border: "1px solid #E5E7EB",
           borderRadius: 6,
-          color: "#9CA3AF",
+          color: "var(--th-text-muted)",
           fontFamily: mono,
           fontSize: 11,
           cursor: "pointer",
@@ -493,13 +493,13 @@ export default function MenuBar({
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLButtonElement;
-          el.style.borderColor = "#3B82F6";
-          el.style.color = "#111827";
+          el.style.borderColor = "var(--th-accent)";
+          el.style.color = "var(--th-text-primary)";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLButtonElement;
-          el.style.borderColor = "#E5E7EB";
-          el.style.color = "#9CA3AF";
+          el.style.borderColor = "var(--th-border)";
+          el.style.color = "var(--th-text-muted)";
         }}
       >
         🔍 {t({ ko: "검색", en: "Search", ja: "検索", zh: "搜索" })}
@@ -514,7 +514,7 @@ export default function MenuBar({
           style={{
             background: "none",
             border: "none",
-            color: "#6B7280",
+            color: "var(--th-text-secondary)",
             fontFamily: mono,
             fontSize: 11,
             cursor: "pointer",
@@ -543,9 +543,9 @@ export default function MenuBar({
         type="button"
         onClick={() => setClockOpen(v => !v)}
         style={{
-          background: clockOpen ? "rgba(0,0,0,0.06)" : "none",
+          background: clockOpen ? "var(--th-hover-overlay)" : "none",
           border: "none",
-          color: "#6B7280",
+          color: "var(--th-text-secondary)",
           fontFamily: mono,
           fontSize: 11,
           cursor: "pointer",
@@ -555,7 +555,7 @@ export default function MenuBar({
           textAlign: "right",
           transition: "background 0.15s",
         }}
-        onMouseEnter={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.03)"; }}
+        onMouseEnter={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
         onMouseLeave={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
       >
         {timeStr}
@@ -585,12 +585,12 @@ export default function MenuBar({
           <div style={{
             padding: "20px 20px 14px",
             borderBottom: "1px solid #E5E7EB",
-            background: "#EBF5FF",
+            background: "var(--th-accent-glow)",
           }}>
-            <div style={{ fontSize: 36, fontWeight: 700, color: "#111827", letterSpacing: "-1px", lineHeight: 1 }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: "-1px", lineHeight: 1 }}>
               {timeStrFull}
             </div>
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 6 }}>
+            <div style={{ fontSize: 12, color: "var(--th-text-muted)", marginTop: 6 }}>
               {now.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
             </div>
           </div>
@@ -602,9 +602,9 @@ export default function MenuBar({
               <button
                 type="button"
                 onClick={prevMonth}
-                style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#3B82F6"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#9CA3AF"; }}
+                style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
               >‹</button>
 
               <button
@@ -612,7 +612,7 @@ export default function MenuBar({
                 onClick={goToday}
                 style={{
                   background: "none", border: "none",
-                  color: isCurrentMonth ? "#3B82F6" : "#111827",
+                  color: isCurrentMonth ? "var(--th-accent)" : "var(--th-text-primary)",
                   fontFamily: mono, fontSize: 12, fontWeight: 700,
                   cursor: "pointer", padding: "2px 8px", borderRadius: 4,
                   letterSpacing: "0.05em",
@@ -624,9 +624,9 @@ export default function MenuBar({
               <button
                 type="button"
                 onClick={nextMonth}
-                style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#3B82F6"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#9CA3AF"; }}
+                style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
               >›</button>
             </div>
 
@@ -638,7 +638,7 @@ export default function MenuBar({
                   fontSize: 10,
                   fontWeight: 700,
                   padding: "2px 0",
-                  color: i === 0 ? "#DC2626" : i === 6 ? "#3B82F6" : "#9CA3AF",
+                  color: i === 0 ? "var(--th-danger-text)" : i === 6 ? "var(--th-accent)" : "var(--th-text-muted)",
                   letterSpacing: "0.05em",
                 }}>
                   {d}
@@ -662,16 +662,16 @@ export default function MenuBar({
                       padding: "4px 0",
                       borderRadius: 6,
                       fontWeight: isToday ? 800 : 400,
-                      background: isToday ? "#3B82F6" : "transparent",
+                      background: isToday ? "var(--th-accent)" : "transparent",
                       color: day == null
                         ? "transparent"
                         : isToday
-                          ? "#FFFFFF"
+                          ? "var(--th-bg-elevated)"
                           : isSun
-                            ? "#DC2626"
+                            ? "var(--th-danger-text)"
                             : isSat
-                              ? "#3B82F6"
-                              : "#6B7280",
+                              ? "var(--th-accent)"
+                              : "var(--th-text-secondary)",
                       cursor: day != null ? "default" : "default",
                     }}
                   >
@@ -689,10 +689,10 @@ export default function MenuBar({
                 style={{
                   marginTop: 10,
                   width: "100%",
-                  background: "#EBF5FF",
+                  background: "var(--th-accent-glow)",
                   border: "1px solid #BFDBFE",
                   borderRadius: 6,
-                  color: "#3B82F6",
+                  color: "var(--th-accent)",
                   fontFamily: mono,
                   fontSize: 10,
                   fontWeight: 700,

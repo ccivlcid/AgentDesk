@@ -35,16 +35,16 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
     : tasks.every((t) => t.status === "planned" || t.status === "inbox") ? "READY"
     : "CLUSTER_STABLE";
 
-  const clusterColor = clusterStatus === "ALL_COMPLETE" ? "#059669"
-    : clusterStatus === "HAS_FAILURES" ? "#DC2626"
-    : clusterStatus === "EXECUTING" ? "#3B82F6"
-    : "#6B7280";
+  const clusterColor = clusterStatus === "ALL_COMPLETE" ? "var(--th-success)"
+    : clusterStatus === "HAS_FAILURES" ? "var(--th-danger-text)"
+    : clusterStatus === "EXECUTING" ? "var(--th-accent)"
+    : "var(--th-text-secondary)";
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   if (agentLanes.size === 0) {
     return (
-      <div style={{ padding: 32, color: "#9CA3AF", fontFamily: mono, fontSize: 13, textAlign: "center" }}>
+      <div style={{ padding: 32, color: "var(--th-text-muted)", fontFamily: mono, fontSize: 13, textAlign: "center" }}>
         No active agent lanes. Start a project kickoff to begin orchestration.
       </div>
     );
@@ -55,7 +55,7 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
       {/* Section header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6", display: "flex", alignItems: "center" }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)", display: "flex", alignItems: "center" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <rect x="3" y="3" width="7" height="7" />
               <rect x="14" y="3" width="7" height="7" />
@@ -108,7 +108,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
   return (
     <div style={{
       border: "1px solid #E5E7EB",
-      background: "#FFFFFF",
+      background: "var(--th-bg-elevated)",
       borderRadius: 20,
       padding: "16px 20px",
       transition: "all 0.2s",
@@ -123,14 +123,14 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 8, height: 8, borderRadius: "50%",
-            background: isWorking ? "#059669" : "#D1D5DB",
+            background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
             boxShadow: isWorking ? "0 0 8px rgba(5, 150, 105, 0.4)" : "none",
           }} />
           <span style={{
             fontFamily: mono,
             fontSize: 13,
             fontWeight: 800,
-            color: "#111827",
+            color: "var(--th-text-primary)",
             letterSpacing: "0.05em",
           }}>
             {agent.name.toUpperCase().replace(/\s+/g, "_")}
@@ -138,7 +138,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           <span style={{
             fontFamily: mono,
             fontSize: 10,
-            color: "#9CA3AF",
+            color: "var(--th-text-muted)",
           }}>
             ID: {agent.id.substring(0, 8).toUpperCase()}
           </span>
@@ -147,9 +147,9 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           fontFamily: mono,
           fontSize: 10,
           fontWeight: 800,
-          color: isWorking ? "#059669" : "#9CA3AF",
-          background: isWorking ? "#ECFDF5" : "#F9FAFB",
-          border: `1px solid ${isWorking ? "#A7F3D0" : "#E5E7EB"}`,
+          color: isWorking ? "var(--th-success)" : "var(--th-text-muted)",
+          background: isWorking ? "#ECFDF5" : "var(--th-bg-surface)",
+          border: `1px solid ${isWorking ? "#A7F3D0" : "var(--th-border)"}`,
           borderRadius: 8,
           padding: "3px 10px",
           letterSpacing: "0.05em",
@@ -179,7 +179,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           style={{
             fontFamily: mono,
             fontSize: 11,
-            color: "#9CA3AF",
+            color: "var(--th-text-muted)",
             paddingLeft: 14,
             cursor: "pointer",
             display: "flex",
@@ -213,8 +213,8 @@ function TaskCard({ task, label, isSelected, onClick }: {
   return (
     <div
       style={{
-        background: isSelected ? "#F0F7FF" : "#F9FAFB",
-        border: `1px solid ${isSelected ? "#BFDBFE" : "#E5E7EB"}`,
+        background: isSelected ? "#F0F7FF" : "var(--th-bg-surface)",
+        border: `1px solid ${isSelected ? "var(--th-accent-border)" : "var(--th-border)"}`,
         borderRadius: 14,
         padding: "12px 16px",
         marginBottom: 8,
@@ -224,19 +224,19 @@ function TaskCard({ task, label, isSelected, onClick }: {
       onClick={onClick}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ fontFamily: mono, fontSize: 10, color: "#3B82F6", fontWeight: 800, letterSpacing: "0.05em" }}>
+        <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-accent)", fontWeight: 800, letterSpacing: "0.05em" }}>
           {label} #{task.id.substring(0, 4)}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {isSelected && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           )}
           <span style={{
             fontFamily: mono, fontSize: 10, fontWeight: 700,
-            color: statusLabel === "running" ? "#059669" : statusLabel === "done" ? "#059669" : "#6B7280",
-            background: statusLabel === "running" ? "#ECFDF5" : statusLabel === "done" ? "#ECFDF5" : "#F3F4F6",
+            color: statusLabel === "running" ? "var(--th-success)" : statusLabel === "done" ? "var(--th-success)" : "var(--th-text-secondary)",
+            background: statusLabel === "running" ? "#ECFDF5" : statusLabel === "done" ? "#ECFDF5" : "var(--th-bg-primary)",
             borderRadius: 6,
             padding: "1px 6px",
           }}>
@@ -244,14 +244,14 @@ function TaskCard({ task, label, isSelected, onClick }: {
           </span>
         </div>
       </div>
-      <div style={{ fontFamily: mono, fontSize: 12, color: "#111827", fontWeight: 600, marginBottom: 10 }}>
+      <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", fontWeight: 600, marginBottom: 10 }}>
         {task.title}
       </div>
       {/* Progress bar */}
-      <div style={{ height: 4, background: "#E5E7EB", width: "100%", borderRadius: 2 }}>
+      <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
         <div style={{
           height: 4,
-          background: progress >= 100 ? "#059669" : "#3B82F6",
+          background: progress >= 100 ? "var(--th-success)" : "var(--th-accent)",
           width: `${progress}%`,
           transition: "width 0.3s",
           borderRadius: 2,
@@ -295,8 +295,8 @@ function TaskInspector({ taskId }: { taskId: string }) {
 
   if (loading) {
     return (
-      <div style={{ padding: "12px 16px", fontFamily: mono, fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 8 }}>
-        <svg className="animate-spin" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth={2.5}>
+      <div style={{ padding: "12px 16px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+        <svg className="animate-spin" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth={2.5}>
           <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
           <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
         </svg>
@@ -316,7 +316,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
 
   if (!hasAnyData) {
     return (
-      <div style={{ padding: "12px 16px", fontFamily: mono, fontSize: 11, color: "#9CA3AF", marginBottom: 6 }}>
+      <div style={{ padding: "12px 16px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", marginBottom: 6 }}>
         No execution data yet.
       </div>
     );
@@ -333,7 +333,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
     <div style={{
       border: "1px solid #E5E7EB",
       borderRadius: 14,
-      background: "#FFFFFF",
+      background: "var(--th-bg-elevated)",
       marginBottom: 8,
       overflow: "hidden",
     }}>
@@ -343,7 +343,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
         gap: 4,
         padding: "8px 12px",
         borderBottom: "1px solid #E5E7EB",
-        background: "#F9FAFB",
+        background: "var(--th-bg-surface)",
       }}>
         {tabs.map((tab) => (
           <button
@@ -355,15 +355,15 @@ function TaskInspector({ taskId }: { taskId: string }) {
               fontSize: 10,
               fontWeight: activeSection === tab.key ? 800 : 600,
               letterSpacing: "0.05em",
-              color: activeSection === tab.key ? "#3B82F6" : "#9CA3AF",
-              background: activeSection === tab.key ? "#FFFFFF" : "transparent",
+              color: activeSection === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              background: activeSection === tab.key ? "var(--th-bg-elevated)" : "transparent",
               border: activeSection === tab.key ? "1px solid #E5E7EB" : "1px solid transparent",
               borderRadius: 8,
               cursor: "pointer",
               transition: "all 0.2s",
             }}
           >
-            {tab.label} {tab.count > 0 && <span style={{ color: "#3B82F6", opacity: 0.7 }}>({tab.count})</span>}
+            {tab.label} {tab.count > 0 && <span style={{ color: "var(--th-accent)", opacity: 0.7 }}>({tab.count})</span>}
           </button>
         ))}
       </div>
@@ -416,7 +416,7 @@ function parseDiffStat(stat: string | undefined | null): DiffFileStat[] {
 
 function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
   if (files.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>No file changes detected.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No file changes detected.</div>;
   }
 
   return (
@@ -426,18 +426,18 @@ function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
       </div>
       {files.map((f) => (
         <div key={f.path} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", fontFamily: mono, fontSize: 11 }}>
-          <span style={{ display: "flex", alignItems: "center", color: f.isNew ? "#059669" : "#3B82F6", flexShrink: 0 }}>
+          <span style={{ display: "flex", alignItems: "center", color: f.isNew ? "var(--th-success)" : "var(--th-accent)", flexShrink: 0 }}>
             {f.isNew ? (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5" /></svg>
             ) : (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" /></svg>
             )}
           </span>
-          <span style={{ color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {f.path}
           </span>
-          <span style={{ color: "#059669", flexShrink: 0, fontWeight: 600 }}>+{f.added}</span>
-          <span style={{ color: "#DC2626", flexShrink: 0, fontWeight: 600 }}>-{f.removed}</span>
+          <span style={{ color: "var(--th-success)", flexShrink: 0, fontWeight: 600 }}>+{f.added}</span>
+          <span style={{ color: "var(--th-danger-text)", flexShrink: 0, fontWeight: 600 }}>-{f.removed}</span>
         </div>
       ))}
     </div>
@@ -448,7 +448,7 @@ function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
 
 function CliHistorySection({ logs }: { logs: TaskLog[] }) {
   if (logs.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>No CLI output recorded.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No CLI output recorded.</div>;
   }
 
   return (
@@ -461,9 +461,9 @@ function CliHistorySection({ logs }: { logs: TaskLog[] }) {
         const isCmd = log.message.startsWith("$") || log.message.startsWith(">");
         return (
           <div key={log.id} style={{ padding: "3px 0", fontFamily: mono, fontSize: 11, display: "flex", gap: 8 }}>
-            <span style={{ color: "#9CA3AF", flexShrink: 0, width: 56 }}>{ts}</span>
+            <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 56 }}>{ts}</span>
             <span style={{
-              color: isCmd ? "#3B82F6" : "#6B7280",
+              color: isCmd ? "var(--th-accent)" : "var(--th-text-secondary)",
               fontWeight: isCmd ? 700 : 400,
               whiteSpace: "pre-wrap",
               wordBreak: "break-all",
@@ -483,7 +483,7 @@ function CliHistorySection({ logs }: { logs: TaskLog[] }) {
 function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[]; planningContent?: string | null }) {
   const hasContent = logs.length > 0 || !!planningContent;
   if (!hasContent) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>No orchestration data.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No orchestration data.</div>;
   }
 
   return (
@@ -500,13 +500,13 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
             padding: "6px 12px",
             fontFamily: mono,
             fontSize: 11,
-            color: "#6B7280",
+            color: "var(--th-text-secondary)",
             borderLeft: "3px solid #3B82F6",
             background: "#F0F7FF",
             borderRadius: "0 8px 8px 0",
             marginBottom: 6,
           }}>
-            <span style={{ color: "#9CA3AF", marginRight: 8, fontSize: 10 }}>{ts}</span>
+            <span style={{ color: "var(--th-text-muted)", marginRight: 8, fontSize: 10 }}>{ts}</span>
             {log.message.length > 300 ? `${log.message.slice(0, 297)}...` : log.message}
           </div>
         );
@@ -518,7 +518,7 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
           marginTop: logs.length > 0 ? 8 : 0,
           fontFamily: mono,
           fontSize: 11,
-          color: "#6B7280",
+          color: "var(--th-text-secondary)",
           lineHeight: 1.5,
           whiteSpace: "pre-wrap",
           borderLeft: "3px solid #059669",
@@ -526,7 +526,7 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
           borderRadius: "0 8px 8px 0",
           padding: "8px 12px",
         }}>
-          <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "#059669", marginBottom: 4, letterSpacing: "0.1em" }}>
+          <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-success)", marginBottom: 4, letterSpacing: "0.1em" }}>
             PLANNING SUMMARY
           </div>
           {planningContent.length > 500 ? `${planningContent.slice(0, 497)}...` : planningContent}
@@ -540,7 +540,7 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
 
 function EventsSection({ events }: { events: TaskExecutionEvent[] }) {
   if (events.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>No events recorded.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No events recorded.</div>;
   }
 
   return (
@@ -559,10 +559,10 @@ function ExecutionEventRow({ event }: { event: TaskExecutionEvent }) {
   const meta = event.metadata_json ? tryParseJson(event.metadata_json) : null;
   const decision = meta?.action ?? meta?.decision ?? event.event_type;
   const decisionColor = decision === "APPROVE" || decision === "approve"
-    ? "#059669"
+    ? "var(--th-success)"
     : decision === "REVISE" || decision === "revise"
       ? "#D97706"
-      : "#6B7280";
+      : "var(--th-text-secondary)";
 
   const ts = new Date(event.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -575,9 +575,9 @@ function ExecutionEventRow({ event }: { event: TaskExecutionEvent }) {
       fontFamily: mono,
       fontSize: 11,
     }}>
-      <span style={{ color: "#9CA3AF", flexShrink: 0, width: 42 }}>{ts}</span>
+      <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 42 }}>{ts}</span>
       {event.from_state && event.to_state ? (
-        <span style={{ color: "#6B7280" }}>
+        <span style={{ color: "var(--th-text-secondary)" }}>
           {event.from_state}
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 4px", verticalAlign: "middle" }}>
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -597,7 +597,7 @@ function ExecutionEventRow({ event }: { event: TaskExecutionEvent }) {
         </span>
       )}
       {event.summary && (
-        <span style={{ color: "#6B7280", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ color: "var(--th-text-secondary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {event.summary.length > 80 ? `${event.summary.slice(0, 77)}...` : event.summary}
         </span>
       )}

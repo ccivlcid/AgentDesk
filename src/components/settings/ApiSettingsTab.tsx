@@ -36,14 +36,14 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
   } = apiState;
 
   const mono = "var(--th-font-mono)";
-  const inputStyle: React.CSSProperties = { borderRadius: 12, border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#111827", transition: "all 0.2s" };
+  const inputStyle: React.CSSProperties = { borderRadius: 12, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)", transition: "all 0.2s" };
 
   return (
     <>
       <section className="space-y-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6" }}>
+            <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)" }}>
               <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <rect x="2" y="2" width="20" height="8" rx="2" />
                 <rect x="2" y="14" width="20" height="8" rx="2" />
@@ -72,7 +72,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                   setApiForm(DEFAULT_API_FORM);
                 }}
                 className="text-xs px-4 py-1.5 font-bold font-mono transition-all hover:brightness-110 active:scale-95"
-                style={{ borderRadius: 12, background: "#3B82F6", color: "#FFFFFF", boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.2)" }}
+                style={{ borderRadius: 12, background: "var(--th-accent)", color: "var(--th-bg-elevated)", boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.2)" }}
               >
                 + {t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -92,7 +92,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
         </div>
 
         {apiAddMode && (
-          <div className="space-y-5 p-6 transition-all hover:shadow-sm" style={{ borderRadius: 24, border: "1px solid #BFDBFE", background: "#FFFFFF" }}>
+          <div className="space-y-5 p-6 transition-all hover:shadow-sm" style={{ borderRadius: 24, border: "1px solid #BFDBFE", background: "var(--th-bg-elevated)" }}>
             <div className="flex items-center gap-2 text-blue-600">
               <span className="text-xs font-black font-mono uppercase tracking-widest">
                 {apiEditingId ? "// edit provider" : "// add new provider"}
@@ -101,7 +101,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
 
             <div className="space-y-4">
               <div>
-                <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "#6B7280", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
+                <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "var(--th-text-secondary)", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
                   {t({ ko: "API 유형 (Type)", en: "Type", ja: "タイプ", zh: "类型" })}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -113,9 +113,9 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       style={{
                         borderRadius: 10,
                         border: "1px solid",
-                        borderColor: apiForm.type === key ? "#3B82F6" : "#E5E7EB",
-                        background: apiForm.type === key ? "#EBF5FF" : "#FFFFFF",
-                        color: apiForm.type === key ? "#2563EB" : "#6B7280",
+                        borderColor: apiForm.type === key ? "var(--th-accent)" : "var(--th-border)",
+                        background: apiForm.type === key ? "var(--th-accent-glow)" : "var(--th-bg-elevated)",
+                        color: apiForm.type === key ? "#2563EB" : "var(--th-text-secondary)",
                       }}
                     >
                       {preset.label}
@@ -126,7 +126,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "#6B7280", textTransform: "uppercase", marginBottom: "8px" }}>{t({ ko: "이름 (Name)", en: "Name", ja: "名前", zh: "名称" })}</div>
+                  <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "var(--th-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>{t({ ko: "이름 (Name)", en: "Name", ja: "名前", zh: "名称" })}</div>
                   <input
                     type="text"
                     value={apiForm.name}
@@ -134,12 +134,12 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                     placeholder="e.g. My OpenAI"
                     className="w-full px-4 py-2.5 text-sm focus:outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                   />
                 </div>
                 <div>
-                  <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "#6B7280", textTransform: "uppercase", marginBottom: "8px" }}>Base URL</div>
+                  <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "var(--th-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>Base URL</div>
                   <input
                     type="text"
                     value={apiForm.base_url}
@@ -147,14 +147,14 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                     placeholder="https://api.openai.com/v1"
                     className="w-full px-4 py-2.5 text-sm font-mono focus:outline-none transition-all"
                     style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                   />
                 </div>
               </div>
 
               <div>
-                <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "#6B7280", textTransform: "uppercase", marginBottom: "8px" }}>
+                <div style={{ fontFamily: mono, fontSize: "10px", fontWeight: 800, color: "var(--th-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
                   API Key {apiForm.type === "ollama" && <span className="lowercase font-medium opacity-60">(usually none for local)</span>}
                 </div>
                 <input
@@ -164,8 +164,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                   placeholder={apiEditingId ? t({ ko: "변경하려면 입력", en: "Enter to change", ja: "変更する場合は入力", zh: "输入以更改" }) : "sk-..."}
                   className="w-full px-4 py-2.5 text-sm font-mono focus:outline-none transition-all"
                   style={inputStyle}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                 />
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
               <button
                 onClick={() => { setApiAddMode(false); setApiEditingId(null); setApiForm(DEFAULT_API_FORM); }}
                 className="px-5 py-2 text-xs font-bold transition-all hover:bg-gray-100"
-                style={{ borderRadius: 12, color: "#6B7280" }}
+                style={{ borderRadius: 12, color: "var(--th-text-secondary)" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -182,7 +182,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                 onClick={() => void handleApiProviderSave()}
                 disabled={apiSaving || !apiForm.name.trim() || !apiForm.base_url.trim()}
                 className="px-6 py-2 text-xs font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 disabled:opacity-40"
-                style={{ borderRadius: 12, background: "#3B82F6", color: "#FFFFFF", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.2)" }}
+                style={{ borderRadius: 12, background: "var(--th-accent)", color: "var(--th-bg-elevated)", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.2)" }}
               >
                 {apiSaving ? "..." : apiEditingId ? t({ ko: "수정 ↵", en: "Update ↵", ja: "更新 ↵", zh: "更新 ↵" }) : t({ ko: "등록 ↵", en: "Register ↵", ja: "登録 ↵", zh: "注册 ↵" })}
               </button>
@@ -205,7 +205,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
               const testResult = apiTestResult[provider.id];
               const isExpanded = apiModelsExpanded[provider.id];
               return (
-                <div key={provider.id} className="p-5 transition-all hover:shadow-sm" style={{ borderRadius: 20, border: "1px solid #E5E7EB", background: provider.enabled ? "#FFFFFF" : "#F9FAFB", opacity: provider.enabled ? 1 : 0.7 }}>
+                <div key={provider.id} className="p-5 transition-all hover:shadow-sm" style={{ borderRadius: 20, border: "1px solid #E5E7EB", background: provider.enabled ? "var(--th-bg-elevated)" : "var(--th-bg-surface)", opacity: provider.enabled ? 1 : 0.7 }}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-2.5 h-2.5 rounded-full ${provider.enabled ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-gray-300"}`} />

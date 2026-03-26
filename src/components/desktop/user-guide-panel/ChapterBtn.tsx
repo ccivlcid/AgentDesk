@@ -20,10 +20,10 @@ export function ChapterBtn({ color, icon, title, active, onClick }: ChapterBtnPr
       style={{
         display: "flex", alignItems: "center", gap: 8,
         width: "100%", padding: "7px 12px",
-        background: active ? `${color}14` : hovered ? "#F3F4F6" : "transparent",
+        background: active ? `${color}14` : hovered ? "var(--th-bg-primary)" : "transparent",
         border: "none",
         borderRight: active ? `2px solid ${color}` : "2px solid transparent",
-        color: active ? color : "#6B7280",
+        color: active ? color : "var(--th-text-secondary)",
         fontFamily: MONO_FONT, fontSize: 11,
         cursor: "pointer", textAlign: "left",
         transition: "background 0.1s, color 0.1s",

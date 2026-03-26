@@ -261,7 +261,7 @@ export default function MemoryHistoryPanel({
           <div
             key={a.id}
             className={`relative h-5 w-5 overflow-hidden ${i === 0 && unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-            style={{ borderRadius: 0, background: "#F3F4F6" }}
+            style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
           >
             <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
             {i === 0 && unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17v-2a5 5 0 0 1 10 0v2"/><path d="M12 10V3"/><path d="M9 6l3-3 3 3"/><rect x="3" y="17" width="18" height="4" rx="1"/></svg></span>}
@@ -274,7 +274,7 @@ export default function MemoryHistoryPanel({
           </div>
         ))}
         {extra > 0 && (
-          <span className="text-[9px] font-mono" style={{ color: "#9CA3AF" }}>+{extra}</span>
+          <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>+{extra}</span>
         )}
       </div>
     );
@@ -283,7 +283,7 @@ export default function MemoryHistoryPanel({
   return (
     <div
       className={`skill-history-panel flex h-full min-h-[360px] flex-col ${className}`}
-      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}
+      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
     >
       <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
         <div className="flex items-center gap-1">
@@ -293,9 +293,9 @@ export default function MemoryHistoryPanel({
             className="px-2 py-1 text-[11px] font-mono transition-all"
             style={{
               borderRadius: 0,
-              border: `1px solid ${tab === "history" ? "#D1D5DB" : "transparent"}`,
-              background: tab === "history" ? "#F9FAFB" : "transparent",
-              color: tab === "history" ? "#111827" : "#9CA3AF",
+              border: `1px solid ${tab === "history" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "history" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "history" ? "var(--th-text-primary)" : "var(--th-text-muted)",
             }}
           >
             {t({ ko: "학습 이력", en: "Learning History", ja: "学習履歴", zh: "学习记录" })}
@@ -306,9 +306,9 @@ export default function MemoryHistoryPanel({
             className="px-2 py-1 text-[11px] font-mono transition-all"
             style={{
               borderRadius: 0,
-              border: `1px solid ${tab === "available" ? "#D1D5DB" : "transparent"}`,
-              background: tab === "available" ? "#F9FAFB" : "transparent",
-              color: tab === "available" ? "#111827" : "#9CA3AF",
+              border: `1px solid ${tab === "available" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "available" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "available" ? "var(--th-text-primary)" : "var(--th-text-muted)",
             }}
           >
             {t({ ko: "사용 가능한 메모리", en: "Available Memories", ja: "利用可能なメモリ", zh: "可用记忆" })}
@@ -318,7 +318,7 @@ export default function MemoryHistoryPanel({
           type="button"
           onClick={() => void load()}
           className="px-2 py-1 text-[11px] font-mono transition-all"
-          style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
+          style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
@@ -333,9 +333,9 @@ export default function MemoryHistoryPanel({
             className="flex items-center gap-2 px-2 py-1 text-[11px] font-mono transition-all"
             style={{
               borderRadius: 0,
-              border: `1px solid ${agentFilters.size > 0 ? "rgba(251,191,36,0.5)" : "#E5E7EB"}`,
+              border: `1px solid ${agentFilters.size > 0 ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
               background: agentFilters.size > 0 ? "rgba(251,191,36,0.08)" : "transparent",
-              color: agentFilters.size > 0 ? "#3B82F6" : "#9CA3AF",
+              color: agentFilters.size > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
               minWidth: 140,
             }}
           >
@@ -360,8 +360,8 @@ export default function MemoryHistoryPanel({
                 top: "calc(100% + 4px)",
                 borderRadius: 0,
                 border: "1px solid #E5E7EB",
-                background: "#FFFFFF",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                background: "var(--th-bg-elevated)",
+                boxShadow: "0 4px 16px var(--th-modal-overlay)",
               }}
             >
               <button
@@ -370,7 +370,7 @@ export default function MemoryHistoryPanel({
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                 style={{
                   background: agentFilters.size === 0 ? "rgba(251,191,36,0.08)" : "transparent",
-                  color: agentFilters.size === 0 ? "#3B82F6" : "#6B7280",
+                  color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
                 }}
               >
                 <span className="w-3 h-3 inline-flex items-center justify-center text-[9px]">
@@ -390,7 +390,7 @@ export default function MemoryHistoryPanel({
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                   style={{
                     background: agentFilters.has(agent.id) ? "rgba(251,191,36,0.08)" : "transparent",
-                    color: agentFilters.has(agent.id) ? "#3B82F6" : "#6B7280",
+                    color: agentFilters.has(agent.id) ? "var(--th-accent)" : "var(--th-text-secondary)",
                   }}
                 >
                   <span className="w-3 h-3 inline-flex items-center justify-center text-[9px]">
@@ -413,7 +413,7 @@ export default function MemoryHistoryPanel({
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3 pt-2">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "메모리 기록 로딩중...", en: "Loading memory records...", ja: "メモリ記録を読み込み中...", zh: "正在加载记忆记录..." })}
           </div>
         )}
@@ -430,7 +430,7 @@ export default function MemoryHistoryPanel({
         )}
 
         {tab === "history" && filteredHistoryRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
         )}
@@ -447,18 +447,18 @@ export default function MemoryHistoryPanel({
               <div
                 key={row.id}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F9FAFB" }}
+                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "#111827" }}>{label}</div>
-                    <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "#9CA3AF" }}>{row.memory_id}</div>
+                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</div>
+                    <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.memory_id}</div>
                   </div>
                   <span className={`px-1.5 py-0.5 text-[10px] font-mono ${memoryStatusClass(row.status)}`} style={{ borderRadius: 0 }}>
                     {memoryStatusLabel(row.status, t)}
                   </span>
                 </div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     {renderAvatarGroup(rowAgents, rowKey)}
                     <span className="truncate">
@@ -476,7 +476,7 @@ export default function MemoryHistoryPanel({
                         style={{
                           borderRadius: 0,
                           border: `1px solid ${isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
-                          color: isUnlearning ? "#9CA3AF" : "rgb(253,164,175)",
+                          color: isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
                           background: isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
                         }}
                       >
@@ -485,7 +485,7 @@ export default function MemoryHistoryPanel({
                           : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                       </button>
                     )}
-                    <span className="skill-history-time" style={{ color: "#9CA3AF" }}>{memoryRelativeTime(eventAt, localeTag)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{memoryRelativeTime(eventAt, localeTag)}</span>
                   </div>
                 </div>
                 {row.error && <div className="mt-1 break-words text-[10px]" style={{ color: "rgb(253,164,175)" }}>{row.error}</div>}
@@ -499,7 +499,7 @@ export default function MemoryHistoryPanel({
               type="button"
               onClick={() => setHistoryExpanded((prev) => !prev)}
               className="px-2.5 py-1 text-[11px] font-mono transition-all"
-              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {historyExpanded
                 ? t({ ko: "접기", en: "Show less", ja: "折りたたむ", zh: "收起" })
@@ -514,7 +514,7 @@ export default function MemoryHistoryPanel({
         )}
 
         {tab === "available" && filteredAvailableRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "사용 가능한 메모리가 없습니다", en: "No available memories.", ja: "利用可能なメモリがありません", zh: "暂无可用记忆" })}
           </div>
         )}
@@ -530,18 +530,18 @@ export default function MemoryHistoryPanel({
               <div
                 key={`${row.provider}-${row.memory_id}`}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F9FAFB" }}
+                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
               >
-                <div className="truncate text-xs font-semibold font-mono" style={{ color: "#111827" }}>{label}</div>
-                <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "#9CA3AF" }}>{row.memory_id}</div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+                <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</div>
+                <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.memory_id}</div>
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     <div className="flex items-center gap-0.5">
                       {rowAgents.slice(0, 5).map((a, i) => (
                         <div
                           key={a.id}
                           className={`relative h-5 w-5 overflow-hidden ${i === 0 && unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-                          style={{ borderRadius: 0, background: "#F3F4F6" }}
+                          style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
                         >
                           <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
                           {i === 0 && unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17v-2a5 5 0 0 1 10 0v2"/><path d="M12 10V3"/><path d="M9 6l3-3 3 3"/><rect x="3" y="17" width="18" height="4" rx="1"/></svg></span>}
@@ -554,7 +554,7 @@ export default function MemoryHistoryPanel({
                         </div>
                       ))}
                       {rowAgents.length > 5 && (
-                        <span className="text-[9px] font-mono" style={{ color: "#9CA3AF" }}>+{rowAgents.length - 5}</span>
+                        <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>+{rowAgents.length - 5}</span>
                       )}
                     </div>
                     <span className="truncate">
@@ -569,14 +569,14 @@ export default function MemoryHistoryPanel({
                       disabled={isUnlearning}
                       className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] transition-all"
                       style={isUnlearning
-                        ? { borderRadius: 0, border: "1px solid #E5E7EB", color: "#9CA3AF", cursor: "not-allowed" }
+                        ? { borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "not-allowed" }
                         : { borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
                     >
                       {isUnlearning
                         ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
                         : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                     </button>
-                    <span className="skill-history-time" style={{ color: "#9CA3AF" }}>{memoryRelativeTime(row.learned_at, localeTag)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{memoryRelativeTime(row.learned_at, localeTag)}</span>
                   </div>
                 </div>
               </div>
@@ -586,7 +586,7 @@ export default function MemoryHistoryPanel({
 
       {centerBonk && (
         <div className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center">
-          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: 0, border: "1px solid rgba(251,113,133,0.3)", background: "#1E1E2E" }}>
+          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: 0, border: "1px solid rgba(251,113,133,0.3)", background: "var(--th-terminal-bg)" }}>
             <div className="relative mx-auto h-20 w-20 overflow-visible">
               <div className="unlearn-avatar-hit">
                 <AgentAvatar agent={centerBonk.agents[0] ?? undefined} agents={agents} size={80} rounded="xl" />

@@ -54,7 +54,7 @@ export default function OAuthSettingsTab({
     <section className="space-y-6">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6" }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
@@ -79,8 +79,8 @@ export default function OAuthSettingsTab({
         <div
           className="flex items-center justify-between px-4 py-3 text-xs font-bold font-mono"
           style={oauthResult.error
-            ? { borderRadius: 16, background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626" }
-            : { borderRadius: 16, background: "#ECFDF5", border: "1px solid #A7F3D0", color: "#059669" }}
+            ? { borderRadius: 16, background: "var(--th-danger-bg)", border: "1px solid #FECACA", color: "var(--th-danger-text)" }
+            : { borderRadius: 16, background: "#ECFDF5", border: "1px solid #A7F3D0", color: "var(--th-success)" }}
         >
           <div className="flex items-center gap-2">
             <span>{oauthResult.error ? "✗" : "✓"}</span>
@@ -125,10 +125,10 @@ export default function OAuthSettingsTab({
       {/* OAuth 자동 전환 토글 */}
       <div
         className="flex items-center justify-between gap-4 px-5 py-4 transition-all hover:bg-gray-50"
-        style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", borderRadius: 20 }}
+        style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", borderRadius: 20 }}
       >
         <div className="flex items-center gap-3">
-          <div style={{ padding: 8, background: "#F3F4F6", borderRadius: 12, color: "#6B7280" }}>
+          <div style={{ padding: 8, background: "var(--th-bg-primary)", borderRadius: 12, color: "var(--th-text-secondary)" }}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l5 5M4 4l5 5" />
             </svg>
@@ -155,7 +155,7 @@ export default function OAuthSettingsTab({
             persistSettings(next);
           }}
           className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-          style={{ background: form.oauthAutoSwap !== false ? "#3B82F6" : "#D1D5DB" }}
+          style={{ background: form.oauthAutoSwap !== false ? "var(--th-accent)" : "var(--th-border-strong)" }}
         >
           <span
             className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"

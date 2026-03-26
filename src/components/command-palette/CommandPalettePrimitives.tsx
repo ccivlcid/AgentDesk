@@ -39,7 +39,7 @@ export function PaletteRow({
             position: "absolute",
             inset: "2px 6px",
             borderRadius: 8,
-            background: "#F3F4F6",
+            background: "var(--th-bg-primary)",
             border: "1px solid #E5E7EB",
             pointerEvents: "none",
           }}
@@ -80,7 +80,7 @@ export function PaletteSectionHeader({ label }: { label: string }) {
         fontSize: 11,
         fontWeight: 600,
         letterSpacing: "0.04em",
-        color: "#9CA3AF",
+        color: "var(--th-text-muted)",
         padding: "10px 16px 4px",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
         textTransform: "uppercase",

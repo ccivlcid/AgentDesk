@@ -123,7 +123,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         display: "flex",
         flexDirection: "column",
         gap: 0,
-        background: "#F3F4F6",
+        background: "var(--th-bg-primary)",
       }}
     >
       {/* ── 터미널 헤더 (설정과 동일 macOS) ── */}
@@ -131,7 +131,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         style={{
           borderBottom: "1px solid #E5E7EB",
           padding: "12px 18px",
-          background: "#FFFFFF",
+          background: "var(--th-bg-elevated)",
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -141,32 +141,32 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
           WebkitBackdropFilter: "blur(12px)",
         }}
       >
-        <span style={{ color: "#3B82F6", fontWeight: 700, fontSize: "11px" }}>$</span>
-        <span style={{ fontSize: "11px", color: "#6B7280" }}>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>
           ls deliverables/{currentProject ? ` --project="${currentProject.name}"` : ""}
         </span>
         {!loading && (
-          <span style={{ marginLeft: "auto", fontSize: "9px", color: "#9CA3AF", opacity: 0.6 }}>
-            <span style={{ color: "#059669" }}>{doneCnt} {t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}</span>
-            {reviewCnt > 0 && <> · <span style={{ color: "#3B82F6" }}>{reviewCnt} {t({ ko: "검토중", en: "review", ja: "レビュー中", zh: "审核中" })}</span></>}
+          <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+            <span style={{ color: "var(--th-success)" }}>{doneCnt} {t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}</span>
+            {reviewCnt > 0 && <> · <span style={{ color: "var(--th-accent)" }}>{reviewCnt} {t({ ko: "검토중", en: "review", ja: "レビュー中", zh: "审核中" })}</span></>}
             {" "}· {items.length} {t({ ko: "전체", en: "total", ja: "合計", zh: "总計" })}
           </span>
         )}
       </div>
 
       {/* ── 검색 + 정렬 바 ── */}
-      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "6px 12px", background: "#F3F4F6", display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "6px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 6 }}>
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t({ ko: "검색 (제목, 에이전트, 프로젝트...)", en: "Search (title, agent, project...)", ja: "検索...", zh: "搜索..." })}
-          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 4, color: "#111827", outline: "none" }}
+          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
         />
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortBy)}
-          style={{ ...mono, fontSize: "9px", padding: "3px 6px", background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 4, color: "#9CA3AF", outline: "none", cursor: "pointer" }}
+          style={{ ...mono, fontSize: "9px", padding: "3px 6px", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-muted)", outline: "none", cursor: "pointer" }}
         >
           <option value="date">{t({ ko: "날짜순", en: "By Date", ja: "日付順", zh: "按日期" })}</option>
           <option value="title">{t({ ko: "제목순", en: "By Title", ja: "タイトル順", zh: "按标题" })}</option>
@@ -175,36 +175,36 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         </select>
         <button
           onClick={() => { setArtifacts({}); void fetchItems(); }}
-          style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer" }}
+          style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
           title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         >↻</button>
       </div>
 
       {/* ── 필터 바 ── */}
-      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "4px 12px", background: "#F3F4F6", display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "4px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             style={{
               ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-              border: `1px solid ${statusFilter === f.key ? "#BFDBFE" : "#E5E7EB"}`,
-              background: statusFilter === f.key ? "#EBF5FF" : "transparent",
-              color: statusFilter === f.key ? "#3B82F6" : "#9CA3AF",
+              border: `1px solid ${statusFilter === f.key ? "var(--th-accent-border)" : "var(--th-border)"}`,
+              background: statusFilter === f.key ? "var(--th-accent-glow)" : "transparent",
+              color: statusFilter === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer", letterSpacing: "0.06em",
             }}
           >{f.label}</button>
         ))}
         {currentProject && (
           <>
-            <div style={{ width: 1, height: 12, background: "#E5E7EB", margin: "0 4px" }} />
+            <div style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 4px" }} />
             <button
               onClick={() => setShowAllProjects((v) => !v)}
               style={{
                 ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                border: `1px solid ${showAllProjects ? "#3B82F6" : "#E5E7EB"}`,
+                border: `1px solid ${showAllProjects ? "var(--th-accent)" : "var(--th-border)"}`,
                 background: showAllProjects ? "rgba(96,165,250,0.08)" : "transparent",
-                color: showAllProjects ? "#3B82F6" : "#9CA3AF",
+                color: showAllProjects ? "var(--th-accent)" : "var(--th-text-muted)",
                 cursor: "pointer",
               }}
             >
@@ -214,21 +214,21 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
             </button>
           </>
         )}
-        <span style={{ ...mono, marginLeft: "auto", fontSize: "9px", color: "#9CA3AF", opacity: 0.5 }}>
+        <span style={{ ...mono, marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.5 }}>
           {filtered.length} / {items.length}
         </span>
       </div>
 
       {/* ── 컨텐츠 영역 (설정과 동일 패딩) ── */}
-      <div style={{ flex: 1, overflow: "auto", background: "#F3F4F6", padding: "20px 18px 24px" }}>
+      <div style={{ flex: 1, overflow: "auto", background: "var(--th-bg-primary)", padding: "20px 18px 24px" }}>
       {/* ── 컬럼 헤더 ── */}
       {!loading && filtered.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "#F3F4F6", borderBottom: "1px solid #E5E7EB", gap: 8 }}>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", width: 44, flexShrink: 0 }}>{t({ ko: "상태", en: "STATUS", ja: "状態", zh: "状态" })}</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", flex: 1 }}>{t({ ko: "제목", en: "TITLE", ja: "タイトル", zh: "标题" })}</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", width: 130, flexShrink: 0 }}>{t({ ko: "에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", width: 120, flexShrink: 0 }}>{t({ ko: "완료일시", en: "COMPLETED", ja: "完了日時", zh: "完成时间" })}</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#9CA3AF", width: 80, flexShrink: 0 }}>{t({ ko: "파일", en: "FILES", ja: "ファイル", zh: "文件" })}</span>
+        <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid #E5E7EB", gap: 8 }}>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 44, flexShrink: 0 }}>{t({ ko: "상태", en: "STATUS", ja: "状態", zh: "状态" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>{t({ ko: "제목", en: "TITLE", ja: "タイトル", zh: "标题" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 130, flexShrink: 0 }}>{t({ ko: "에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>{t({ ko: "완료일시", en: "COMPLETED", ja: "完了日時", zh: "完成时间" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 80, flexShrink: 0 }}>{t({ ko: "파일", en: "FILES", ja: "ファイル", zh: "文件" })}</span>
         </div>
       )}
 
@@ -238,12 +238,12 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={`skel-${i}`}
-              style={{ height: 48, borderBottom: "1px solid #E5E7EB", background: "#F9FAFB", opacity: 0.4, borderLeft: "3px solid #E5E7EB" }}
+              style={{ height: 48, borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid #E5E7EB" }}
             />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: "40px 16px", textAlign: "center", color: "#9CA3AF" }}>
+        <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--th-text-muted)" }}>
           <div style={{ fontSize: "10px", marginBottom: 6 }}>$ ls deliverables/</div>
           <div style={{ fontSize: "11px", opacity: 0.5 }}>(empty)</div>
           <div style={{ fontSize: "10px", marginTop: 8, opacity: 0.4 }}>
@@ -267,8 +267,8 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
 
       {/* ── footer ── */}
       {!loading && (
-        <div style={{ borderTop: "1px solid #E5E7EB", padding: "5px 16px", background: "#F3F4F6" }}>
-          <span style={{ fontSize: "9px", color: "#9CA3AF", opacity: 0.4 }}>
+        <div style={{ borderTop: "1px solid #E5E7EB", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
             $ {filtered.length} {t({ ko: "건", en: "entries", ja: "件", zh: "条" })}{statusFilter !== "all" ? ` (${t({ ko: "필터", en: "filtered", ja: "フィルタ", zh: "过滤" })}: ${statusFilter})` : ""}
           </span>
         </div>

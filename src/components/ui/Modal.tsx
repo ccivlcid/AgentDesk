@@ -86,7 +86,7 @@ export default function Modal({
   return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)", fontFamily: mono, zIndex: 1100 }}
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", fontFamily: mono, zIndex: 1100 }}
       onClick={persistent ? undefined : (e) => { if (e.target === e.currentTarget) onClose(); }}
       role="presentation"
     >
@@ -100,9 +100,9 @@ export default function Modal({
         style={{
           borderRadius: 10,
           border: "1px solid #D1D5DB",
-          background: "#FFFFFF",
+          background: "var(--th-bg-elevated)",
           fontFamily: mono,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+          boxShadow: "0 20px 50px var(--th-modal-overlay)",
         }}
       >
         {children}
@@ -128,7 +128,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       className="flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
       style={{
         borderBottom: "1px solid #E5E7EB",
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         fontFamily: mono,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
@@ -140,12 +140,12 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       <div className="flex min-w-0 flex-1 flex-col">
         <h2
           className="truncate text-[12px] font-semibold"
-          style={{ color: "#111827", fontFamily: mono }}
+          style={{ color: "var(--th-text-primary)", fontFamily: mono }}
         >
           {children}
         </h2>
         {subtitle && (
-          <p className="mt-0.5 truncate text-[11px]" style={{ color: "#9CA3AF", fontFamily: mono }}>
+          <p className="mt-0.5 truncate text-[11px]" style={{ color: "var(--th-text-muted)", fontFamily: mono }}>
             {subtitle}
           </p>
         )}
@@ -162,7 +162,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
             padding: "2px 8px",
             fontFamily: mono,
             fontSize: "12px",
-            color: "#9CA3AF",
+            color: "var(--th-text-muted)",
             cursor: "pointer",
           }}
           className="hover:!text-[#111827] hover:!border-[#D1D5DB]"

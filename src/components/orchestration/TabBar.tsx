@@ -36,7 +36,7 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
         flexWrap: "wrap" as const,
         gap: 8,
         borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         padding: "12px 16px 8px",
         fontFamily: mono,
         flexShrink: 0,
@@ -58,8 +58,8 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
               fontWeight: isActive ? 800 : 600,
               fontFamily: mono,
               letterSpacing: "0.1em",
-              background: isActive ? "#F3F4F6" : "transparent",
-              color: isActive ? "#111827" : "#6B7280",
+              background: isActive ? "var(--th-bg-primary)" : "transparent",
+              color: isActive ? "var(--th-text-primary)" : "var(--th-text-secondary)",
               border: "1px solid",
               borderColor: isActive ? "rgba(0, 0, 0, 0.05)" : "transparent",
               cursor: "pointer",
@@ -70,18 +70,18 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
             onMouseEnter={(e) => {
               if (!isActive) {
                 e.currentTarget.style.color = "#374151";
-                e.currentTarget.style.background = "#F9FAFB";
+                e.currentTarget.style.background = "var(--th-bg-surface)";
               }
             }}
             onMouseLeave={(e) => {
               if (!isActive) {
-                e.currentTarget.style.color = "#6B7280";
+                e.currentTarget.style.color = "var(--th-text-secondary)";
                 e.currentTarget.style.background = "transparent";
               }
             }}
           >
             <span style={{ opacity: isActive ? 1 : 0.6, display: "flex", alignItems: "center" }}>
-              {tab.icon(isActive ? "#111827" : "#9CA3AF")}
+              {tab.icon(isActive ? "var(--th-text-primary)" : "var(--th-text-muted)")}
             </span>
             <span style={{ textTransform: "uppercase" as const }}>{tab.label}</span>
           </button>

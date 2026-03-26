@@ -53,7 +53,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
       </select>
       {requiresOAuthAccount &&
         (oauthLoading ? (
-          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "계정 로딩...",
               en: "Loading accounts...",
@@ -96,7 +96,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
       )}
       {supportsCliModelOverride &&
         (cliModelsLoading ? (
-          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "모델 로딩...",
               en: "Loading models...",
@@ -130,7 +130,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
             </select>
           </>
         ) : (
-          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "모델 목록이 없습니다",
               en: "No model list available",
@@ -148,8 +148,8 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50"
         style={{
           borderRadius: 8,
-          background: "#EBF5FF",
-          color: "#3B82F6",
+          background: "var(--th-accent-glow)",
+          color: "var(--th-accent)",
           border: "1px solid #BFDBFE",
         }}
       >
@@ -163,7 +163,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
           borderRadius: 8,
           border: "1px solid #E5E7EB",
           background: "transparent",
-          color: "#6B7280",
+          color: "var(--th-text-secondary)",
         }}
       >
         {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}

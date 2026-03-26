@@ -116,7 +116,7 @@ export function CalloutBox({ type, text }: Callout) {
           style={{
             fontFamily: MONO_FONT,
             fontSize: 11,
-            color: "#6B7280",
+            color: "var(--th-text-secondary)",
             lineHeight: 1.5,
           }}
         >

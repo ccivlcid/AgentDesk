@@ -99,7 +99,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8" style={{ color: "#9CA3AF" }}>
+      <div className="flex items-center justify-center py-8" style={{ color: "var(--th-text-muted)" }}>
         <span className="text-xs font-mono animate-pulse">{tr("로딩 중...", "Loading...")}</span>
       </div>
     );
@@ -110,7 +110,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
       {/* Message list */}
       <div className="space-y-2 pb-2" style={{ maxHeight: 320, overflowY: "auto" }}>
         {messages.length === 0 ? (
-          <div className="py-6 text-center text-xs font-mono" style={{ color: "#9CA3AF" }}>
+          <div className="py-6 text-center text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {tr(`${agentName}와 주고받은 메시지가 없습니다`, `No messages with ${agentName} yet`)}
           </div>
         ) : (
@@ -126,13 +126,13 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             return (
               <div key={msg.id} className={`flex flex-col gap-0.5 ${isCeo ? "items-end" : "items-start"}`}>
                 {/* Sender + type + time */}
-                <div className="flex items-center gap-1.5 text-[10px] font-mono px-0.5" style={{ color: "#9CA3AF" }}>
-                  <span style={{ color: isCeo ? "#3B82F6" : "#6B7280" }}>
+                <div className="flex items-center gap-1.5 text-[10px] font-mono px-0.5" style={{ color: "var(--th-text-muted)" }}>
+                  <span style={{ color: isCeo ? "var(--th-accent)" : "var(--th-text-secondary)" }}>
                     {senderLabel}
                   </span>
                   <span
                     className="px-1 py-px"
-                    style={{ borderRadius: 8, background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+                    style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid #E5E7EB" }}
                   >
                     {typeLabel}
                   </span>
@@ -143,9 +143,9 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
                   className="max-w-[85%] px-2.5 py-1.5 text-xs font-mono leading-relaxed whitespace-pre-wrap break-words"
                   style={{
                     borderRadius: 12,
-                    background: isCeo ? "rgba(59,130,246,0.06)" : "#FFFFFF",
-                    border: `1px solid ${isCeo ? "rgba(59,130,246,0.2)" : "#E5E7EB"}`,
-                    color: "#111827",
+                    background: isCeo ? "rgba(59,130,246,0.06)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${isCeo ? "rgba(59,130,246,0.2)" : "var(--th-border)"}`,
+                    color: "var(--th-text-primary)",
                   }}
                 >
                   {msg.content}
@@ -165,7 +165,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
         <div
           style={{
             border: "1px solid #E5E7EB",
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
             borderRadius: 8,
           }}
         >
@@ -173,11 +173,11 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             className="flex items-center gap-1.5 px-2 pt-1.5"
             style={{ borderBottom: "1px solid #E5E7EB", paddingBottom: "4px" }}
           >
-            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "#3B82F6", fontWeight: 700 }}>$</span>
-            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "#9CA3AF" }}>
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)" }}>
               {tr(`msg → ${agentName}`, `msg → ${agentName}`)}
             </span>
-            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "#9CA3AF", marginLeft: "auto" }}>
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", marginLeft: "auto" }}>
               {content.length}/{MAX_CONTENT} · Ctrl+Enter
             </span>
           </div>
@@ -197,8 +197,8 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             style={{
               background: "transparent",
               border: "none",
-              color: "#111827",
-              caretColor: "#3B82F6",
+              color: "var(--th-text-primary)",
+              caretColor: "var(--th-accent)",
             }}
             placeholder={tr("메시지 입력...", "type a message...")}
           />
@@ -210,7 +210,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
           <button
             onClick={() => void fetchMessages()}
             className="px-2 py-1 text-[10px] font-mono border transition hover:opacity-80"
-            style={{ borderRadius: 8, borderColor: "#E5E7EB", color: "#9CA3AF", background: "#F9FAFB" }}
+            style={{ borderRadius: 8, borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)" }}
             title={tr("새로고침", "Refresh")}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -219,7 +219,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             onClick={() => void handleSend()}
             disabled={!content.trim() || sending}
             className="px-3 py-1 text-[10px] font-mono font-bold transition disabled:opacity-40"
-            style={{ borderRadius: 8, background: "#3B82F6", color: "#FFFFFF" }}
+            style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)" }}
           >
             {sending ? tr("전송 중...", "sending...") : tr("전송 ↵", "SEND ↵")}
           </button>

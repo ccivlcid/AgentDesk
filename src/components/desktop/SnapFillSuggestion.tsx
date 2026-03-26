@@ -74,8 +74,8 @@ export default function SnapFillSuggestion() {
       <div
         style={{
           pointerEvents: "auto",
-          background: "#FFFFFF",
-          backdropFilter: "blur(20px)",
+          background: "var(--th-bg-elevated)",
+          backdropFilter: "var(--th-glass-blur)",
           border: "1px solid #3B82F6",
           borderRadius: 12,
           padding: "12px 16px",
@@ -89,7 +89,7 @@ export default function SnapFillSuggestion() {
         <div style={{
           fontSize: 9,
           fontFamily: "var(--th-font-mono)",
-          color: "#9CA3AF",
+          color: "var(--th-text-muted)",
           letterSpacing: "0.08em",
           marginBottom: 2,
         }}>
@@ -112,11 +112,11 @@ export default function SnapFillSuggestion() {
                 cursor: "pointer",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 12,
-                color: "#111827",
+                color: "var(--th-text-primary)",
                 textAlign: "left",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{info.emoji}</span>
@@ -133,7 +133,7 @@ export default function SnapFillSuggestion() {
             cursor: "pointer",
             fontFamily: "var(--th-font-mono)",
             fontSize: 10,
-            color: "#9CA3AF",
+            color: "var(--th-text-muted)",
             textAlign: "center",
           }}
         >

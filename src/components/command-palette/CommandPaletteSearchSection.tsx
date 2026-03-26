@@ -55,7 +55,7 @@ export function CommandPaletteSearchSection({
       >
         <svg
           width="20" height="20" viewBox="0 0 20 20" fill="none"
-          style={{ flexShrink: 0, color: "#9CA3AF" }}
+          style={{ flexShrink: 0, color: "var(--th-text-muted)" }}
         >
           <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.8" />
           <line x1="12.9" y1="12.9" x2="17.5" y2="17.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -74,7 +74,7 @@ export function CommandPaletteSearchSection({
             ...sf,
             fontSize: 22,
             fontWeight: 300,
-            color: "#111827",
+            color: "var(--th-text-primary)",
             minWidth: 0,
             letterSpacing: "-0.01em",
           }}
@@ -85,10 +85,10 @@ export function CommandPaletteSearchSection({
             onClick={() => setQuery("")}
             style={{
               width: 20, height: 20, borderRadius: "50%",
-              background: "#F3F4F6",
+              background: "var(--th-bg-primary)",
               border: "none", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#9CA3AF", fontSize: 12, flexShrink: 0,
+              color: "var(--th-text-muted)", fontSize: 12, flexShrink: 0,
             }}
           >
             ✕
@@ -98,8 +98,8 @@ export function CommandPaletteSearchSection({
             style={{
               ...sf,
               fontSize: 11,
-              color: "#9CA3AF",
-              background: "#FFFFFF",
+              color: "var(--th-text-muted)",
+              background: "var(--th-bg-elevated)",
               border: "1px solid #E5E7EB",
               borderRadius: 5,
               padding: "2px 7px",
@@ -121,11 +121,11 @@ export function CommandPaletteSearchSection({
             gap: 6,
           }}
         >
-          <span style={{ ...sf, fontSize: 11, color: "#9CA3AF" }}>
+          <span style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)" }}>
             {t({ ko: "현재 프로젝트", en: "Project", ja: "現在", zh: "当前" })}
           </span>
-          <span style={{ fontSize: 10, color: "#9CA3AF" }}>›</span>
-          <span style={{ ...sf, fontSize: 11, color: "#3B82F6", fontWeight: 600 }}>{currentProject.name}</span>
+          <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>›</span>
+          <span style={{ ...sf, fontSize: 11, color: "var(--th-accent)", fontWeight: 600 }}>{currentProject.name}</span>
         </div>
       )}
     </>

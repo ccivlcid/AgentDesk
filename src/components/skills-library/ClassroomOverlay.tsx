@@ -85,7 +85,7 @@ export default function ClassroomOverlay({ t, show, skillName, providers, agents
               zh: `"${skillName}" 技能培训中...`,
             })}
           </div>
-          <div className="text-[11px] font-mono mt-1" style={{ color: "#9CA3AF" }}>
+          <div className="text-[11px] font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "CLI 대표자들이 열심히 학습하고 있습니다 📖",
               en: "CLI representatives are studying hard 📖",

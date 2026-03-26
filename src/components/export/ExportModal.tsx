@@ -57,33 +57,33 @@ export default function ExportModal({ onClose }: Props) {
   };
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: mono, fontSize: 10, color: "#9CA3AF",
+    fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)",
     textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5, display: "block",
   };
   const inputStyle: React.CSSProperties = {
     display: "block", width: "100%", fontFamily: mono, fontSize: 11,
-    padding: "6px 9px", background: "#FFFFFF",
+    padding: "6px 9px", background: "var(--th-bg-elevated)",
     border: "1px solid #E5E7EB", borderRadius: 5,
-    color: "#111827", outline: "none",
+    color: "var(--th-text-primary)", outline: "none",
   };
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2200 }}
+      style={{ position: "fixed", inset: 0, background: "var(--th-modal-overlay)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2200 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: "#FFFFFF", border: "1px solid #E5E7EB",
+        background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB",
         borderRadius: 10, width: 500, maxWidth: "92vw", maxHeight: "88vh",
         display: "flex", flexDirection: "column", overflow: "hidden",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+        boxShadow: "0 20px 60px var(--th-modal-overlay)",
       }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
-          <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "#111827" }}>
+          <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> {t({ ko: "데이터 내보내기", en: "Export Data", ja: "データエクスポート", zh: "数据导出" })}
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 4, display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg></button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", padding: 4, display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg></button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -97,17 +97,17 @@ export default function ExportModal({ onClose }: Props) {
                   onClick={() => setExportType(et.id)}
                   style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                    background: exportType === et.id ? "var(--th-accent-glow, #FFFFFF)" : "#FFFFFF",
-                    border: `1px solid ${exportType === et.id ? "#3B82F6" : "#E5E7EB"}`,
+                    background: exportType === et.id ? "var(--th-accent-glow, #FFFFFF)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${exportType === et.id ? "var(--th-accent)" : "var(--th-border)"}`,
                     borderRadius: 6, cursor: "pointer", textAlign: "left",
                   }}
                 >
                   <span style={{ fontSize: 18, flexShrink: 0 }}>{et.icon}</span>
                   <div>
-                    <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: exportType === et.id ? "#3B82F6" : "#111827" }}>
+                    <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: exportType === et.id ? "var(--th-accent)" : "var(--th-text-primary)" }}>
                       {t({ ko: et.labelKo, en: et.labelEn, ja: et.labelEn, zh: et.labelEn })}
                     </div>
-                    <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginTop: 1 }}>{et.desc}</div>
+                    <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 1 }}>{et.desc}</div>
                   </div>
                 </button>
               ))}
@@ -124,10 +124,10 @@ export default function ExportModal({ onClose }: Props) {
                   onClick={() => setFormat(f)}
                   style={{
                     fontFamily: mono, fontSize: 11, fontWeight: 600, padding: "5px 18px",
-                    background: format === f ? "#3B82F6" : "#FFFFFF",
-                    border: `1px solid ${format === f ? "#3B82F6" : "#E5E7EB"}`,
+                    background: format === f ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${format === f ? "var(--th-accent)" : "var(--th-border)"}`,
                     borderRadius: 5, cursor: "pointer",
-                    color: format === f ? "#fff" : "#9CA3AF",
+                    color: format === f ? "#fff" : "var(--th-text-muted)",
                   }}
                 >
                   {f.toUpperCase()}
@@ -135,7 +135,7 @@ export default function ExportModal({ onClose }: Props) {
               ))}
             </div>
             {format === "csv" && (
-              <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>
+              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 4 }}>
                 {t({ ko: "UTF-8 BOM 포함 (Excel 호환)", en: "UTF-8 BOM included (Excel compatible)", ja: "UTF-8 BOM付き (Excel対応)", zh: "含UTF-8 BOM (Excel兼容)" })}
               </div>
             )}
@@ -181,19 +181,19 @@ export default function ExportModal({ onClose }: Props) {
 
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderTop: "1px solid #E5E7EB", flexShrink: 0 }}>
-          <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF" }}>
+          <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
             {EXPORT_TYPES.find((e) => e.id === exportType)?.icon}{" "}
             {t({ ko: EXPORT_TYPES.find((e) => e.id === exportType)?.labelKo ?? "", en: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "", ja: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "", zh: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "" })}
             {" · "}{format.toUpperCase()}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={onClose} style={{ fontFamily: mono, fontSize: 11, padding: "6px 14px", background: "transparent", border: "1px solid #E5E7EB", borderRadius: 5, cursor: "pointer", color: "#9CA3AF" }}>
+            <button onClick={onClose} style={{ fontFamily: mono, fontSize: 11, padding: "6px 14px", background: "transparent", border: "1px solid #E5E7EB", borderRadius: 5, cursor: "pointer", color: "var(--th-text-muted)" }}>
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
             </button>
             <button
               onClick={handleExport}
               disabled={downloading}
-              style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, padding: "6px 20px", background: downloading ? "#E5E7EB" : "#3B82F6", border: "none", borderRadius: 5, cursor: downloading ? "not-allowed" : "pointer", color: "#fff" }}
+              style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, padding: "6px 20px", background: downloading ? "var(--th-border)" : "var(--th-accent)", border: "none", borderRadius: 5, cursor: downloading ? "not-allowed" : "pointer", color: "#fff" }}
             >
               {downloading
                 ? t({ ko: "다운로드 중...", en: "Downloading...", ja: "ダウンロード中...", zh: "下载中..." })

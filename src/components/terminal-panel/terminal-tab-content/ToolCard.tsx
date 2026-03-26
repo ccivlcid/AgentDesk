@@ -126,7 +126,7 @@ export function ToolCard({
               style={{
                 fontFamily: mono,
                 fontSize: 10,
-                color: "#9CA3AF",
+                color: "var(--th-text-muted)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",

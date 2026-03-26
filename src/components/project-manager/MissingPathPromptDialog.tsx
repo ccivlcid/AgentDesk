@@ -21,11 +21,11 @@ export default function MissingPathPromptDialog({
     <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
         className="w-full max-w-lg overflow-hidden"
-        style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F9FAFB" }}
+        style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB", borderLeft: "3px solid #3B82F6" }}>
-          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#111827", fontFamily: "var(--th-font-mono)" }}>
+          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
             {t({
               ko: "프로젝트 경로 확인",
               en: "Confirm Project Path",
@@ -35,7 +35,7 @@ export default function MissingPathPromptDialog({
           </h3>
         </div>
         <div className="space-y-2 px-4 py-4">
-          <p className="text-xs font-mono" style={{ color: "#111827" }}>
+          <p className="text-xs font-mono" style={{ color: "var(--th-text-primary)" }}>
             {t({
               ko: "해당 경로가 없습니다. 추가하시겠습니까?",
               en: "This path does not exist. Create it now?",
@@ -43,11 +43,11 @@ export default function MissingPathPromptDialog({
               zh: "该路径不存在。现在创建吗？",
             })}
           </p>
-          <p className="break-all px-2.5 py-2 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}>
+          <p className="break-all px-2.5 py-2 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
             {prompt.normalizedPath}
           </p>
           {prompt.nearestExistingParent && (
-            <p className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+            <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: `기준 폴더: ${prompt.nearestExistingParent}`,
                 en: `Base folder: ${prompt.nearestExistingParent}`,
@@ -72,7 +72,7 @@ export default function MissingPathPromptDialog({
             type="button"
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-semibold font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -81,7 +81,7 @@ export default function MissingPathPromptDialog({
             disabled={!prompt.canCreate || saving}
             onClick={onConfirmCreate}
             className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: 0, background: "#10b981", color: "#FFFFFF" }}
+            style={{ borderRadius: 0, background: "#10b981", color: "var(--th-bg-elevated)" }}
           >
             {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
           </button>

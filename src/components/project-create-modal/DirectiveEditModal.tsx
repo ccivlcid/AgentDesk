@@ -53,7 +53,7 @@ export default function DirectiveEditModal() {
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   const windowIcon = (
-    <svg viewBox="0 0 18 18" fill="none" stroke="#3B82F6" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <svg viewBox="0 0 18 18" fill="none" stroke="var(--th-accent)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
       <path d="M3 3h12v12H3z" />
       <path d="M6 7h6M6 10h4" />
     </svg>
@@ -73,7 +73,7 @@ export default function DirectiveEditModal() {
           <div className="space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px]" style={{ ...mono, color: "#9CA3AF" }}>
+              <p className="text-[10px]" style={{ ...mono, color: "var(--th-text-muted)" }}>
                 {t({
                   ko: "에이전트가 이 프로젝트에서 지켜야 할 규칙을 정의합니다.",
                   en: "Define rules for agents on this project.",
@@ -88,7 +88,7 @@ export default function DirectiveEditModal() {
                   type="button"
                   onClick={() => setShowTemplateMenu(!showTemplateMenu)}
                   className="px-2 py-1 text-[10px] font-mono"
-                  style={{ border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#9CA3AF", cursor: "pointer" }}
+                  style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer" }}
                 >
                   {t({ ko: "템플릿", en: "Templates", ja: "テンプレート", zh: "模板" })}
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline", marginLeft: 4, transform: showTemplateMenu ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
@@ -98,7 +98,7 @@ export default function DirectiveEditModal() {
                 {showTemplateMenu && (
                   <div
                     className="absolute right-0 top-full mt-1 z-50 w-56"
-                    style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxHeight: 280, overflowY: "auto" }}
+                    style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxHeight: 280, overflowY: "auto" }}
                   >
                     {templates.map((tpl) => (
                       <button
@@ -115,20 +115,20 @@ export default function DirectiveEditModal() {
                           background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.08)" : "transparent",
                           cursor: "pointer",
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,0,0,0.03)"; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-hover-overlay-subtle)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.08)" : "transparent"; }}
                       >
                         <span className="text-sm">{tpl.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[11px] font-mono truncate" style={{ color: tpl.slug === directiveTypeSlug ? "#3B82F6" : "#111827" }}>
+                          <div className="text-[11px] font-mono truncate" style={{ color: tpl.slug === directiveTypeSlug ? "var(--th-accent)" : "var(--th-text-primary)" }}>
                             {tpl.name_ko}
                           </div>
-                          <div className="text-[9px] font-mono truncate" style={{ color: "#9CA3AF" }}>
+                          <div className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
                             {tpl.description_ko}
                           </div>
                         </div>
                         {tpl.slug === directiveTypeSlug && (
-                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "#3B82F6" }}>
+                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
                             <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         )}
@@ -161,18 +161,18 @@ export default function DirectiveEditModal() {
                 lineHeight: "1.7",
                 padding: "14px",
                 border: "1px solid #E5E7EB",
-                background: "#FFFFFF",
-                color: "#111827",
+                background: "var(--th-bg-elevated)",
+                color: "var(--th-text-primary)",
                 minHeight: "320px",
                 maxHeight: "500px",
               }}
             />
 
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-mono" style={{ color: "#9CA3AF" }}>
+              <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "비워두면 디렉티브 없이 실행됩니다", en: "Leave empty to run without directive", ja: "空ならディレクティブなしで実行", zh: "留空则不使用指令" })}
               </span>
-              <span className="text-[9px] font-mono" style={{ color: "#9CA3AF" }}>
+              <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {directive.length.toLocaleString()} chars
               </span>
             </div>

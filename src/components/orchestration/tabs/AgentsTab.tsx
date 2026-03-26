@@ -38,7 +38,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6", display: "flex", alignItems: "center" }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)", display: "flex", alignItems: "center" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
@@ -50,7 +50,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", color: "#374151", margin: 0 }}>
               Team Agents
             </h3>
-            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, fontWeight: 600 }}>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 2, fontWeight: 600 }}>
               ACTIVE: {String(activeCount).padStart(2, "0")} / TOTAL: {agents.length}
             </div>
           </div>
@@ -63,13 +63,13 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
           label="TOKEN_THROUGHPUT"
           value={`${totalDone} tasks done`}
           percent={totalTasks > 0 ? (totalDone / totalTasks) * 100 : 0}
-          color="#3B82F6"
+          color="var(--th-accent)"
         />
         <MetricBar
           label="COST_EFFICIENCY"
           value={costEfficiency !== "--" ? `${costEfficiency}% success` : "--"}
           percent={costEfficiency !== "--" ? parseFloat(costEfficiency) : 0}
-          color="#059669"
+          color="var(--th-success)"
         />
       </div>
 
@@ -79,12 +79,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
         gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
         gap: 8,
         padding: "10px 16px",
-        background: "#F9FAFB",
+        background: "var(--th-bg-surface)",
         borderRadius: "12px 12px 0 0",
         border: "1px solid #E5E7EB",
         borderBottom: "none",
         fontSize: 10,
-        color: "#9CA3AF",
+        color: "var(--th-text-muted)",
         fontWeight: 800,
         letterSpacing: "0.1em",
         textTransform: "uppercase" as const,
@@ -125,18 +125,18 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             alignItems: "start",
             fontSize: 12,
             position: "relative",
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
             transition: "background 0.15s",
           }}
             onMouseEnter={(e) => { e.currentTarget.style.background = "#FAFBFC"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFFFF"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--th-bg-elevated)"; }}
           >
             {/* Identity */}
             <div>
-              <div style={{ color: "#111827", fontWeight: 700 }}>
+              <div style={{ color: "var(--th-text-primary)", fontWeight: 700 }}>
                 {agent.name.toUpperCase().replace(/\s+/g, "_")}
               </div>
-              <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+              <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
                 ID: {agent.id.substring(0, 8)}
               </div>
             </div>
@@ -145,8 +145,8 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             <div>
               <span style={{
                 fontSize: 9, fontWeight: 800, letterSpacing: "0.05em",
-                color: "#FFFFFF",
-                background: agent.role === "team_leader" ? "#3B82F6" : "#059669",
+                color: "var(--th-bg-elevated)",
+                background: agent.role === "team_leader" ? "var(--th-accent)" : "var(--th-success)",
                 padding: "3px 8px",
                 borderRadius: 6,
                 display: "inline-block",
@@ -155,7 +155,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
                 {roleLabel}
               </span>
               {dept && (
-                <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>
+                <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 4 }}>
                   {domainLabel}
                 </div>
               )}
@@ -165,12 +165,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: "50%",
-                background: isWorking ? "#059669" : "#D1D5DB",
+                background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
                 boxShadow: isWorking ? "0 0 6px rgba(5,150,105,0.3)" : "none",
               }} />
               <span style={{
                 fontSize: 10, fontWeight: 700,
-                color: isWorking ? "#059669" : "#9CA3AF",
+                color: isWorking ? "var(--th-success)" : "var(--th-text-muted)",
               }}>
                 {agent.status.toUpperCase()}
               </span>
@@ -178,16 +178,16 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
 
             {/* Current process */}
             <div>
-              <div style={{ fontSize: 11, color: "#111827", marginBottom: 4, fontWeight: 500 }}>
+              <div style={{ fontSize: 11, color: "var(--th-text-primary)", marginBottom: 4, fontWeight: 500 }}>
                 {currentTask ? currentTask.title : (
-                  <span style={{ fontStyle: "italic", color: "#D1D5DB" }}>
+                  <span style={{ fontStyle: "italic", color: "var(--th-border-strong)" }}>
                     No active task...
                   </span>
                 )}
               </div>
               {currentTask && (
-                <div style={{ height: 4, background: "#E5E7EB", width: "100%", borderRadius: 2 }}>
-                  <div style={{ height: 4, background: "#3B82F6", width: `${getTaskProgress(currentTask)}%`, transition: "width 0.3s", borderRadius: 2 }} />
+                <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
+                  <div style={{ height: 4, background: "var(--th-accent)", width: `${getTaskProgress(currentTask)}%`, transition: "width 0.3s", borderRadius: 2 }} />
                 </div>
               )}
             </div>
@@ -197,20 +197,20 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
               {fitnessByType.length > 0 ? (
                 fitnessByType.slice(0, 4).map((f) => (
                   <div key={f.task_type} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
-                    <span style={{ color: "#9CA3AF", width: 36, flexShrink: 0, textTransform: "uppercase" as const, fontWeight: 600 }}>
+                    <span style={{ color: "var(--th-text-muted)", width: 36, flexShrink: 0, textTransform: "uppercase" as const, fontWeight: 600 }}>
                       {f.task_type.slice(0, 4)}:
                     </span>
                     <span style={{
-                      color: f.success_rate >= 80 ? "#059669" : f.success_rate >= 50 ? "#D97706" : "#DC2626",
+                      color: f.success_rate >= 80 ? "var(--th-success)" : f.success_rate >= 50 ? "#D97706" : "var(--th-danger-text)",
                       fontWeight: 800,
                     }}>
                       {f.success_rate}%
                     </span>
-                    <span style={{ color: "#D1D5DB", fontSize: 9 }}>({f.total})</span>
+                    <span style={{ color: "var(--th-border-strong)", fontSize: 9 }}>({f.total})</span>
                   </div>
                 ))
               ) : (
-                <div style={{ color: "#3B82F6", fontWeight: 700 }}>
+                <div style={{ color: "var(--th-accent)", fontWeight: 700 }}>
                   FITNESS: {perf?.success_rate != null ? `${Math.round(perf.success_rate)}%` : "--"}
                 </div>
               )}
@@ -223,11 +223,11 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
                 onClick={() => handleToggleMenu(agent.id)}
                 style={{
                   background: "transparent", border: "none", cursor: "pointer",
-                  color: "#9CA3AF", padding: 4,
+                  color: "var(--th-text-muted)", padding: 4,
                   borderRadius: 8,
                   transition: "all 0.15s",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#F3F4F6"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-bg-primary)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -249,7 +249,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
       </div>
 
       {agents.length === 0 && (
-        <div style={{ padding: 40, textAlign: "center", color: "#9CA3AF", fontSize: 12, background: "#FFFFFF", borderRadius: 16, border: "1px dashed #E5E7EB" }}>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--th-text-muted)", fontSize: 12, background: "var(--th-bg-elevated)", borderRadius: 16, border: "1px dashed #E5E7EB" }}>
           No agents assigned to this project.
         </div>
       )}
@@ -273,7 +273,7 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
         right: 0,
         top: 28,
         width: 170,
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         border: "1px solid #E5E7EB",
         borderRadius: 14,
         zIndex: 100,
@@ -283,7 +283,7 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
       onMouseLeave={onClose}
     >
       <div style={{
-        fontFamily: mono, fontSize: 9, color: "#9CA3AF", fontWeight: 800,
+        fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 800,
         padding: "8px 14px", borderBottom: "1px solid #F3F4F6",
         letterSpacing: "0.05em", textTransform: "uppercase" as const,
       }}>
@@ -303,14 +303,14 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
             fontFamily: mono,
             fontSize: 11,
             fontWeight: 600,
-            color: action.icon === "stop" ? "#DC2626" : "#6B7280",
+            color: action.icon === "stop" ? "var(--th-danger-text)" : "var(--th-text-secondary)",
             background: "transparent",
             border: "none",
             cursor: "pointer",
             textAlign: "left",
             transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#F9FAFB"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-bg-surface)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
           {action.icon === "log" && (
@@ -335,16 +335,16 @@ function MetricBar({ label, value, percent, color }: { label: string; value: str
   return (
     <div style={{
       flex: 1,
-      background: "#FFFFFF",
+      background: "var(--th-bg-elevated)",
       border: "1px solid #E5E7EB",
       borderRadius: 14,
       padding: "12px 16px",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{label}</span>
+        <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{label}</span>
         <span style={{ fontSize: 11, color, fontWeight: 700 }}>{value}</span>
       </div>
-      <div style={{ height: 4, background: "#E5E7EB", width: "100%", borderRadius: 2 }}>
+      <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
         <div style={{ height: 4, background: color, width: `${Math.min(percent, 100)}%`, transition: "width 0.3s", borderRadius: 2 }} />
       </div>
     </div>

@@ -193,7 +193,7 @@ export default function DecisionInboxModal({
               padding: "3px 8px",
               border: "1px solid #E5E7EB",
               background: "transparent",
-              color: "#9CA3AF",
+              color: "var(--th-text-muted)",
               cursor: "pointer",
               letterSpacing: "0.04em",
             }}
@@ -208,8 +208,8 @@ export default function DecisionInboxModal({
               fontWeight: 700,
               padding: "2px 6px",
               border: "1px solid #E5E7EB",
-              background: items.length > 0 ? "#EBF5FF" : "#F9FAFB",
-              color: items.length > 0 ? "#3B82F6" : "#9CA3AF",
+              background: items.length > 0 ? "var(--th-accent-glow)" : "var(--th-bg-surface)",
+              color: items.length > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
             }}
           >
             {items.length}
@@ -227,7 +227,7 @@ export default function DecisionInboxModal({
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
               </div>
-              <p style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "#3B82F6", marginBottom: 6 }}>
+              <p style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-accent)", marginBottom: 6 }}>
                 {t({
                   ko: "자율 모드",
                   en: "Autonomous Mode",
@@ -235,7 +235,7 @@ export default function DecisionInboxModal({
                   zh: "自主模式",
                 })}
               </p>
-              <p style={{ ...mono, fontSize: "11px", color: "#9CA3AF", lineHeight: 1.6 }}>
+              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", lineHeight: 1.6 }}>
                 {t({
                   ko: "PM 오케스트레이터가 자동으로 처리합니다",
                   en: "PM orchestrator handles all decisions automatically",
@@ -245,7 +245,7 @@ export default function DecisionInboxModal({
               </p>
             </div>
           ) : loading ? (
-            <div className="flex items-center gap-2 px-5 py-8" style={{ ...mono, fontSize: "12px", color: "#9CA3AF" }}>
+            <div className="flex items-center gap-2 px-5 py-8" style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)" }}>
               <span className="animate-pulse">▌</span>
               {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
             </div>
@@ -256,7 +256,7 @@ export default function DecisionInboxModal({
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <p style={{ ...mono, fontSize: "11px", color: "#9CA3AF", marginTop: 4 }}>
+              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginTop: 4 }}>
                 {t({ ko: "미결 의사결정 없음", en: "No pending decisions", ja: "未決の意思決定なし", zh: "无待处理决策" })}
               </p>
             </div>
@@ -274,14 +274,14 @@ export default function DecisionInboxModal({
                     key={item.id}
                     style={{
                       borderBottom: "1px solid #E5E7EB",
-                      background: idx % 2 === 0 ? "transparent" : "#F9FAFB",
+                      background: idx % 2 === 0 ? "transparent" : "var(--th-bg-surface)",
                     }}
                   >
                     {/* 에이전트 행 */}
                     <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         {/* 순번 */}
-                        <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF", flexShrink: 0, opacity: 0.5 }}>
+                        <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", flexShrink: 0, opacity: 0.5 }}>
                           {String(idx + 1).padStart(2, "0")}
                         </span>
                         {/* 아바타 */}
@@ -290,7 +290,7 @@ export default function DecisionInboxModal({
                         ) : (
                           <span
                             className="flex items-center justify-center"
-                            style={{ width: 28, height: 28, background: "#FFFFFF", border: "1px solid #E5E7EB", flexShrink: 0, color: "#9CA3AF" }}
+                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", flexShrink: 0, color: "var(--th-text-muted)" }}
                           >
                             {AgentIconSvg}
                           </span>
@@ -298,7 +298,7 @@ export default function DecisionInboxModal({
                         {/* 이름 + 타입 */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "#111827" }}>
+                            <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-text-primary)" }}>
                               {agentName}
                             </span>
                             <span
@@ -313,11 +313,11 @@ export default function DecisionInboxModal({
                             >
                               {meta.badge}
                             </span>
-                            <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>
+                            <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
                               {kindLabel}
                             </span>
                           </div>
-                          <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF", opacity: 0.6 }}>
+                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
                             {formatTime(item.createdAt, uiLanguage)}
                           </span>
                         </div>
@@ -331,7 +331,7 @@ export default function DecisionInboxModal({
                               padding: "2px 8px",
                               border: "1px solid #E5E7EB",
                               background: "transparent",
-                              color: "#9CA3AF",
+                              color: "var(--th-text-muted)",
                               cursor: "pointer",
                               letterSpacing: "0.04em",
                             }}
@@ -348,8 +348,8 @@ export default function DecisionInboxModal({
                       style={{
                         border: "1px solid #E5E7EB",
                         borderLeft: `2px solid ${meta.color}60`,
-                        background: "#FFFFFF",
-                        ...mono, fontSize: "11px", color: "#111827",
+                        background: "var(--th-bg-elevated)",
+                        ...mono, fontSize: "11px", color: "var(--th-text-primary)",
                       }}
                     >
                       <MessageContent content={item.requestContent} />
@@ -361,7 +361,7 @@ export default function DecisionInboxModal({
                         (() => {
                           if (item.options.length === 0) {
                             return (
-                              <p style={{ ...mono, fontSize: "10px", color: "#9CA3AF", padding: "6px 0" }}>
+                              <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "6px 0" }}>
                                 · {t({ ko: "PM 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
                               </p>
                             );
@@ -385,8 +385,8 @@ export default function DecisionInboxModal({
                                       ...mono, fontSize: "11px",
                                       padding: "6px 10px",
                                       border: isSelected ? "1px solid #3B82F6" : "1px solid #E5E7EB",
-                                      background: isSelected ? "#F9FAFB" : "#FFFFFF",
-                                      color: isSelected ? "#3B82F6" : "#6B7280",
+                                      background: isSelected ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
+                                      color: isSelected ? "var(--th-accent)" : "var(--th-text-secondary)",
                                       cursor: isItemBusy ? "not-allowed" : "pointer",
                                       opacity: isItemBusy ? 0.6 : 1,
                                       display: "flex", alignItems: "center", gap: 8,
@@ -399,7 +399,7 @@ export default function DecisionInboxModal({
                                   </button>
                                 );
                               })}
-                              <p style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>
+                              <p style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
                                 {isKorean ? `${selected.length}건 선택됨` : `${selected.length} selected`}
                               </p>
                               <textarea
@@ -408,7 +408,7 @@ export default function DecisionInboxModal({
                                 rows={2}
                                 placeholder={t({ ko: "추가 의견 (선택)", en: "Extra notes (optional)", ja: "追加意見（任意）", zh: "补充意见（可选）" })}
                                 className="w-full resize-y outline-none"
-                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
+                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                               />
                               <div className="flex items-center justify-end gap-2 pt-1">
                                 {skipOption && (
@@ -454,8 +454,8 @@ export default function DecisionInboxModal({
                                   ...mono, fontSize: "11px",
                                   padding: "7px 10px",
                                   border: isPrimary ? "1px solid #3B82F6" : "1px solid #E5E7EB",
-                                  background: isPrimary ? "#F9FAFB" : "#FFFFFF",
-                                  color: isPrimary ? "#3B82F6" : "#6B7280",
+                                  background: isPrimary ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
+                                  color: isPrimary ? "var(--th-accent)" : "var(--th-text-secondary)",
                                   cursor: isBusy ? "not-allowed" : "pointer",
                                   opacity: isBusy ? 0.6 : 1,
                                   display: "flex", alignItems: "center", gap: 8,
@@ -474,7 +474,7 @@ export default function DecisionInboxModal({
                           })}
                         </div>
                       ) : (
-                        <p style={{ ...mono, fontSize: "10px", color: "#9CA3AF", padding: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
+                        <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
                           <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 opacity-60" aria-hidden>
                             <circle cx="12" cy="12" r="2" />
                           </svg>
@@ -497,9 +497,9 @@ export default function DecisionInboxModal({
         {followupItem && (
           <div
             className="px-5 py-3 flex-shrink-0"
-            style={{ borderTop: "1px solid #E5E7EB", background: "#FFFFFF" }}
+            style={{ borderTop: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
           >
-            <p style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "#3B82F6", marginBottom: 8, letterSpacing: "0.06em" }}>
+            <p style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "var(--th-accent)", marginBottom: 8, letterSpacing: "0.06em" }}>
               + {t({ ko: "추가 요청사항", en: "FOLLOW-UP REQUEST", ja: "追加要請", zh: "追加请求" })}
             </p>
             <textarea
@@ -508,7 +508,7 @@ export default function DecisionInboxModal({
               placeholder={t({ ko: "요청사항을 입력해 주세요.", en: "Enter your request details.", ja: "要請内容を入力してください。", zh: "请输入请求详情。" })}
               rows={3}
               className="w-full resize-y outline-none"
-              style={{ ...mono, fontSize: "11px", padding: "8px 10px", border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#111827" }}
+              style={{ ...mono, fontSize: "11px", padding: "8px 10px", border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
             />
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
@@ -519,7 +519,7 @@ export default function DecisionInboxModal({
                   ...mono, fontSize: "10px", padding: "4px 10px",
                   border: "1px solid #E5E7EB",
                   background: "transparent",
-                  color: "#9CA3AF",
+                  color: "var(--th-text-muted)",
                   cursor: isFollowupSubmitting ? "not-allowed" : "pointer",
                 }}
               >

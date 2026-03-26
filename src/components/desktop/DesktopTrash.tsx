@@ -139,7 +139,7 @@ export function TrashIcon({
               transition: "background 0.15s, border 0.15s",
             }}
           >
-            <IconTrash color={hov || full ? "#ff3b30" : "#9CA3AF"} />
+            <IconTrash color={hov || full ? "#ff3b30" : "var(--th-text-muted)"} />
           </div>
           {full && (
             <div
@@ -170,7 +170,7 @@ export function TrashIcon({
           style={{
             fontFamily: "var(--th-font-mono)",
             fontSize: 10,
-            color: hov || full ? "#ff3b30" : "#6B7280",
+            color: hov || full ? "#ff3b30" : "var(--th-text-secondary)",
             transition: "color 0.15s",
             textShadow: "0 1px 3px rgba(0,0,0,0.5)",
           }}
@@ -190,7 +190,7 @@ export function TrashIcon({
             top: ctxMenu.y,
             zIndex: 9999,
             minWidth: 160,
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
             border: "1px solid #E5E7EB",
             borderRadius: 6,
             boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
@@ -214,10 +214,10 @@ export function TrashIcon({
               cursor: "pointer",
               fontFamily: "var(--th-font-mono)",
               fontSize: 12,
-              color: "#111827",
+              color: "var(--th-text-primary)",
               textAlign: "left",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F3F4F6"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -308,12 +308,12 @@ export function TrashModal({
               borderRadius: 8,
               cursor: "pointer",
               border: "1px solid #FECACA",
-              background: "#FEF2F2",
-              color: "#DC2626",
+              background: "var(--th-danger-bg)",
+              color: "var(--th-danger-text)",
               transition: "all 0.2s"
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = "#FEE2E2"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--th-danger-bg)"; }}
           >
             {t({ ko: "비우기", en: "EMPTY", ja: "空にする", zh: "清空" })}
           </button>
@@ -324,7 +324,7 @@ export function TrashModal({
         <div className="flex-shrink-0 px-6 py-3 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gray-300" />
-            <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, color: "#6B7280", letterSpacing: "0.02em" }}>
+            <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, color: "var(--th-text-secondary)", letterSpacing: "0.02em" }}>
               {items.length + features.length} {t({ ko: "개 항목 보관됨", en: "ITEMS ARCHIVED", ja: "個の項目", zh: "项内容" })}
             </span>
           </div>
@@ -334,7 +334,7 @@ export function TrashModal({
           {items.length + features.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 opacity-30">
               <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full">
-                <IconTrash color="#6B7280" />
+                <IconTrash color="var(--th-text-secondary)" />
               </div>
               <span style={{ fontFamily: mono, fontSize: 13, fontWeight: 600, color: "#4B5563" }}>
                 {t({ ko: "휴지통이 비어 있습니다", en: "Trash is empty", ja: "ゴミ箱は空です", zh: "垃圾桶为空" })}
@@ -359,7 +359,7 @@ export function TrashModal({
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 800, color: "#111827" }} className="truncate">
+                      <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 800, color: "var(--th-text-primary)" }} className="truncate">
                         {entry.data.name}
                       </div>
                       <div style={{ fontFamily: mono, fontSize: 10, color: "#94A3B8", marginTop: 2 }} className="truncate">

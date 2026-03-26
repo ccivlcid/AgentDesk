@@ -37,7 +37,7 @@ export default function OAuthConnectedProvidersSection({
 
   return (
     <div className="space-y-2">
-      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "#3B82F6", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid #3B82F6", paddingLeft: "8px", marginBottom: "8px" }}>
+      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid #3B82F6", paddingLeft: "8px", marginBottom: "8px" }}>
         // auth status
       </div>
       {detectedProviders.map(([provider, info]) => {
@@ -51,19 +51,19 @@ export default function OAuthConnectedProvidersSection({
         const accountList = info.accounts ?? [];
 
         return (
-          <div key={provider} className="space-y-2 overflow-hidden p-4" style={{ borderRadius: 0, background: "#FFFFFF" }}>
+          <div key={provider} className="space-y-2 overflow-hidden p-4" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-                {LogoComp ? <LogoComp className="w-5 h-5" /> : <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "14px", color: "#9CA3AF" }}>⇄</span>}
-                <span className="text-sm font-medium font-mono" style={{ color: "#111827" }}>{oauthInfo?.label ?? provider}</span>
-                {info.email && <span className="max-w-full break-all text-xs font-mono" style={{ color: "#9CA3AF" }}>{info.email}</span>}
+                {LogoComp ? <LogoComp className="w-5 h-5" /> : <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "14px", color: "var(--th-text-muted)" }}>⇄</span>}
+                <span className="text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{oauthInfo?.label ?? provider}</span>
+                {info.email && <span className="max-w-full break-all text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{info.email}</span>}
                 {isFileDetected && (
-                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, background: "#F3F4F6", color: "#9CA3AF" }}>
+                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                     {t({ ko: "CLI 감지", en: "CLI detected", ja: "CLI 検出", zh: "检测到 CLI" })}
                   </span>
                 )}
                 {isWebOAuth && (
-                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, background: "rgba(251,191,36,0.15)", color: "#3B82F6" }}>
+                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}>
                     {t({ ko: "웹 OAuth", en: "Web OAuth", ja: "Web OAuth", zh: "网页 OAuth" })}
                   </span>
                 )}
@@ -109,7 +109,7 @@ export default function OAuthConnectedProvidersSection({
                     onClick={() => void onRefreshToken(provider as OAuthConnectProvider)}
                     disabled={refreshing === provider}
                     className="text-xs px-2.5 py-1 font-mono transition-colors disabled:opacity-50"
-                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.3)" }}
+                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
                   >
                     {refreshing === provider
                       ? t({ ko: "갱신 중...", en: "Refreshing...", ja: "更新中...", zh: "刷新中..." })
@@ -121,7 +121,7 @@ export default function OAuthConnectedProvidersSection({
                   <button
                     onClick={() => onConnect(provider as OAuthConnectProvider)}
                     className="text-xs px-2.5 py-1 font-mono uppercase transition-colors"
-                    style={{ borderRadius: 0, background: "#3B82F6", color: "#FFFFFF" }}
+                    style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-elevated)" }}
                   >
                     {t({ ko: "재연결", en: "Reconnect", ja: "再接続", zh: "重新连接" })}
                   </button>
@@ -157,24 +157,24 @@ export default function OAuthConnectedProvidersSection({
               <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                 {info.scope && (
                   <div className="col-span-2">
-                    <span className="font-mono" style={{ color: "#9CA3AF" }}>
+                    <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "스코프", en: "Scope", ja: "スコープ", zh: "范围" })}:{" "}
                     </span>
-                    <span className="break-all font-mono text-[10px] leading-relaxed" style={{ color: "#6B7280" }}>{info.scope}</span>
+                    <span className="break-all font-mono text-[10px] leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>{info.scope}</span>
                   </div>
                 )}
                 {expiresAt && (
                   <div>
-                    <span className="font-mono" style={{ color: "#9CA3AF" }}>{t({ ko: "만료", en: "Expires", ja: "期限", zh: "到期" })}: </span>
-                    <span className={isExpired ? "text-red-400" : ""} style={isExpired ? {} : { color: "#6B7280" }}>
+                    <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>{t({ ko: "만료", en: "Expires", ja: "期限", zh: "到期" })}: </span>
+                    <span className={isExpired ? "text-red-400" : ""} style={isExpired ? {} : { color: "var(--th-text-secondary)" }}>
                       {expiresAt.toLocaleString(localeTag)}
                     </span>
                   </div>
                 )}
                 {info.created_at > 0 && (
                   <div>
-                    <span className="font-mono" style={{ color: "#9CA3AF" }}>{t({ ko: "등록", en: "Created", ja: "登録", zh: "创建" })}: </span>
-                    <span style={{ color: "#6B7280" }}>{new Date(info.created_at).toLocaleString(localeTag)}</span>
+                    <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>{t({ ko: "등록", en: "Created", ja: "登録", zh: "创建" })}: </span>
+                    <span style={{ color: "var(--th-text-secondary)" }}>{new Date(info.created_at).toLocaleString(localeTag)}</span>
                   </div>
                 )}
               </div>
@@ -189,11 +189,11 @@ export default function OAuthConnectedProvidersSection({
 
               return (
                 <div className="flex min-w-0 flex-col items-stretch gap-1.5 pt-1 sm:flex-row sm:items-center sm:gap-2">
-                  <span className="w-auto shrink-0 text-xs font-mono" style={{ color: "#9CA3AF" }}>
+                  <span className="w-auto shrink-0 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {t({ ko: "모델:", en: "Model:", ja: "モデル:", zh: "模型:" })}
                   </span>
                   {modelsLoading ? (
-                    <span className="text-xs animate-pulse font-mono" style={{ color: "#9CA3AF" }}>
+                    <span className="text-xs animate-pulse font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
                     </span>
                   ) : modelList && modelList.length > 0 ? (
@@ -209,7 +209,7 @@ export default function OAuthConnectedProvidersSection({
                         persistSettings(newForm);
                       }}
                       className="w-full min-w-0 px-2 py-1 text-xs focus:outline-none sm:flex-1"
-                      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
+                      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                     >
                       {!currentModel && (
                         <option value="">
@@ -224,7 +224,7 @@ export default function OAuthConnectedProvidersSection({
                     </select>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+                      <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                         {t({ ko: "모델 목록 없음", en: "No models", ja: "モデル一覧なし", zh: "无模型列表" })}
                       </span>
                       {provider === "github-copilot" && (
@@ -244,12 +244,12 @@ export default function OAuthConnectedProvidersSection({
             })()}
 
             {accountList.length > 0 && (
-              <div className="space-y-2 p-2.5" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+              <div className="space-y-2 p-2.5" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
                 <div className="flex flex-wrap items-center justify-between gap-1.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {t({ ko: "계정 풀", en: "Account Pool", ja: "アカウントプール", zh: "账号池" })}
                   </div>
-                  <div className="text-[10px] text-right font-mono" style={{ color: "#9CA3AF" }}>
+                  <div className="text-[10px] text-right font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {t({
                       ko: "여러 계정을 동시에 활성 가능 · 우선순위 숫자가 낮을수록 먼저 시도",
                       en: "Multiple active accounts supported · lower priority runs first",
@@ -274,7 +274,7 @@ export default function OAuthConnectedProvidersSection({
                     <div
                       key={account.id}
                       className="p-2.5 space-y-2"
-                      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F3F4F6" }}
+                      style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}
                     >
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
@@ -297,12 +297,12 @@ export default function OAuthConnectedProvidersSection({
                             ? t({ ko: "실행 가능", en: "Runnable", ja: "実行可能", zh: "可执行" })
                             : t({ ko: "실행 불가", en: "Not runnable", ja: "実行不可", zh: "不可执行" })}
                         </span>
-                        {account.email && <span className="text-[11px] break-all font-mono" style={{ color: "#6B7280" }}>{account.email}</span>}
+                        {account.email && <span className="text-[11px] break-all font-mono" style={{ color: "var(--th-text-secondary)" }}>{account.email}</span>}
                       </div>
 
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                         <label className="space-y-1">
-                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
+                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
                             // {t({ ko: "라벨", en: "label", ja: "ラベル", zh: "标签" })}
                           </span>
                           <input
@@ -315,19 +315,19 @@ export default function OAuthConnectedProvidersSection({
                               zh: "账号别名",
                             })}
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
+                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           />
                         </label>
 
                         <label className="space-y-1">
-                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
+                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
                             // {t({ ko: "모델 오버라이드", en: "model override", ja: "モデル上書き", zh: "模型覆盖" })}
                           </span>
                           <select
                             value={draft.modelOverride}
                             onChange={(e) => onUpdateAccountDraft(account.id, { modelOverride: e.target.value })}
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
+                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           >
                             <option value="">
                               {t({
@@ -347,7 +347,7 @@ export default function OAuthConnectedProvidersSection({
                         </label>
 
                         <label className="space-y-1">
-                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
+                          <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
                             // {t({ ko: "우선순위", en: "priority", ja: "優先度", zh: "优先级" })}
                           </span>
                           <input
@@ -358,7 +358,7 @@ export default function OAuthConnectedProvidersSection({
                             onChange={(e) => onUpdateAccountDraft(account.id, { priority: e.target.value })}
                             placeholder="100"
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
+                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           />
                         </label>
                       </div>

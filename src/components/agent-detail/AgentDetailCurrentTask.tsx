@@ -34,20 +34,20 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
 
   const isRunning = task?.status === "in_progress";
 
-  const sectionBg     = "#F9FAFB";
-  const sectionBorder = "#E5E7EB";
-  const labelColor    = "#9CA3AF";
-  const emptyColor    = "#9CA3AF";
-  const taskTitleColor= "#111827";
-  const taskTimeColor = "#9CA3AF";
-  const idleDot       = "#9CA3AF";
-  const injectBtnBg   = "#F3F4F6";
-  const injectBtnBdr  = "#E5E7EB";
-  const injectBtnClr  = "#6B7280";
-  const injectPanelBorder = "#E5E7EB";
-  const textareaColor = "#111827";
-  const textareaBg    = "#FFFFFF";
-  const hintColor     = "#9CA3AF";
+  const sectionBg     = "var(--th-bg-surface)";
+  const sectionBorder = "var(--th-border)";
+  const labelColor    = "var(--th-text-muted)";
+  const emptyColor    = "var(--th-text-muted)";
+  const taskTitleColor= "var(--th-text-primary)";
+  const taskTimeColor = "var(--th-text-muted)";
+  const idleDot       = "var(--th-text-muted)";
+  const injectBtnBg   = "var(--th-bg-primary)";
+  const injectBtnBdr  = "var(--th-border)";
+  const injectBtnClr  = "var(--th-text-secondary)";
+  const injectPanelBorder = "var(--th-border)";
+  const textareaColor = "var(--th-text-primary)";
+  const textareaBg    = "var(--th-bg-elevated)";
+  const hintColor     = "var(--th-text-muted)";
 
   return (
     <div style={{
@@ -151,11 +151,11 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
                   background: showInject ? "rgba(59,130,246,0.1)" : injectBtnBg,
                   border: `1px solid ${showInject ? "rgba(59,130,246,0.3)" : injectBtnBdr}`,
                   borderRadius: 8,
-                  color: showInject ? "#3B82F6" : injectBtnClr,
+                  color: showInject ? "var(--th-accent)" : injectBtnClr,
                   padding: "5px 0",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "rgba(59,130,246,0.18)" : "#E5E7EB"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "rgba(59,130,246,0.18)" : "var(--th-border)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = showInject ? "rgba(59,130,246,0.1)" : injectBtnBg; }}
               >
                 {t({ ko: "프롬프트 주입", en: "Inject prompt", ja: "プロンプト注入", zh: "注入提示" })}
@@ -212,9 +212,9 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
               style={{
                 fontFamily: mono, fontSize: 10,
                 background: injectText.trim() ? "rgba(59,130,246,0.1)" : textareaBg,
-                border: `1px solid ${injectText.trim() ? "rgba(59,130,246,0.35)" : "#E5E7EB"}`,
+                border: `1px solid ${injectText.trim() ? "rgba(59,130,246,0.35)" : "var(--th-border)"}`,
                 borderRadius: 8,
-                color: injectText.trim() ? "#3B82F6" : hintColor,
+                color: injectText.trim() ? "var(--th-accent)" : hintColor,
                 padding: "4px 12px",
                 cursor: injectText.trim() ? "pointer" : "not-allowed",
               }}

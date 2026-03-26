@@ -5,7 +5,7 @@ import { useUiStore } from "../../store/uiStore";
 const mono = "var(--th-font-mono)";
 
 const TOAST_ACCENT: Record<string, string> = {
-  success: "#3B82F6",
+  success: "var(--th-accent)",
   error: "#ef4444",
   info: "#3b82f6",
   progress: "#8b5cf6",
@@ -106,7 +106,7 @@ export default function ToastContainer() {
             style={{
               pointerEvents: "auto",
               display: "flex",
-              background: "#F9FAFB",
+              background: "var(--th-bg-surface)",
               border: "1px solid #E5E7EB",
               borderRadius: 10,
               boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
@@ -118,7 +118,7 @@ export default function ToastContainer() {
               style={{
                 width: 3,
                 flexShrink: 0,
-                background: TOAST_ACCENT[toast.type] ?? "#3B82F6",
+                background: TOAST_ACCENT[toast.type] ?? "var(--th-accent)",
               }}
             />
             <div style={{ flex: 1, padding: "10px 12px", minWidth: 0, display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -126,11 +126,11 @@ export default function ToastContainer() {
                 <ToastIcon type={toast.type} />
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "#111827" }}>
+                <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)" }}>
                   {toast.title}
                 </div>
                 {toast.body && (
-                  <div style={{ fontFamily: mono, fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                  <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", marginTop: 2 }}>
                     {toast.body}
                   </div>
                 )}
@@ -145,7 +145,7 @@ export default function ToastContainer() {
                   border: "none",
                   background: "none",
                   cursor: "pointer",
-                  color: "#9CA3AF",
+                  color: "var(--th-text-muted)",
                   fontSize: 14,
                   lineHeight: 1,
                 }}
@@ -163,7 +163,7 @@ export default function ToastContainer() {
             transition={{ duration: 0.3 }}
             style={{
               pointerEvents: "auto",
-              background: "#F9FAFB",
+              background: "var(--th-bg-surface)",
               border: "1px solid #E5E7EB",
               borderRadius: 10,
               boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
@@ -173,7 +173,7 @@ export default function ToastContainer() {
               gap: 8,
               fontFamily: mono,
               fontSize: 11,
-              color: "#9CA3AF",
+              color: "var(--th-text-muted)",
             }}
           >
             <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>

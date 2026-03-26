@@ -14,7 +14,7 @@ function InstallLogPanel({ logs }: { logs: string[] }) {
         fontFamily: "var(--th-font-mono)",
         fontSize: "10px",
         color: "#4B5563",
-        background: "#F9FAFB",
+        background: "var(--th-bg-surface)",
         border: "1px solid #E5E7EB",
         padding: "8px 12px",
         maxHeight: 120,
@@ -51,7 +51,7 @@ export default function CliSettingsTab({
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6" }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <polyline points="4 17 10 11 4 5" />
               <line x1="12" y1="19" x2="20" y2="19" />
@@ -93,7 +93,7 @@ export default function CliSettingsTab({
                 <div
                   key={provider}
                   className="p-5 space-y-4 transition-all hover:shadow-sm"
-                  style={{ borderRadius: 20, background: "#FFFFFF", border: "1px solid #E5E7EB" }}
+                  style={{ borderRadius: 20, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-2xl w-12 h-12 flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100 flex-shrink-0">
@@ -113,8 +113,8 @@ export default function CliSettingsTab({
                         className="text-[10px] font-black uppercase px-2 py-1 tracking-tighter"
                         style={{
                           borderRadius: 8,
-                          background: status.installed ? "#ECFDF5" : "#F3F4F6",
-                          color: status.installed ? "#059669" : "#6B7280",
+                          background: status.installed ? "#ECFDF5" : "var(--th-bg-primary)",
+                          color: status.installed ? "var(--th-success)" : "var(--th-text-secondary)",
                         }}
                       >
                         {status.installed
@@ -126,8 +126,8 @@ export default function CliSettingsTab({
                           className="text-[10px] font-black uppercase px-2 py-1 tracking-tighter"
                           style={{
                             borderRadius: 8,
-                            background: status.authenticated ? "#FFFBEB" : "#FEF2F2",
-                            color: status.authenticated ? "#D97706" : "#DC2626",
+                            background: status.authenticated ? "#FFFBEB" : "var(--th-danger-bg)",
+                            color: status.authenticated ? "#D97706" : "var(--th-danger-text)",
                           }}
                         >
                           {status.authenticated
@@ -151,8 +151,8 @@ export default function CliSettingsTab({
                           className="text-xs font-bold px-4 py-2 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
                           style={{
                             borderRadius: 12,
-                            background: "#3B82F6",
-                            color: "#FFFFFF",
+                            background: "var(--th-accent)",
+                            color: "var(--th-bg-elevated)",
                             boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.2)",
                           }}
                         >
@@ -207,9 +207,9 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-3 py-2 text-xs font-mono focus:outline-none sm:flex-1 transition-all"
-                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#111827" }}
-                            onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-                            onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                           >
                             <option value="">{t({ ko: "기본값 (Default)", en: "Default", ja: "デフォルト", zh: "默认" })}</option>
                             {modelList.map((m) => (
@@ -243,9 +243,9 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-3 py-2 text-xs font-mono focus:outline-none sm:flex-1 transition-all"
-                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#111827" }}
-                            onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-                            onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                           >
                             {reasoningLevels.map((rl) => (
                               <option key={rl.effort} value={rl.effort}>

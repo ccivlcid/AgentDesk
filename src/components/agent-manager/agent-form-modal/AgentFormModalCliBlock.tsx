@@ -13,7 +13,7 @@ export function AgentFormModalCliBlock({
   return (
     <>
       <div className="mb-4">
-        <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
+        <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
           {tr("CLI 도구", "CLI Provider")}
         </label>
         <div className="flex flex-wrap gap-1.5">
@@ -28,8 +28,8 @@ export function AgentFormModalCliBlock({
                 style={{
                   borderRadius: 6,
                   ...(active
-                    ? { background: "#EBF5FF", color: "#3B82F6", borderColor: "#BFDBFE" }
-                    : { borderColor: "#E5E7EB", color: "#9CA3AF" }),
+                    ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-accent-border)" }
+                    : { borderColor: "var(--th-border)", color: "var(--th-text-muted)" }),
                 }}
               >
                 {p}
@@ -41,7 +41,7 @@ export function AgentFormModalCliBlock({
 
       {["claude", "cursor", "codex", "gemini"].includes(form.cli_provider) && (
         <div className="mb-4">
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
+          <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
             {tr("기획 회의 단계", "Planning Phase")}
           </label>
           <button
@@ -51,8 +51,8 @@ export function AgentFormModalCliBlock({
             style={{
               borderRadius: 6,
               ...(form.enable_planning_phase !== 0
-                ? { background: "#EBF5FF", color: "#3B82F6", borderColor: "#BFDBFE" }
-                : { borderColor: "#E5E7EB", color: "#9CA3AF" }),
+                ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-accent-border)" }
+                : { borderColor: "var(--th-border)", color: "var(--th-text-muted)" }),
             }}
           >
             <span style={{ fontSize: 10 }}>{form.enable_planning_phase !== 0 ? "●" : "○"}</span>

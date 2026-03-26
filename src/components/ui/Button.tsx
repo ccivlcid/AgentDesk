@@ -18,27 +18,27 @@ const SIZE_PADDING: Record<ButtonSize, string> = {
 
 const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: "#EBF5FF",
+    background: "var(--th-accent-glow)",
     border: "1px solid #BFDBFE",
-    color: "#3B82F6",
+    color: "var(--th-accent)",
     fontWeight: 600,
   },
   secondary: {
     background: "transparent",
     border: "1px solid #D1D5DB",
-    color: "#6B7280",
+    color: "var(--th-text-secondary)",
     fontWeight: 500,
   },
   ghost: {
     background: "transparent",
     border: "1px solid transparent",
-    color: "#9CA3AF",
+    color: "var(--th-text-muted)",
     fontWeight: 400,
   },
   danger: {
     background: "transparent",
     border: "1px solid #FECACA",
-    color: "#DC2626",
+    color: "var(--th-danger-text)",
     fontWeight: 500,
   },
 };

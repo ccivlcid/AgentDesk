@@ -183,7 +183,7 @@ export default function DesktopIcon({
   const iconBorder = accentColor
     ? `1px solid ${accentColor}55`
     : light
-      ? "1px solid rgba(0,0,0,0.08)"
+      ? "1px solid var(--th-glass-shadow)"
       : "1px solid rgba(255,255,255,0.12)";
 
   const iconShadow = accentColor
@@ -191,7 +191,7 @@ export default function DesktopIcon({
       ? `0 4px 16px ${accentColor}88, 0 1px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)`
       : `0 2px 10px ${accentColor}55, 0 1px 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)`
     : light
-      ? "0 2px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)"
+      ? "0 2px 8px rgba(0,0,0,0.10), 0 1px 2px var(--th-hover-overlay)"
       : "0 2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)";
 
   const labelColor = light ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.95)";
@@ -257,7 +257,7 @@ export default function DesktopIcon({
               width: 18,
               height: 18,
               borderRadius: "50%",
-              background: "#DC2626",
+              background: "var(--th-danger-text)",
               border: "2px solid rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
@@ -285,7 +285,7 @@ export default function DesktopIcon({
               minWidth: 16,
               height: 16,
               borderRadius: 8,
-              background: "#DC2626",
+              background: "var(--th-danger-text)",
               border: "2px solid rgba(0,0,0,0.6)",
               display: "flex",
               alignItems: "center",

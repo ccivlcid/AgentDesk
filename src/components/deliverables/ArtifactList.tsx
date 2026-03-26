@@ -80,11 +80,11 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                 alignItems: "center",
                 gap: 0,
                 borderBottom: idx < artifacts.length - 1 || isExpanded ? "1px solid #E5E7EB" : "none",
-                background: "#F3F4F6",
+                background: "var(--th-bg-primary)",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#FFFFFF"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#F3F4F6"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
             >
               {/* 파일 타입 태그 */}
               <div style={{ width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0" }}>
@@ -95,20 +95,20 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
 
               {/* 파일명 + 경로 */}
               <div style={{ flex: 1, minWidth: 0, padding: "10px 8px" }}>
-                <div style={{ fontSize: "10px", fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   title={art.relativePath}
                 >
                   {art.title}
                 </div>
                 {art.relativePath !== art.title && (
-                  <div style={{ fontSize: "9px", color: "#9CA3AF", opacity: 0.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {art.relativePath}
                   </div>
                 )}
               </div>
 
               {/* 크기 */}
-              <span style={{ fontSize: "9px", color: "#9CA3AF", width: 64, flexShrink: 0, textAlign: "right", paddingRight: 12 }}>
+              <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 64, flexShrink: 0, textAlign: "right", paddingRight: 12 }}>
                 {formatSize(art.size)}
               </span>
 
@@ -127,7 +127,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                       background: isExpanded ? "rgba(245,158,11,0.08)" : "none",
                       border: "none",
                       borderRight: "1px solid #E5E7EB",
-                      color: isExpanded ? "#3B82F6" : "#9CA3AF",
+                      color: isExpanded ? "var(--th-accent)" : "var(--th-text-muted)",
                       cursor: "pointer",
                       letterSpacing: "0.04em",
                     }}
@@ -141,9 +141,9 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                   <button
                     type="button"
                     onClick={() => onPreview(art)}
-                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, background: "none", border: "none", borderRight: "1px solid #E5E7EB", color: "#9CA3AF", cursor: "pointer", letterSpacing: "0.04em" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "#3B82F6"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "#9CA3AF"; }}
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, background: "none", border: "none", borderRight: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.04em" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   >
                     {t({ ko: "보기", en: "VIEW", ja: "表示", zh: "查看" })}
                   </button>
@@ -161,9 +161,9 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                 <a
                   href={downloadUrl}
                   download
-                  style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "none", color: "#9CA3AF", textDecoration: "none", letterSpacing: "0.04em" }}
+                  style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "none", color: "var(--th-text-muted)", textDecoration: "none", letterSpacing: "0.04em" }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = "#4ade80"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#9CA3AF"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   title={t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -180,7 +180,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
 
             {/* 인라인 미리보기 */}
             {isExpanded && isImage && (
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
                 <img src={previewUrl} alt={art.title} style={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain", display: "block" }} loading="lazy" />
               </div>
             )}

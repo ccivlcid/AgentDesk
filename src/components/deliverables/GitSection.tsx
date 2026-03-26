@@ -29,7 +29,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   if (loading) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#9CA3AF" }}>
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "Git 정보 로딩중...", en: "Loading Git info...", ja: "Git情報を読み込み中...", zh: "加载Git信息..." })}
       </div>
     );
@@ -92,27 +92,27 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   return (
     <>
-      <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F9FAFB" }}>
+      <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}>
         <button
           type="button"
           onClick={onToggleSection}
           className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[#F3F4F6] transition"
         >
-          <span className="text-[11px] font-medium font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "Git 변경사항", en: "Git Changes", ja: "Git変更", zh: "Git变更" })}
           </span>
           <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor"
             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             className={`transition-transform ${sectionOpen ? "rotate-180" : ""}`}
-            style={{ color: "#9CA3AF" }}>
+            style={{ color: "var(--th-text-muted)" }}>
             <path d="M6 8l4 4 4-4" />
           </svg>
         </button>
         {sectionOpen && (
           <div className="px-3 py-2 space-y-2" style={{ borderTop: "1px solid #E5E7EB" }}>
             <div className="flex items-center gap-2 text-xs font-mono">
-              <span style={{ color: "#3B82F6" }}>{diff.branchName || "unknown"}</span>
-              <span style={{ color: "#9CA3AF" }}>{summaryLine}</span>
+              <span style={{ color: "var(--th-accent)" }}>{diff.branchName || "unknown"}</span>
+              <span style={{ color: "var(--th-text-muted)" }}>{summaryLine}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
             </div>
 
             {actionMsg && (
-              <div className="text-[11px] font-mono" style={{ color: "#6B7280" }}>{actionMsg}</div>
+              <div className="text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{actionMsg}</div>
             )}
           </div>
         )}

@@ -472,7 +472,7 @@ export default function SettingsPanel({
         gap: 0,
         width: "100%",
         overflow: "hidden",
-        background: "#F9FAFB",
+        background: "var(--th-bg-surface)",
         color: "#1F2937",
       }}
     >
@@ -480,13 +480,13 @@ export default function SettingsPanel({
 
       <div
         className="min-h-0 flex-1 overflow-y-auto"
-        style={{ padding: "32px 24px 40px", background: "#F3F4F6" }}
+        style={{ padding: "32px 24px 40px", background: "var(--th-bg-primary)" }}
       >
         <div 
           className="max-w-4xl mx-auto"
           style={{
             background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
+            backdropFilter: "var(--th-glass-blur)",
             border: "1px solid rgba(0, 0, 0, 0.08)",
             borderRadius: 24,
             padding: "40px 32px",

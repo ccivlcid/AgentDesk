@@ -82,7 +82,7 @@ function KickoffStageOverlay() {
             border: "1px solid #E5E7EB",
             borderRadius: 12,
             padding: "12px 24px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+            boxShadow: "0 12px 40px var(--th-modal-overlay)",
             display: "flex",
             alignItems: "center",
             gap: 0,
@@ -99,7 +99,7 @@ function KickoffStageOverlay() {
                     height: 2,
                     borderRadius: 1,
                     background: state === "pending"
-                      ? "#9CA3AF"
+                      ? "var(--th-text-muted)"
                       : "var(--th-success, #22c55e)",
                     transition: "background 0.3s ease",
                     margin: "0 4px",
@@ -125,7 +125,7 @@ function KickoffStageOverlay() {
                     /* Active: accent circle with spinner */
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      background: "#3B82F6",
+                      background: "var(--th-accent)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
                       boxShadow: "0 0 8px #3B82F6",
@@ -153,8 +153,8 @@ function KickoffStageOverlay() {
                     color: state === "done"
                       ? "var(--th-success, #22c55e)"
                       : state === "active"
-                        ? "#3B82F6"
-                        : "#9CA3AF",
+                        ? "var(--th-accent)"
+                        : "var(--th-text-muted)",
                     whiteSpace: "nowrap",
                     transition: "color 0.3s ease",
                   }}>

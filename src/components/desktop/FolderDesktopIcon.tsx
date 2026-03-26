@@ -210,7 +210,7 @@ export default function FolderDesktopIcon({
       <span style={{
         fontFamily: "var(--th-font-mono)",
         fontSize: 10,
-        color: "#111827",
+        color: "var(--th-text-primary)",
         textAlign: "center",
         maxWidth: 72,
         overflow: "hidden",
@@ -233,7 +233,7 @@ export default function FolderDesktopIcon({
             left: ctxPos.x,
             top: ctxPos.y,
             zIndex: 9999,
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
             border: "1px solid #E5E7EB",
             borderRadius: 0,
             minWidth: 160,
@@ -242,34 +242,34 @@ export default function FolderDesktopIcon({
           }}>
             <button
               onClick={() => { setCtxOpen(false); openFolder(folder.id); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "#111827", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#F9FAFB")}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "var(--th-text-primary)", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {t({ ko: "폴더 열기", en: "Open Folder", ja: "フォルダを開く", zh: "打开文件夹" })}
             </button>
-            <div style={{ height: 1, background: "#E5E7EB", margin: "2px 0" }} />
+            <div style={{ height: 1, background: "var(--th-border)", margin: "2px 0" }} />
             <button
               onClick={() => { setCtxOpen(false); onRename(folder); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "#111827", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#F9FAFB")}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "var(--th-text-primary)", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {t({ ko: "이름 변경", en: "Rename", ja: "名前を変更", zh: "重命名" })}
             </button>
             <button
               onClick={() => { setCtxOpen(false); onColorChange(folder); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "#111827", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#F9FAFB")}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "var(--th-text-primary)", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {t({ ko: "색상 변경", en: "Change Color", ja: "色を変更", zh: "更改颜色" })}
             </button>
-            <div style={{ height: 1, background: "#E5E7EB", margin: "2px 0" }} />
+            <div style={{ height: 1, background: "var(--th-border)", margin: "2px 0" }} />
             <button
               onClick={() => { setCtxOpen(false); onDelete(folder); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "#DC2626", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#F9FAFB")}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px", background: "transparent", border: "none", color: "var(--th-danger-text)", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {t({ ko: "폴더 삭제", en: "Delete Folder", ja: "フォルダを削除", zh: "删除文件夹" })}

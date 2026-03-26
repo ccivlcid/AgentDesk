@@ -57,16 +57,16 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
             className="flex items-center gap-4 text-left transition-all"
             style={{
               padding: "14px 16px",
-              border: `1.5px solid ${isSelected ? "#3B82F6" : "transparent"}`,
-              background: isSelected ? "rgba(245,158,11,0.06)" : "#F9FAFB",
+              border: `1.5px solid ${isSelected ? "var(--th-accent)" : "transparent"}`,
+              background: isSelected ? "rgba(245,158,11,0.06)" : "var(--th-bg-surface)",
               cursor: "pointer",
               borderRadius: 0,
             }}
             onMouseEnter={(e) => {
-              if (!isSelected) e.currentTarget.style.background = "#FFFFFF";
+              if (!isSelected) e.currentTarget.style.background = "var(--th-bg-elevated)";
             }}
             onMouseLeave={(e) => {
-              if (!isSelected) e.currentTarget.style.background = "#F9FAFB";
+              if (!isSelected) e.currentTarget.style.background = "var(--th-bg-surface)";
             }}
           >
             <span
@@ -86,7 +86,7 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
                 fontFamily: "var(--th-font-display)",
                 fontSize: "13px",
                 fontWeight: 600,
-                color: isSelected ? "#3B82F6" : "#111827",
+                color: isSelected ? "var(--th-accent)" : "var(--th-text-primary)",
                 lineHeight: 1.3,
               }}>
                 {cat.name_ko ?? cat.name}
@@ -96,7 +96,7 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
                   className="line-clamp-1"
                   style={{
                     fontSize: "11px",
-                    color: "#9CA3AF",
+                    color: "var(--th-text-muted)",
                     marginTop: 3,
                     lineHeight: 1.4,
                   }}
@@ -106,7 +106,7 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
               )}
             </div>
             {isSelected && (
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ flexShrink: 0, color: "#3B82F6" }}>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
               </svg>
             )}

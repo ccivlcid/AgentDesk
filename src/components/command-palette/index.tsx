@@ -127,7 +127,7 @@ export default function CommandPalette({
         position: "fixed",
         inset: 0,
         zIndex: 10100,
-        background: "rgba(0,0,0,0.4)",
+        background: "var(--th-modal-overlay)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         display: "flex",
@@ -143,12 +143,12 @@ export default function CommandPalette({
         tabIndex={-1}
         style={{
           width: "min(680px, 92vw)",
-          background: "#F9FAFB",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          background: "var(--th-bg-surface)",
+          backdropFilter: "var(--th-glass-blur) saturate(180%)",
+          WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
           border: "1px solid #D1D5DB",
           borderRadius: 22,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          boxShadow: "var(--th-glass-shadow-active)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}

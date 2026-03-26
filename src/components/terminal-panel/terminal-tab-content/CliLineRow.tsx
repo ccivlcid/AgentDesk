@@ -23,7 +23,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
         style={{
           fontFamily: mono,
           fontSize: 9,
-          color: "#9CA3AF",
+          color: "var(--th-text-muted)",
           opacity: 0.5,
           padding: "3px 0 3px 6px",
           borderLeft: "2px solid #E5E7EB",
@@ -51,7 +51,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
           headerRight={<LineBadge count={lineCount} color="#c4b5fd" />}
           defaultOpen={false}
         >
-          <pre style={{ fontFamily: mono, fontSize: 12, color: "#111827", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.65 }}>
+          <pre style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.65 }}>
             {highlight(text)}
           </pre>
         </ToolCard>
@@ -60,7 +60,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
 
     return (
       <div style={{ padding: "4px 0 4px 6px", borderLeft: "2px solid rgba(196,181,253,0.2)" }}>
-        <pre style={{ fontFamily: mono, fontSize: 12, color: "#111827", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.65 }}>
+        <pre style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.65 }}>
           {highlight(text)}
         </pre>
       </div>
@@ -210,15 +210,15 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
 
   if (line.raw.trim().startsWith("{")) {
     const rawTheme: ToolTheme = {
-      accent: "#9CA3AF",
+      accent: "var(--th-text-muted)",
       bg: "rgba(255,255,255,0.02)",
-      border: "#E5E7EB",
+      border: "var(--th-border)",
       icon: "{ }",
       label: "raw",
     };
     return (
       <ToolCard theme={rawTheme} defaultOpen={false}>
-        <pre style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.55 }}>
+        <pre style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.55 }}>
           {line.raw}
         </pre>
       </ToolCard>
@@ -232,7 +232,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
       style={{
         fontFamily: mono,
         fontSize: 12,
-        color: "#6B7280",
+        color: "var(--th-text-secondary)",
         margin: 0,
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",

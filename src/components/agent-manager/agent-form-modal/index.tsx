@@ -89,7 +89,7 @@ export default function AgentFormModal({
               gap: 8,
               flexShrink: 0,
               fontFamily: "var(--th-font-mono)",
-              background: "#F9FAFB",
+              background: "var(--th-bg-surface)",
             }}
           >
             {footerButtons}

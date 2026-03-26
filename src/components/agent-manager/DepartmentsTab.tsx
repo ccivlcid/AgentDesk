@@ -51,11 +51,11 @@ export default function DepartmentsTab({
           className="flex items-center gap-3 px-4 py-3"
           style={{
             borderRadius: 8,
-            background: "#F9FAFB",
+            background: "var(--th-bg-surface)",
             border: "1px solid #E5E7EB",
           }}
         >
-          <span className="text-sm" style={{ color: "#111827" }}>
+          <span className="text-sm" style={{ color: "var(--th-text-primary)" }}>
             {tr("순번이 변경되었습니다.", "Order has been changed.")}
           </span>
           <button
@@ -63,7 +63,7 @@ export default function DepartmentsTab({
             onClick={onSaveOrder}
             disabled={reorderSaving}
             className="ml-auto px-4 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ borderRadius: 6, background: "#3B82F6", color: "white" }}
+            style={{ borderRadius: 6, background: "var(--th-accent)", color: "white" }}
           >
             {reorderSaving ? tr("저장 중...", "Saving...") : tr("순번 저장", "Save Order")}
           </button>
@@ -71,7 +71,7 @@ export default function DepartmentsTab({
             type="button"
             onClick={onCancelOrder}
             className="px-3 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ borderRadius: 6, color: "#9CA3AF", background: "#F3F4F6" }}
+            style={{ borderRadius: 6, color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
           >
             {tr("취소", "Cancel")}
           </button>
@@ -94,18 +94,18 @@ export default function DepartmentsTab({
               onDrop={(e) => onDrop(dept.id, e)}
               onDragEnd={onDragEnd}
               className={`relative flex items-center gap-3 px-4 py-3 transition-all group ${isDragging ? "opacity-60" : ""}`}
-              style={{ borderRadius: 14, background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+              style={{ borderRadius: 14, background: "var(--th-bg-surface)", border: "1px solid #E5E7EB" }}
             >
               {showDropBefore && (
                 <div
                   className="pointer-events-none absolute left-2 right-2 top-0 h-0.5"
-                  style={{ background: "#3B82F6" }}
+                  style={{ background: "var(--th-accent)" }}
                 />
               )}
               {showDropAfter && (
                 <div
                   className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5"
-                  style={{ background: "#3B82F6" }}
+                  style={{ background: "var(--th-accent)" }}
                 />
               )}
 
@@ -115,7 +115,7 @@ export default function DepartmentsTab({
                   onClick={() => onMoveDept(index, -1)}
                   disabled={index === 0}
                   className="w-6 h-5 flex items-center justify-center text-xs transition-colors hover:opacity-80 disabled:opacity-20"
-                  style={{ color: "#9CA3AF" }}
+                  style={{ color: "var(--th-text-muted)" }}
                 >
                   ▲
                 </button>
@@ -124,7 +124,7 @@ export default function DepartmentsTab({
                   onClick={() => onMoveDept(index, 1)}
                   disabled={index === deptOrder.length - 1}
                   className="w-6 h-5 flex items-center justify-center text-xs transition-colors hover:opacity-80 disabled:opacity-20"
-                  style={{ color: "#9CA3AF" }}
+                  style={{ color: "var(--th-text-muted)" }}
                 >
                   ▼
                 </button>
@@ -139,7 +139,7 @@ export default function DepartmentsTab({
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm" style={{ color: "#111827" }}>
+                  <span className="font-semibold text-sm" style={{ color: "var(--th-text-primary)" }}>
                     {localeName(locale, dept)}
                   </span>
                   <span className="w-3 h-3 inline-block" style={{ borderRadius: "50%", background: dept.color }}></span>
@@ -151,13 +151,13 @@ export default function DepartmentsTab({
                   </span>
                 </div>
                 {dept.description && (
-                  <div className="text-xs mt-0.5 truncate" style={{ color: "#9CA3AF" }}>
+                  <div className="text-xs mt-0.5 truncate" style={{ color: "var(--th-text-muted)" }}>
                     {dept.description}
                   </div>
                 )}
               </div>
 
-              <code className="text-[10px] px-2 py-0.5 opacity-50 font-mono" style={{ borderRadius: 8, background: "#F3F4F6" }}>
+              <code className="text-[10px] px-2 py-0.5 opacity-50 font-mono" style={{ borderRadius: 8, background: "var(--th-bg-primary)" }}>
                 {dept.id}
               </code>
 
@@ -165,7 +165,7 @@ export default function DepartmentsTab({
                 type="button"
                 onClick={() => onEditDept(dept)}
                 className="px-3 py-1.5 text-xs font-medium font-mono transition-opacity opacity-0 group-hover:opacity-100 hover:opacity-90"
-                style={{ borderRadius: 8, color: "#9CA3AF", background: "#F3F4F6" }}
+                style={{ borderRadius: 8, color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
               >
                 {tr("편집", "Edit")}
               </button>
@@ -175,7 +175,7 @@ export default function DepartmentsTab({
       </div>
 
       {deptOrder.length === 0 && (
-        <div className="text-center py-16 text-sm" style={{ color: "#9CA3AF" }}>
+        <div className="text-center py-16 text-sm" style={{ color: "var(--th-text-muted)" }}>
           {tr("등록된 전문 분야가 없습니다.", "No specialties found.")}
         </div>
       )}

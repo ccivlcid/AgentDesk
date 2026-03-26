@@ -8,8 +8,8 @@ export const MONO_FONT = "var(--th-font-mono)";
 export const KBD_STYLE: CSSProperties = {
   fontFamily: MONO_FONT,
   fontSize: 10,
-  color: "#6B7280",
-  background: "#FFFFFF",
+  color: "var(--th-text-secondary)",
+  background: "var(--th-bg-elevated)",
   border: "1px solid #E5E7EB",
   borderRadius: 4,
   padding: "2px 6px",

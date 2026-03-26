@@ -22,7 +22,7 @@ export default function StageRail({ stage }: StageRailProps) {
       display: "flex",
       flexDirection: "column",
       width: 72,
-      background: "#FFFFFF",
+      background: "var(--th-bg-elevated)",
       borderRight: "1px solid rgba(0, 0, 0, 0.05)",
       padding: "16px 0",
       gap: 4,
@@ -32,20 +32,20 @@ export default function StageRail({ stage }: StageRailProps) {
         const isCurrent = s.id === stage;
         const isDone = activeIdx >= 0 && i < activeIdx;
 
-        let iconBg = "#F9FAFB";
-        let iconColor = "#9CA3AF";
-        let textColor = "#9CA3AF";
+        let iconBg = "var(--th-bg-surface)";
+        let iconColor = "var(--th-text-muted)";
+        let textColor = "var(--th-text-muted)";
         let borderLeftColor = "transparent";
 
         if (isCurrent) {
-          iconBg = "#EBF5FF";
-          iconColor = "#3B82F6";
-          textColor = "#3B82F6";
-          borderLeftColor = "#3B82F6";
+          iconBg = "var(--th-accent-glow)";
+          iconColor = "var(--th-accent)";
+          textColor = "var(--th-accent)";
+          borderLeftColor = "var(--th-accent)";
         } else if (isDone) {
           iconBg = "#ECFDF5";
-          iconColor = "#059669";
-          textColor = "#059669";
+          iconColor = "var(--th-success)";
+          textColor = "var(--th-success)";
         }
 
         return (

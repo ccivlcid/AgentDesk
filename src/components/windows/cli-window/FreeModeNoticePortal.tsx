@@ -25,7 +25,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
         alignItems: "center",
         justifyContent: "center",
         padding: 20,
-        background: "rgba(0,0,0,0.4)",
+        background: "var(--th-modal-overlay)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
       }}
@@ -41,7 +41,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          background: "#FFFFFF",
+          background: "var(--th-bg-elevated)",
           border: "1px solid #D1D5DB",
           borderRadius: 12,
           boxShadow:
@@ -63,7 +63,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
               top: 0,
               bottom: 0,
               width: 3,
-              background: "#3B82F6",
+              background: "var(--th-accent)",
               borderRadius: "12px 0 0 0",
               opacity: 0.85,
             }}
@@ -78,7 +78,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   fontSize: 16,
                   fontWeight: 600,
                   letterSpacing: "-0.02em",
-                  color: "#111827",
+                  color: "var(--th-text-primary)",
                   lineHeight: 1.3,
                 }}
               >
@@ -91,7 +91,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   fontSize: 12,
                   fontWeight: 400,
                   lineHeight: 1.65,
-                  color: "#9CA3AF",
+                  color: "var(--th-text-muted)",
                 }}
               >
                 {t({
@@ -117,16 +117,16 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                 border: "none",
                 borderRadius: 8,
                 background: "transparent",
-                color: "#9CA3AF",
+                color: "var(--th-text-muted)",
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#F3F4F6";
-                e.currentTarget.style.color = "#6B7280";
+                e.currentTarget.style.background = "var(--th-bg-primary)";
+                e.currentTarget.style.color = "var(--th-text-secondary)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "#9CA3AF";
+                e.currentTarget.style.color = "var(--th-text-muted)";
               }}
             >
               <IconClose />
@@ -139,7 +139,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             style={{
               borderRadius: 10,
               border: "1px solid #E5E7EB",
-              background: "#F9FAFB",
+              background: "var(--th-bg-surface)",
               overflow: "hidden",
             }}
           >
@@ -155,9 +155,9 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                 fontWeight: 700,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "#6B7280",
+                color: "var(--th-text-secondary)",
                 borderBottom: "1px solid #E5E7EB",
-                background: "#F9FAFB",
+                background: "var(--th-bg-surface)",
               }}
             >
               <span>{t({ ko: "기능", en: "Feature", ja: "機能", zh: "功能" })}</span>
@@ -178,9 +178,9 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   padding: "10px 14px",
                   fontFamily: "var(--th-font-body)",
                   fontSize: 12,
-                  color: "#111827",
+                  color: "var(--th-text-primary)",
                   borderBottom: i < rows.length - 1 ? "1px solid #E5E7EB" : "none",
-                  background: i % 2 === 1 ? "#F3F4F6" : "transparent",
+                  background: i % 2 === 1 ? "var(--th-bg-primary)" : "transparent",
                 }}
               >
                 <span style={{ lineHeight: 1.45, paddingRight: 8 }}>{row.label}</span>
@@ -189,7 +189,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: row.free ? "#059669" : "#9CA3AF",
+                    color: row.free ? "var(--th-success)" : "var(--th-text-muted)",
                     opacity: row.free ? 1 : 0.45,
                   }}
                 >
@@ -200,7 +200,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#059669",
+                    color: "var(--th-success)",
                   }}
                 >
                   <IconCheck />
@@ -219,7 +219,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             flexWrap: "wrap",
             padding: "14px 20px 18px",
             borderTop: "1px solid #E5E7EB",
-            background: "#F9FAFB",
+            background: "var(--th-bg-surface)",
           }}
         >
           <button
@@ -228,7 +228,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             style={{
               fontSize: 11,
               fontFamily: "var(--th-font-mono)",
-              color: "#9CA3AF",
+              color: "var(--th-text-muted)",
               background: "none",
               border: "none",
               cursor: "pointer",
@@ -236,13 +236,13 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
               letterSpacing: "0.02em",
               textDecoration: "underline",
               textUnderlineOffset: 3,
-              textDecorationColor: "#D1D5DB",
+              textDecorationColor: "var(--th-border-strong)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#6B7280";
+              e.currentTarget.style.color = "var(--th-text-secondary)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#9CA3AF";
+              e.currentTarget.style.color = "var(--th-text-muted)";
             }}
           >
             {t({ ko: "오늘 하루 안 보기", en: "Don't show today", ja: "今日は表示しない", zh: "今天不再显示" })}
@@ -254,8 +254,8 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
               fontSize: 12,
               fontFamily: "var(--th-font-mono)",
               fontWeight: 600,
-              color: "#F3F4F6",
-              background: "#111827",
+              color: "var(--th-bg-primary)",
+              background: "var(--th-text-primary)",
               border: "1px solid #D1D5DB",
               borderRadius: 8,
               cursor: "pointer",

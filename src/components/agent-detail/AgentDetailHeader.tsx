@@ -5,9 +5,9 @@ const mono = "var(--th-font-mono)";
 
 const STATUS_COLOR: Record<string, string> = {
   working: "#30d158",
-  idle:    "#9CA3AF",
-  break:   "#3B82F6",
-  offline: "#D1D5DB",
+  idle:    "var(--th-text-muted)",
+  break:   "var(--th-accent)",
+  offline: "var(--th-border-strong)",
 };
 
 const ROLE_LABEL: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
@@ -33,18 +33,18 @@ export default function AgentDetailHeader({ agent, department, isLight }: Props)
     offline: { ko: "오프",   en: "OFFLINE", ja: "オフライン", zh: "离线" },
   };
 
-  const statusColor = STATUS_COLOR[agent.status] ?? "#9CA3AF";
+  const statusColor = STATUS_COLOR[agent.status] ?? "var(--th-text-muted)";
   const roleEntry = ROLE_LABEL[agent.role];
   const isWorking = agent.status === "working";
 
-  const avatarBg     = "#F3F4F6";
-  const avatarBorder = "#E5E7EB";
-  const dotBorder    = "#FFFFFF";
-  const nameColor    = "#111827";
-  const roleBg       = "#F3F4F6";
-  const roleBorder   = "#E5E7EB";
-  const roleColor    = "#6B7280";
-  const metaColor    = "#9CA3AF";
+  const avatarBg     = "var(--th-bg-primary)";
+  const avatarBorder = "var(--th-border)";
+  const dotBorder    = "var(--th-bg-elevated)";
+  const nameColor    = "var(--th-text-primary)";
+  const roleBg       = "var(--th-bg-primary)";
+  const roleBorder   = "var(--th-border)";
+  const roleColor    = "var(--th-text-secondary)";
+  const metaColor    = "var(--th-text-muted)";
 
   return (
     <div style={{ padding: "18px 20px 16px" }}>

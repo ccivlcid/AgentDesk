@@ -176,9 +176,9 @@ export default function ControlCenter({
         onClick={() => setOpen((v) => !v)}
         title="Control Center"
         style={{
-          background: open ? "rgba(0,0,0,0.06)" : "none",
+          background: open ? "var(--th-hover-overlay)" : "none",
           border: "none",
-          color: open ? "#3B82F6" : "#9CA3AF",
+          color: open ? "var(--th-accent)" : "var(--th-text-muted)",
           cursor: "pointer",
           padding: "4px 6px",
           borderRadius: 6,
@@ -187,8 +187,8 @@ export default function ControlCenter({
           transition: "background 0.15s, color 0.15s",
           flexShrink: 0,
         }}
-        onMouseEnter={(e) => { if (!open) (e.currentTarget as HTMLButtonElement).style.color = "#111827"; }}
-        onMouseLeave={(e) => { if (!open) (e.currentTarget as HTMLButtonElement).style.color = "#9CA3AF"; }}
+        onMouseEnter={(e) => { if (!open) (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-primary)"; }}
+        onMouseLeave={(e) => { if (!open) (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
       >
         {/* 2×2 그리드 아이콘 — 활성 토글에 따라 불투명도 변경 */}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

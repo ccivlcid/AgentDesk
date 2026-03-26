@@ -69,7 +69,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         left: pos.x,
         top: pos.y,
         width: 480,
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         border: "1px solid #E5E7EB",
         borderRadius: 10,
         fontFamily: "var(--th-font-mono)",
@@ -77,7 +77,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         flexDirection: "column",
         overflow: "hidden",
         pointerEvents: "auto",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        boxShadow: "0 8px 32px var(--th-modal-overlay)",
       }}>
         {/* Title bar */}
         <div
@@ -88,7 +88,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
             gap: 10,
             padding: "10px 14px",
             borderBottom: "1px solid #E5E7EB",
-            background: "#F9FAFB",
+            background: "var(--th-bg-surface)",
             cursor: dragging ? "grabbing" : "grab",
             userSelect: "none",
             flexShrink: 0,
@@ -96,7 +96,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         >
           <TrafficLights onClose={onCancel} onMinimize={() => {}} onMaximize={() => {}} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: "#111827", fontWeight: 600 }}>
+            <div style={{ fontSize: 12, color: "var(--th-text-primary)", fontWeight: 600 }}>
               {t({ ko: "새 폴더 만들기", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" })}
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         <div style={{ padding: 24 }}>
           {/* Folder name */}
           <label style={{ display: "block", marginBottom: 12 }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+            <div style={{ fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
               {t({ ko: "폴더 이름", en: "Folder Name", ja: "フォルダ名", zh: "文件夹名称" })}
             </div>
             <input
@@ -118,10 +118,10 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               style={{
                 width: "100%",
                 boxSizing: "border-box",
-                background: "#FFFFFF",
+                background: "var(--th-bg-elevated)",
                 border: "1px solid #E5E7EB",
                 borderRadius: 0,
-                color: "#111827",
+                color: "var(--th-text-primary)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
                 padding: "7px 10px",
@@ -132,7 +132,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
 
           {/* Base path */}
           <label style={{ display: "block", marginBottom: 16 }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+            <div style={{ fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
               {t({ ko: "기본 경로", en: "Base Path", ja: "ベースパス", zh: "基础路径" })}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
@@ -144,10 +144,10 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); else if (e.key === "Escape") onCancel(); }}
                 style={{
                   flex: 1,
-                  background: "#FFFFFF",
+                  background: "var(--th-bg-elevated)",
                   border: "1px solid #E5E7EB",
                   borderRadius: 0,
-                  color: "#111827",
+                  color: "var(--th-text-primary)",
                   fontFamily: "var(--th-font-mono)",
                   fontSize: 11,
                   padding: "7px 10px",
@@ -161,7 +161,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                   background: "transparent",
                   border: "1px solid #E5E7EB",
                   borderRadius: 0,
-                  color: "#9CA3AF",
+                  color: "var(--th-text-muted)",
                   fontFamily: "var(--th-font-mono)",
                   fontSize: 9,
                   padding: "7px 10px",
@@ -176,7 +176,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
 
           {/* Color presets */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+            <div style={{ fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
               {t({ ko: "색상", en: "Color", ja: "カラー", zh: "颜色" })}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -206,7 +206,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 background: "transparent",
                 border: "1px solid #E5E7EB",
                 borderRadius: 0,
-                color: "#6B7280",
+                color: "var(--th-text-secondary)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
                 padding: "7px 16px",
@@ -219,10 +219,10 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               onClick={handleSubmit}
               disabled={!name.trim() || !basePath.trim()}
               style={{
-                background: (!name.trim() || !basePath.trim()) ? "#F9FAFB" : "#3B82F6",
+                background: (!name.trim() || !basePath.trim()) ? "var(--th-bg-surface)" : "var(--th-accent)",
                 border: "none",
                 borderRadius: 0,
-                color: (!name.trim() || !basePath.trim()) ? "#9CA3AF" : "#FFFFFF",
+                color: (!name.trim() || !basePath.trim()) ? "var(--th-text-muted)" : "var(--th-bg-elevated)",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 11,
                 padding: "7px 16px",

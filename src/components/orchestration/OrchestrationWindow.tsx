@@ -59,7 +59,7 @@ export default function OrchestrationWindow() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "#F3F4F6",
+        background: "var(--th-bg-primary)",
         fontFamily: mono,
         overflow: "hidden",
       }}>
@@ -83,7 +83,7 @@ export default function OrchestrationWindow() {
             <div style={{ flex: 1, overflow: "auto", padding: "24px 20px" }}>
               <div style={{
                 background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(20px)",
+                backdropFilter: "var(--th-glass-blur)",
                 border: "1px solid rgba(0, 0, 0, 0.08)",
                 borderRadius: 24,
                 padding: "24px 24px",

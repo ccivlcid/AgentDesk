@@ -54,7 +54,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
 
   if (!projectPath) {
     return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF", fontSize: 12, fontFamily: mono }}>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12, fontFamily: mono }}>
         {t({ ko: "프로젝트 경로가 설정되지 않았습니다", en: "No project path configured", ja: "パス未設定", zh: "未配置项目路径" })}
       </div>
     );
@@ -63,10 +63,10 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {/* Header bar */}
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0, background: "#FFFFFF" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0, background: "var(--th-bg-elevated)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, color: "#9CA3AF", fontFamily: mono, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               {projectPath}
             </div>
@@ -79,7 +79,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
             style={{
               display: "flex", alignItems: "center", gap: 6,
               fontSize: 12, fontWeight: 700, padding: "7px 16px",
-              background: opened ? "rgba(34,197,94,0.15)" : "#3B82F6",
+              background: opened ? "rgba(34,197,94,0.15)" : "var(--th-accent)",
               border: `1px solid ${opened ? "rgba(34,197,94,0.4)" : "transparent"}`,
               borderRadius: 6,
               color: opened ? "#22c55e" : "#000",
@@ -100,7 +100,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
       {/* Command reference section */}
       <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
         {loading && (
-          <div style={{ color: "#9CA3AF", fontSize: 11, fontFamily: mono }}>
+          <div style={{ color: "var(--th-text-muted)", fontSize: 11, fontFamily: mono }}>
             {t({ ko: "프로젝트 분석 중...", en: "Analyzing project...", ja: "解析中...", zh: "分析中..." })}
           </div>
         )}
@@ -111,13 +111,13 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
               <span style={{ fontSize: 20 }}>{runInfo.icon}</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: runInfo.color, fontFamily: mono }}>{runInfo.type}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", fontFamily: mono }}>{projectName}</div>
+                <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono }}>{projectName}</div>
               </div>
             </div>
 
             {runInfo.sections.map((section) => (
               <div key={section.title}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", fontFamily: mono, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
                   {section.title}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -127,15 +127,15 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
                       style={{
                         display: "flex", alignItems: "center", gap: 10,
                         padding: "8px 12px", borderRadius: 6,
-                        background: "#FFFFFF",
+                        background: "var(--th-bg-elevated)",
                         border: "1px solid #E5E7EB",
                       }}
                     >
-                      <code style={{ flex: 1, fontSize: 12, fontFamily: mono, color: "#111827", background: "none" }}>
+                      <code style={{ flex: 1, fontSize: 12, fontFamily: mono, color: "var(--th-text-primary)", background: "none" }}>
                         {c.cmd}
                       </code>
                       {c.description && (
-                        <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: mono, flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, flexShrink: 0 }}>
                           {c.description}
                         </span>
                       )}
@@ -144,9 +144,9 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
                         onClick={() => handleCopy(c.cmd)}
                         style={{
                           fontSize: 10, padding: "2px 8px", borderRadius: 4,
-                          background: copied === c.cmd ? "rgba(34,197,94,0.12)" : "#F9FAFB",
-                          border: `1px solid ${copied === c.cmd ? "rgba(34,197,94,0.3)" : "#E5E7EB"}`,
-                          color: copied === c.cmd ? "#22c55e" : "#9CA3AF",
+                          background: copied === c.cmd ? "rgba(34,197,94,0.12)" : "var(--th-bg-surface)",
+                          border: `1px solid ${copied === c.cmd ? "rgba(34,197,94,0.3)" : "var(--th-border)"}`,
+                          color: copied === c.cmd ? "#22c55e" : "var(--th-text-muted)",
                           cursor: "pointer", fontFamily: mono, flexShrink: 0,
                         }}
                       >
@@ -164,7 +164,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
 
         {!loading && !runInfo && (
           <div style={{ padding: "20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "#6B7280", fontFamily: mono }}>
+            <div style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono }}>
               {t({
                 ko: "프로젝트 타입을 자동으로 감지하지 못했습니다.\n터미널을 열고 직접 명령어를 입력하세요.",
                 en: "Could not auto-detect project type.\nOpen a terminal and enter commands manually.",
@@ -172,7 +172,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
                 zh: "无法自动检测项目类型。\n请打开终端手动输入命令。",
               })}
             </div>
-            <div style={{ fontSize: 10, color: "#9CA3AF", fontFamily: mono, lineHeight: 1.8 }}>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, lineHeight: 1.8 }}>
               {t({ ko: "지원 타입: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", en: "Supported: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", ja: "対応: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", zh: "支持: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make" })}
             </div>
           </div>

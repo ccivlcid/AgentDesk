@@ -23,7 +23,7 @@ export default function HeaderModalChrome({
       className="flex flex-shrink-0 items-center gap-3 py-2 pl-3 pr-4"
       style={{
         borderBottom: "1px solid #E5E7EB",
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         fontFamily: mono,
         borderTopLeftRadius: macOSStyle ? 10 : 0,
         borderTopRightRadius: macOSStyle ? 10 : 0,
@@ -33,14 +33,14 @@ export default function HeaderModalChrome({
       {macOSStyle ? (
         <TrafficLights onClose={onClose} />
       ) : (
-        <span style={{ color: "#3B82F6", fontWeight: 700, fontSize: "11px", flexShrink: 0 }}>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px", flexShrink: 0 }}>
           {sigil}
         </span>
       )}
 
       <span
         className="flex-1 truncate"
-        style={{ fontSize: "12px", fontWeight: 600, color: "#111827", letterSpacing: "0.02em" }}
+        style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-primary)", letterSpacing: "0.02em" }}
       >
         {title}
       </span>
@@ -57,7 +57,7 @@ export default function HeaderModalChrome({
               width: 28, height: 28,
               border: "1px solid #E5E7EB", background: "transparent",
               borderRadius: 0, fontFamily: mono, fontSize: "12px",
-              color: "#9CA3AF", cursor: "pointer",
+              color: "var(--th-text-muted)", cursor: "pointer",
             }}
             className="hover:!text-[#111827] hover:!border-[#D1D5DB] hover:!bg-[#F3F4F6]"
           >

@@ -18,9 +18,9 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
   const lightInputStyle: React.CSSProperties = { 
     borderRadius: 14, 
     padding: "12px 16px", 
-    background: "#F9FAFB", 
+    background: "var(--th-bg-surface)", 
     border: "1px solid #E5E7EB",
-    color: "#111827",
+    color: "var(--th-text-primary)",
     fontSize: "13px",
     transition: "all 0.2s"
   };
@@ -30,7 +30,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
       <section>
         {/* section header */}
         <div className="flex items-center gap-3 mb-8">
-          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10, color: "#3B82F6" }}>
+          <div style={{ padding: 6, background: "var(--th-accent-glow)", borderRadius: 10, color: "var(--th-accent)" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M3 9h18M9 21V9" />
@@ -68,8 +68,8 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
               value={form.defaultProvider}
               onChange={(e) => setForm({ ...form, defaultProvider: e.target.value as CliProvider })}
               style={lightInputStyle}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
             >
               <option value="claude">Claude Code</option>
               <option value="codex">Codex CLI</option>
@@ -86,8 +86,8 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
               value={form.language}
               onChange={(e) => setForm({ ...form, language: e.target.value as LocalSettings["language"] })}
               style={lightInputStyle}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
             >
               <option value="ko">{t({ ko: "한국어", en: "Korean", ja: "韓国語", zh: "韩语" })}</option>
               <option value="en">{t({ ko: "영어", en: "English", ja: "英語", zh: "英语" })}</option>
@@ -118,8 +118,8 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             borderRadius: 16, 
             fontSize: "12px",
             fontWeight: 800,
-            background: "#3B82F6",
-            color: "#FFFFFF",
+            background: "var(--th-accent)",
+            color: "var(--th-bg-elevated)",
             boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.2)"
           }}
         >

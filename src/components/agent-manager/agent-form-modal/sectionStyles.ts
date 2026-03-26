@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
 
 export const agentFormSelectStyle: CSSProperties = {
-  background: "#FFFFFF",
-  borderColor: "#E5E7EB",
-  color: "#111827",
+  background: "var(--th-bg-elevated)",
+  borderColor: "var(--th-border)",
+  color: "var(--th-text-primary)",
   borderRadius: 6,
 };
 
@@ -13,5 +13,5 @@ export const agentFormSectionLabelStyle: CSSProperties = {
   fontWeight: 700,
   letterSpacing: "0.1em",
   textTransform: "uppercase",
-  color: "#9CA3AF",
+  color: "var(--th-text-muted)",
 };

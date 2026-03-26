@@ -34,8 +34,8 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
                 border: active ? "1px solid var(--th-accent, #f59e0b)" : "1px solid #E5E7EB",
                 borderRadius: 0,
                 padding: "2px 6px",
-                background: active ? "rgba(245,158,11,0.1)" : "#F3F4F6",
-                color: active ? "#f59e0b" : "#9CA3AF",
+                background: active ? "rgba(245,158,11,0.1)" : "var(--th-bg-primary)",
+                color: active ? "#f59e0b" : "var(--th-text-muted)",
                 transition: "all 0.1s linear",
               }}
             >

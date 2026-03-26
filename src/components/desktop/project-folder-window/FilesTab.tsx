@@ -48,7 +48,7 @@ function FileNode({
           style={{ 
             display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", 
             paddingLeft: 12 + indent, cursor: "pointer", fontSize: 12, 
-            color: "#6B7280", border: "none", background: "none",
+            color: "var(--th-text-secondary)", border: "none", background: "none",
             width: "100%", textAlign: "left", transition: "all 0.2s"
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
@@ -82,8 +82,8 @@ function FileNode({
         display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "6px 12px",
         paddingLeft: 12 + indent + 22, fontSize: 12, border: "none", cursor: "pointer", textAlign: "left",
         transition: "all 0.2s", borderRadius: 8, margin: "1px 0",
-        background: isSelected ? "#EBF5FF" : "transparent",
-        color: isSelected ? "#111827" : "#9CA3AF",
+        background: isSelected ? "var(--th-accent-glow)" : "transparent",
+        color: isSelected ? "var(--th-text-primary)" : "var(--th-text-muted)",
         boxShadow: isSelected ? "inset 0 0 0 1px #BFDBFE" : "none"
       }}
       onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
@@ -160,16 +160,16 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
         borderBottom: "1px solid #E5E7EB", background: "rgba(255,255,255,0.01)" 
       }}>
         <div style={{ display: "flex", gap: 4 }}>
-          <button style={{ padding: 6, background: "none", border: "none", color: "#9CA3AF", cursor: "pointer" }}><ArrowLeft size={16} /></button>
-          <button style={{ padding: 6, background: "none", border: "none", color: "#9CA3AF", cursor: "pointer" }}><ArrowRight size={16} /></button>
-          <button style={{ padding: 6, background: "none", border: "none", color: "#9CA3AF", cursor: "pointer" }}><ArrowUp size={16} /></button>
+          <button style={{ padding: 6, background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer" }}><ArrowLeft size={16} /></button>
+          <button style={{ padding: 6, background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer" }}><ArrowRight size={16} /></button>
+          <button style={{ padding: 6, background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer" }}><ArrowUp size={16} /></button>
         </div>
         
         {/* Address Bar */}
         <div style={{ 
           flex: 1, display: "flex", alignItems: "center", gap: 10, 
           background: "rgba(0,0,0,0.2)", border: "1px solid #D1D5DB", 
-          borderRadius: 10, padding: "0 12px", height: 32, fontSize: 12, color: "#6B7280" 
+          borderRadius: 10, padding: "0 12px", height: 32, fontSize: 12, color: "var(--th-text-secondary)" 
         }}>
           <HardDrive size={14} className="opacity-50" />
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentDir || projectName}</span>
@@ -177,10 +177,10 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 1, height: 20, background: "#E5E7EB" }} />
+          <div style={{ width: 1, height: 20, background: "var(--th-border)" }} />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid #E5E7EB", borderRadius: 8, padding: "0 10px", height: 32 }}>
             <Search size={14} className="opacity-50" />
-            <input placeholder="Search" style={{ background: "none", border: "none", outline: "none", color: "#111827", fontSize: 11, width: 100 }} />
+            <input placeholder="Search" style={{ background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", fontSize: 11, width: 100 }} />
           </div>
         </div>
       </div>
@@ -193,7 +193,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
           display: "flex", flexDirection: "column", overflow: "hidden", background: "rgba(0,0,0,0.1)"
         }}>
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 8px" }} className="pm-shelf-scroll">
-            {loading && <div style={{ padding: 20, textAlign: "center", fontSize: 11, color: "#9CA3AF" }}>Scanning...</div>}
+            {loading && <div style={{ padding: 20, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)" }}>Scanning...</div>}
             {tree.map((node, i) => (
               <FileNode key={i} node={node} depth={0} selectedPath={selectedFile?.path ?? null} onSelect={handleSelectFile} />
             ))}
@@ -211,13 +211,13 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
                 <FileText size={16} className="text-blue-400" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{selectedFile.name}</div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>{selectedFile.path}</div>
+                  <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{selectedFile.path}</div>
                 </div>
                 <button
                   onClick={handleOpenInOS}
                   style={{
                     height: 30, padding: "0 12px", borderRadius: 8, background: "rgba(255,255,255,0.03)", 
-                    border: "1px solid #D1D5DB", color: "#111827",
+                    border: "1px solid #D1D5DB", color: "var(--th-text-primary)",
                     fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6
                   }}
                 >
@@ -228,11 +228,11 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
 
               <div style={{ flex: 1, overflowY: "auto", padding: "24px" }} className="pm-shelf-scroll">
                 {fileLoading ? (
-                  <div style={{ color: "#9CA3AF", fontSize: 12 }}>Loading file...</div>
+                  <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>Loading file...</div>
                 ) : IMAGE_EXTENSIONS.has(getExt(selectedFile.name)) ? (
                   <img src={`/api/projects/file-content?path=${encodeURIComponent(selectedFile.path)}&raw=1`} style={{ maxWidth: "100%", borderRadius: 12, boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }} />
                 ) : (
-                  <pre style={{ fontSize: 12, lineHeight: 1.7, color: "#111827", margin: 0, fontFamily: "var(--th-font-mono)" }}>
+                  <pre style={{ fontSize: 12, lineHeight: 1.7, color: "var(--th-text-primary)", margin: 0, fontFamily: "var(--th-font-mono)" }}>
                     <code>{fileContent}</code>
                   </pre>
                 )}

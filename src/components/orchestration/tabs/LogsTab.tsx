@@ -92,10 +92,10 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
         gap: 2,
         flexShrink: 0,
         overflow: "auto",
-        background: "#F9FAFB",
+        background: "var(--th-bg-surface)",
         borderRadius: "12px 0 0 12px",
       }}>
-        <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 6, textTransform: "uppercase" as const }}>
+        <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 6, textTransform: "uppercase" as const }}>
           Active Agents
         </span>
         {agents.map((agent) => {
@@ -112,10 +112,10 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
                 padding: "8px 10px",
                 fontFamily: mono,
                 fontSize: 11,
-                color: isSelected ? "#3B82F6" : isWorking ? "#111827" : "#6B7280",
+                color: isSelected ? "var(--th-accent)" : isWorking ? "var(--th-text-primary)" : "var(--th-text-secondary)",
                 fontWeight: isSelected ? 700 : 500,
                 cursor: "pointer",
-                background: isSelected ? "#EBF5FF" : "transparent",
+                background: isSelected ? "var(--th-accent-glow)" : "transparent",
                 borderRadius: 10,
                 transition: "all 0.2s",
               }}
@@ -123,7 +123,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             >
               <span style={{
                 width: 7, height: 7, borderRadius: "50%",
-                background: isWorking ? "#059669" : "#D1D5DB",
+                background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
                 boxShadow: isWorking ? "0 0 6px rgba(5,150,105,0.3)" : "none",
                 flexShrink: 0,
               }} />
@@ -135,8 +135,8 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
                   fontFamily: mono,
                   fontSize: 9,
                   fontWeight: 800,
-                  color: "#DC2626",
-                  background: "#FEF2F2",
+                  color: "var(--th-danger-text)",
+                  background: "var(--th-danger-bg)",
                   border: "1px solid #FECACA",
                   padding: "1px 5px",
                   borderRadius: 6,
@@ -159,13 +159,13 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           gap: 16,
           padding: "8px 16px",
           borderBottom: "1px solid #E5E7EB",
-          background: "#F9FAFB",
+          background: "var(--th-bg-surface)",
           fontFamily: mono,
           fontSize: 10,
         }}>
-          <LogMetricBadge label="TOKEN_THROUGHPUT" value={formatTokenCount(totalTokens)} color="#111827" />
-          <LogMetricBadge label="ERR_RATE" value={`${errRate}%`} color={parseFloat(errRate) > 5 ? "#DC2626" : "#059669"} />
-          <LogMetricBadge label="ACTIVE_THREADS" value={`${agents.filter((a) => a.status === "working").length} Active`} color="#3B82F6" />
+          <LogMetricBadge label="TOKEN_THROUGHPUT" value={formatTokenCount(totalTokens)} color="var(--th-text-primary)" />
+          <LogMetricBadge label="ERR_RATE" value={`${errRate}%`} color={parseFloat(errRate) > 5 ? "var(--th-danger-text)" : "var(--th-success)"} />
+          <LogMetricBadge label="ACTIVE_THREADS" value={`${agents.filter((a) => a.status === "working").length} Active`} color="var(--th-accent)" />
         </div>
 
         {/* Toolbar */}
@@ -177,18 +177,18 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           borderBottom: "1px solid #E5E7EB",
           fontFamily: mono,
           fontSize: 10,
-          color: "#6B7280",
+          color: "var(--th-text-secondary)",
         }}>
           <button
             type="button"
             onClick={handleToggleErrorFirst}
             style={{
               fontFamily: mono, fontSize: 10, cursor: "pointer",
-              background: errorFirstMode ? "#FEF2F2" : "transparent",
+              background: errorFirstMode ? "var(--th-danger-bg)" : "transparent",
               border: errorFirstMode ? "1px solid #FECACA" : "1px solid transparent",
               borderRadius: 8,
               padding: "3px 10px",
-              color: errorFirstMode ? "#DC2626" : "#9CA3AF",
+              color: errorFirstMode ? "var(--th-danger-text)" : "var(--th-text-muted)",
               fontWeight: errorFirstMode ? 800 : 500,
               transition: "all 0.2s",
             }}
@@ -196,9 +196,9 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             ERROR_FIRST: {errorFirstMode ? "ON" : "OFF"}
           </button>
 
-          <span style={{ color: "#E5E7EB" }}>|</span>
+          <span style={{ color: "var(--th-border)" }}>|</span>
 
-          <span style={{ color: "#9CA3AF", fontWeight: 600 }}>LEVEL:</span>
+          <span style={{ color: "var(--th-text-muted)", fontWeight: 600 }}>LEVEL:</span>
           {(["ALL", "ERROR", "WARN", "INFO", "DEBUG"] as LogLevel[]).map((lvl) => (
             <button
               key={lvl}
@@ -206,9 +206,9 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               onClick={() => setLevelFilter(lvl)}
               style={{
                 fontFamily: mono, fontSize: 9, cursor: "pointer",
-                background: levelFilter === lvl ? "#EBF5FF" : "transparent",
+                background: levelFilter === lvl ? "var(--th-accent-glow)" : "transparent",
                 border: levelFilter === lvl ? "1px solid #BFDBFE" : "1px solid transparent",
-                color: levelFilter === lvl ? "#3B82F6" : "#9CA3AF",
+                color: levelFilter === lvl ? "var(--th-accent)" : "var(--th-text-muted)",
                 padding: "2px 8px",
                 fontWeight: levelFilter === lvl ? 800 : 500,
                 borderRadius: 6,
@@ -222,7 +222,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           <div style={{ flex: 1 }} />
 
           {agentTask && (
-            <span style={{ color: "#3B82F6", fontWeight: 600, fontSize: 10 }}>
+            <span style={{ color: "var(--th-accent)", fontWeight: 600, fontSize: 10 }}>
               TASK: {agentTask.title.slice(0, 30)}
             </span>
           )}
@@ -234,7 +234,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               fontFamily: mono, fontSize: 10, cursor: "pointer",
               background: autoScroll ? "#ECFDF5" : "transparent",
               border: autoScroll ? "1px solid #A7F3D0" : "1px solid #E5E7EB",
-              color: autoScroll ? "#059669" : "#9CA3AF",
+              color: autoScroll ? "var(--th-success)" : "var(--th-text-muted)",
               fontWeight: autoScroll ? 700 : 500,
               padding: "2px 10px",
               borderRadius: 6,
@@ -253,18 +253,18 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             padding: 16,
             fontFamily: mono,
             fontSize: 11,
-            color: "#6B7280",
+            color: "var(--th-text-secondary)",
             overflow: "auto",
           }}
         >
           {!selectedAgentId && (
-            <div style={{ color: "#9CA3AF", textAlign: "center", padding: 32, fontSize: 12 }}>
+            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
               Select an agent to view execution logs...
             </div>
           )}
 
           {selectedAgentId && displayLogs.length === 0 && !reportContent && (
-            <div style={{ color: "#9CA3AF", textAlign: "center", padding: 32, fontSize: 12 }}>
+            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
               Awaiting log data...
             </div>
           )}
@@ -273,13 +273,13 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           {errorFirstMode && displayLogs.some((l) => l.level === "ERROR") && (
             <div style={{
               border: "1px solid #FECACA",
-              background: "#FEF2F2",
+              background: "var(--th-danger-bg)",
               borderRadius: 14,
               padding: "12px 16px",
               marginBottom: 16,
             }}>
-              <div style={{ fontWeight: 800, color: "#DC2626", fontSize: 10, letterSpacing: "0.05em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+              <div style={{ fontWeight: 800, color: "var(--th-danger-text)", fontSize: 10, letterSpacing: "0.05em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-danger-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 CRITICAL ERRORS
               </div>
               {displayLogs.filter((l) => l.level === "ERROR").map((entry) => (
@@ -291,17 +291,17 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           {/* Task report from file */}
           {reportContent && (
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 800, color: "#3B82F6", fontSize: 10, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+              <div style={{ fontWeight: 800, color: "var(--th-accent)", fontSize: 10, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
                 PM Review Report
               </div>
               <div style={{
-                background: "#F9FAFB",
+                background: "var(--th-bg-surface)",
                 border: "1px solid #E5E7EB",
                 borderRadius: 14,
                 padding: "14px 18px",
                 whiteSpace: "pre-wrap",
                 fontSize: 11,
-                color: "#6B7280",
+                color: "var(--th-text-secondary)",
                 lineHeight: 1.6,
                 maxHeight: 200,
                 overflowY: "auto",
@@ -326,9 +326,9 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           gap: 8,
           padding: "10px 16px",
           borderTop: "1px solid #E5E7EB",
-          background: "#F9FAFB",
+          background: "var(--th-bg-surface)",
         }}>
-          <span style={{ fontFamily: mono, fontSize: 12, color: "#9CA3AF" }}>/</span>
+          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)" }}>/</span>
           <input
             type="text"
             placeholder="Global search or command..."
@@ -339,19 +339,19 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               outline: "none",
               fontFamily: mono,
               fontSize: 11,
-              color: "#111827",
+              color: "var(--th-text-primary)",
             }}
           />
           <button type="button" style={{
-            fontFamily: mono, fontSize: 10, fontWeight: 700, color: "#FFFFFF",
-            background: "#3B82F6", border: "none",
+            fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--th-bg-elevated)",
+            background: "var(--th-accent)", border: "none",
             padding: "5px 14px", cursor: "pointer",
             borderRadius: 8,
           }}>
             EXECUTE
           </button>
           <button type="button" style={{
-            fontFamily: mono, fontSize: 10, fontWeight: 600, color: "#6B7280",
+            fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-secondary)",
             background: "transparent", border: "1px solid #E5E7EB",
             padding: "4px 14px", cursor: "pointer",
             borderRadius: 8,
@@ -369,7 +369,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
 function LogMetricBadge({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <span style={{ fontFamily: mono, fontSize: 10 }}>
-      <span style={{ color: "#9CA3AF", marginRight: 6, fontWeight: 600, letterSpacing: "0.05em" }}>{label}</span>
+      <span style={{ color: "var(--th-text-muted)", marginRight: 6, fontWeight: 600, letterSpacing: "0.05em" }}>{label}</span>
       <span style={{ color, fontWeight: 700 }}>{value}</span>
     </span>
   );
@@ -449,15 +449,15 @@ function filterByLevel(entries: ClassifiedLogEntry[], level: LogLevel): Classifi
 /* -- Log entry row -- */
 
 const LEVEL_COLORS: Record<string, { text: string; bg: string }> = {
-  ERROR: { text: "#DC2626", bg: "#FEF2F2" },
+  ERROR: { text: "var(--th-danger-text)", bg: "var(--th-danger-bg)" },
   WARN: { text: "#D97706", bg: "#FFFBEB" },
-  INFO: { text: "#3B82F6", bg: "#EBF5FF" },
-  DEBUG: { text: "#9CA3AF", bg: "#F9FAFB" },
+  INFO: { text: "var(--th-accent)", bg: "var(--th-accent-glow)" },
+  DEBUG: { text: "var(--th-text-muted)", bg: "var(--th-bg-surface)" },
 };
 
 function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
   const ts = new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const levelStyle = LEVEL_COLORS[entry.level] ?? { text: "#6B7280", bg: "transparent" };
+  const levelStyle = LEVEL_COLORS[entry.level] ?? { text: "var(--th-text-secondary)", bg: "transparent" };
   const isError = entry.level === "ERROR";
 
   return (
@@ -468,7 +468,7 @@ function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
       fontFamily: mono,
       fontSize: 11,
     }}>
-      <span style={{ color: "#9CA3AF", width: 56, flexShrink: 0 }}>{ts}</span>
+      <span style={{ color: "var(--th-text-muted)", width: 56, flexShrink: 0 }}>{ts}</span>
       <span style={{
         color: levelStyle.text,
         fontWeight: 800,
@@ -481,7 +481,7 @@ function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
         {entry.level}
       </span>
       {entry.fromState && entry.toState ? (
-        <span style={{ color: "#6B7280", flexShrink: 0 }}>
+        <span style={{ color: "var(--th-text-secondary)", flexShrink: 0 }}>
           {entry.fromState}
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 4px", verticalAlign: "middle" }}>
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -490,7 +490,7 @@ function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
         </span>
       ) : null}
       <span style={{
-        color: isError ? "#DC2626" : "#6B7280",
+        color: isError ? "var(--th-danger-text)" : "var(--th-text-secondary)",
         fontWeight: isError ? 600 : 400,
         flex: 1,
         overflow: "hidden",

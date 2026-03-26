@@ -91,12 +91,12 @@ export default function BurndownChart({ projectId, t }: Props) {
   }, [data]);
 
   if (loading) {
-    return <div className="text-xs font-mono py-4 text-center" style={{ color: "#9CA3AF" }}>Loading...</div>;
+    return <div className="text-xs font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>Loading...</div>;
   }
 
   if (!chartData || data.length < 2) {
     return (
-      <div className="text-xs font-mono py-4 text-center" style={{ color: "#9CA3AF" }}>
+      <div className="text-xs font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
         {tr(t, "데이터가 부족합니다", "Not enough data")}
       </div>
     );
@@ -107,7 +107,7 @@ export default function BurndownChart({ projectId, t }: Props) {
       {/* Legend */}
       <div className="flex gap-4 text-[10px]">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5 rounded" style={{ background: "#9CA3AF" }} />
+          <span className="w-3 h-0.5 rounded" style={{ background: "var(--th-text-muted)" }} />
           {tr(t, "전체", "Total")}
         </span>
         <span className="flex items-center gap-1">
@@ -174,7 +174,7 @@ export default function BurndownChart({ projectId, t }: Props) {
 
       {/* Stats */}
       {chartData.lastPoint && (
-        <div className="flex gap-4 text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+        <div className="flex gap-4 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
           <span>{tr(t, "전체", "Total")}: {chartData.lastPoint.total}</span>
           <span style={{ color: "rgb(52,211,153)" }}>{tr(t, "완료", "Done")}: {chartData.lastPoint.done}</span>
           <span style={{ color: "rgb(251,191,36)" }}>{tr(t, "잔여", "Rem")}: {chartData.lastPoint.remaining}</span>

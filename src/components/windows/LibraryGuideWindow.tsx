@@ -23,7 +23,7 @@ export default function LibraryGuideWindow() {
           fontFamily: sysFont,
           fontSize: 13,
           lineHeight: 1.75,
-          color: "#6B7280",
+          color: "var(--th-text-secondary)",
           margin: "0 0 22px",
         }}>
           {t(entry.description)}
@@ -36,7 +36,7 @@ export default function LibraryGuideWindow() {
           fontWeight: 700,
           letterSpacing: "0.07em",
           textTransform: "uppercase",
-          color: "#9CA3AF",
+          color: "var(--th-text-muted)",
           marginBottom: 10,
         }}>
           {t({ ko: "탭별 기능", en: "What each tab does", ja: "タブ別機能", zh: "各选项卡功能" })}
@@ -52,7 +52,7 @@ export default function LibraryGuideWindow() {
                 alignItems: "flex-start",
                 gap: 12,
                 padding: "9px 14px",
-                background: "rgba(0,0,0,0.03)",
+                background: "var(--th-hover-overlay-subtle)",
                 border: "1px solid #E5E7EB",
                 borderLeft: "3px solid #3B82F6",
                 borderRadius: 7,
@@ -62,7 +62,7 @@ export default function LibraryGuideWindow() {
                 fontFamily: mono,
                 fontSize: 10,
                 fontWeight: 700,
-                color: "#3B82F6",
+                color: "var(--th-accent)",
                 flexShrink: 0,
                 marginTop: 2,
                 minWidth: 18,
@@ -73,7 +73,7 @@ export default function LibraryGuideWindow() {
                 fontFamily: sysFont,
                 fontSize: 12,
                 lineHeight: 1.65,
-                color: "#6B7280",
+                color: "var(--th-text-secondary)",
               }}>
                 {t(tip)}
               </span>

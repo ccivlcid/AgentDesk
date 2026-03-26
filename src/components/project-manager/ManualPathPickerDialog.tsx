@@ -98,7 +98,7 @@ export default function ManualPathPickerDialog({
       {/* Toolbar: current path + nav buttons */}
       <div
         className="flex flex-shrink-0 items-center gap-2 px-4 py-2"
-        style={{ borderBottom: "1px solid #E5E7EB", background: "#FFFFFF" }}
+        style={{ borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
       >
         <button
           type="button"
@@ -106,7 +106,7 @@ export default function ManualPathPickerDialog({
           onClick={() => { if (!manualPathParent) return; void onLoadEntries(manualPathParent); }}
           title={t({ ko: "상위 폴더", en: "Up", ja: "上位フォルダ", zh: "上级目录" })}
           className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75"
-          style={{ ...mono, fontSize: 14, lineHeight: 1, background: "none", border: "none", color: "#6B7280", cursor: "pointer", padding: "2px 4px" }}
+          style={{ ...mono, fontSize: 14, lineHeight: 1, background: "none", border: "none", color: "var(--th-text-secondary)", cursor: "pointer", padding: "2px 4px" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
         </button>
@@ -116,7 +116,7 @@ export default function ManualPathPickerDialog({
           onClick={() => void onLoadEntries(manualPathCurrent || undefined)}
           title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
           className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75"
-          style={{ ...mono, fontSize: 13, lineHeight: 1, background: "none", border: "none", color: "#6B7280", cursor: "pointer", padding: "2px 4px" }}
+          style={{ ...mono, fontSize: 13, lineHeight: 1, background: "none", border: "none", color: "var(--th-text-secondary)", cursor: "pointer", padding: "2px 4px" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
         </button>
@@ -125,8 +125,8 @@ export default function ManualPathPickerDialog({
           style={{
             ...mono,
             fontSize: 11,
-            color: "#111827",
-            background: "#FFFFFF",
+            color: "var(--th-text-primary)",
+            background: "var(--th-bg-elevated)",
             border: "1px solid #E5E7EB",
             borderRadius: 4,
           }}
@@ -139,16 +139,16 @@ export default function ManualPathPickerDialog({
           onClick={() => { setCreating(true); setNewFolderName(""); setCreateError(null); }}
           title={t({ ko: "새 폴더 만들기", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" })}
           className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75 flex items-center gap-1"
-          style={{ ...mono, fontSize: 11, background: "none", border: "1px solid #E5E7EB", borderRadius: 4, color: "#6B7280", cursor: "pointer", padding: "3px 7px" }}
+          style={{ ...mono, fontSize: 11, background: "none", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-secondary)", cursor: "pointer", padding: "3px 7px" }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="12" y1="11" x2="12" y2="17" /><line x1="9" y1="14" x2="15" y2="14" /></svg>
         </button>
       </div>
 
       {/* File list */}
-      <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "#FFFFFF" }}>
+      <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "var(--th-bg-elevated)" }}>
         {creating && (
-          <div style={{ padding: "6px 12px", borderBottom: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+          <div style={{ padding: "6px 12px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
               <input
@@ -160,20 +160,20 @@ export default function ManualPathPickerDialog({
                   if (e.key === "Escape") handleCancelCreate();
                 }}
                 placeholder={t({ ko: "폴더 이름", en: "Folder name", ja: "フォルダ名", zh: "文件夹名称" })}
-                style={{ ...mono, flex: 1, fontSize: 12, padding: "3px 8px", background: "#FFFFFF", border: "1px solid #3B82F6", borderRadius: 4, color: "#111827", outline: "none" }}
+                style={{ ...mono, flex: 1, fontSize: 12, padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid #3B82F6", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
               />
               <button
                 type="button"
                 onClick={() => void handleConfirmCreate()}
                 disabled={createBusy || !newFolderName.trim()}
-                style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "#3B82F6", color: "var(--th-accent-text, #F3F4F6)", border: "none", borderRadius: 4, cursor: "pointer", opacity: createBusy || !newFolderName.trim() ? 0.4 : 1 }}
+                style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "var(--th-accent)", color: "var(--th-accent-text, #F3F4F6)", border: "none", borderRadius: 4, cursor: "pointer", opacity: createBusy || !newFolderName.trim() ? 0.4 : 1 }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               </button>
               <button
                 type="button"
                 onClick={handleCancelCreate}
-                style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "none", border: "1px solid #E5E7EB", borderRadius: 4, color: "#9CA3AF", cursor: "pointer" }}
+                style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "none", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-muted)", cursor: "pointer" }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
@@ -185,7 +185,7 @@ export default function ManualPathPickerDialog({
         )}
         {manualPathLoading ? (
           <div className="flex items-center justify-center py-12">
-            <p style={{ ...mono, fontSize: 11, color: "#9CA3AF" }}>
+            <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
               {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
             </p>
           </div>
@@ -195,7 +195,7 @@ export default function ManualPathPickerDialog({
           </div>
         ) : manualPathEntries.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <p style={{ ...mono, fontSize: 11, color: "#9CA3AF" }}>
+            <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
               {t({ ko: "하위 폴더가 없습니다", en: "No subdirectories", ja: "サブフォルダなし", zh: "无子目录" })}
             </p>
           </div>
@@ -214,14 +214,14 @@ export default function ManualPathPickerDialog({
                 borderBottom: i < manualPathEntries.length - 1 ? "1px solid #E5E7EB" : "none",
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "#3B82F6" }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
-              <span style={{ ...mono, fontSize: 12, color: "#111827", fontWeight: 500 }}>{entry.name}</span>
-              <span className="ml-auto truncate" style={{ ...mono, fontSize: 10, color: "#9CA3AF" }}>{entry.path}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "var(--th-accent)" }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+              <span style={{ ...mono, fontSize: 12, color: "var(--th-text-primary)", fontWeight: 500 }}>{entry.name}</span>
+              <span className="ml-auto truncate" style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>{entry.path}</span>
             </button>
           ))
         )}
         {manualPathTruncated && (
-          <p className="px-4 py-2" style={{ ...mono, fontSize: 10, color: "#9CA3AF", borderTop: "1px solid #E5E7EB" }}>
+          <p className="px-4 py-2" style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", borderTop: "1px solid #E5E7EB" }}>
             {t({ ko: "상위 300개만 표시", en: "Showing first 300 entries", ja: "先頭300件のみ表示", zh: "仅显示前300项" })}
           </p>
         )}
@@ -230,16 +230,16 @@ export default function ManualPathPickerDialog({
       {/* Footer */}
       <div
         className="flex flex-shrink-0 items-center justify-between px-4 py-3"
-        style={{ borderTop: "1px solid #E5E7EB", background: "#FFFFFF" }}
+        style={{ borderTop: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
       >
-        <p style={{ ...mono, fontSize: 10, color: "#9CA3AF" }}>
+        <p style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>
           {t({ ko: "선택할 폴더로 이동 후 아래 버튼을 누르세요", en: "Navigate to folder, then confirm", ja: "フォルダに移動して確認", zh: "导航到文件夹后确认" })}
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onClose}
-            style={{ ...mono, fontSize: 11, padding: "5px 12px", borderRadius: 4, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF", cursor: "pointer" }}
+            style={{ ...mono, fontSize: 11, padding: "5px 12px", borderRadius: 4, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "pointer" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -253,7 +253,7 @@ export default function ManualPathPickerDialog({
               fontWeight: 700,
               padding: "5px 14px",
               borderRadius: 4,
-              background: "#3B82F6",
+              background: "var(--th-accent)",
               color: "var(--th-accent-text, #F3F4F6)",
               cursor: "pointer",
               opacity: manualPathCurrent ? 1 : 0.4,

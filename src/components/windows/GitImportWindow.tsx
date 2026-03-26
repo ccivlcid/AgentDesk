@@ -118,14 +118,14 @@ function TrendingCard({
         border: "1px solid #E5E7EB",
         borderRadius: 16,
         padding: "14px 16px",
-        background: "#FFFFFF",
+        background: "var(--th-bg-elevated)",
         display: "flex",
         flexDirection: "column",
         gap: 8,
         transition: "border-color 0.15s",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#D1D5DB"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--th-border-strong)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
     >
       {/* top row: stars + trend */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
@@ -133,13 +133,13 @@ function TrendingCard({
           <StarIcon size={12} /> {formatNum(repo.stars)}
         </span>
         {repo.stars_today > 0 && (
-          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#059669", fontSize: 10, fontWeight: 600 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--th-success)", fontSize: 10, fontWeight: 600 }}>
             <TrendUpIcon /> +{formatNum(repo.stars_today)}
           </span>
         )}
         {repo.language && (
-          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, color: "#9CA3AF", fontSize: 10 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: repo.language_color ?? "#9CA3AF", flexShrink: 0 }} />
+          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, color: "var(--th-text-muted)", fontSize: 10 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: repo.language_color ?? "var(--th-text-muted)", flexShrink: 0 }} />
             {repo.language}
           </span>
         )}
@@ -147,10 +147,10 @@ function TrendingCard({
 
       {/* name */}
       <div>
-        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
+        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)", lineHeight: 1.2 }}>
           {repo.name}
         </div>
-        <div style={{ ...mono, fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
+        <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginTop: 1 }}>
           {repo.owner}
         </div>
       </div>
@@ -161,7 +161,7 @@ function TrendingCard({
           style={{
             ...mono,
             fontSize: 11,
-            color: "#6B7280",
+            color: "var(--th-text-secondary)",
             lineHeight: 1.4,
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -177,7 +177,7 @@ function TrendingCard({
       {/* download button */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto", gap: 8 }}>
         {isDone ? (
-          <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "#059669", display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "var(--th-success)", display: "flex", alignItems: "center", gap: 4 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
@@ -185,7 +185,7 @@ function TrendingCard({
           </span>
         ) : isInstalled ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "flex-end" }}>
-            <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "#9CA3AF" }}>
+            <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-muted)" }}>
               {t({ ko: "설치됨", en: "Installed", ja: "インストール済み", zh: "已安装" })}
             </span>
             <button
@@ -193,7 +193,7 @@ function TrendingCard({
               onClick={onSelectInstalled}
               style={{
                 ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 10,
-                border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827",
+                border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
                 cursor: "pointer",
               }}
             >
@@ -202,10 +202,10 @@ function TrendingCard({
           </div>
         ) : isCloning ? (
           <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
-            <div style={{ flex: 1, height: 4, borderRadius: 2, background: "#E5E7EB", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${cloneState.progress}%`, background: "#3B82F6", transition: "width 0.3s", borderRadius: 2 }} />
+            <div style={{ flex: 1, height: 4, borderRadius: 2, background: "var(--th-border)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${cloneState.progress}%`, background: "var(--th-accent)", transition: "width 0.3s", borderRadius: 2 }} />
             </div>
-            <span style={{ ...mono, fontSize: 9, color: "#9CA3AF", flexShrink: 0 }}>{cloneState.progress}%</span>
+            <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>{cloneState.progress}%</span>
           </div>
         ) : cloneState.status === "error" ? (
           <button
@@ -213,7 +213,7 @@ function TrendingCard({
             onClick={onDownload}
             style={{
               ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-              border: "1px solid #FECACA", background: "#FEF2F2", color: "#DC2626",
+              border: "1px solid #FECACA", background: "var(--th-danger-bg)", color: "var(--th-danger-text)",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
             }}
           >
@@ -225,7 +225,7 @@ function TrendingCard({
             onClick={onDownload}
             style={{
               ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 10,
-              border: "none", background: "#3B82F6", color: "#FFFFFF",
+              border: "none", background: "var(--th-accent)", color: "var(--th-bg-elevated)",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
               transition: "opacity 0.12s",
             }}
@@ -384,8 +384,8 @@ export default function GitImportWindow() {
 
   const selectStyle: React.CSSProperties = {
     ...mono, fontSize: 10, padding: "4px 6px", borderRadius: 10,
-    border: "1px solid #E5E7EB", background: "#FFFFFF",
-    color: "#111827", outline: "none", cursor: "pointer",
+    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+    color: "var(--th-text-primary)", outline: "none", cursor: "pointer",
   };
 
   const sinceOpts = sinceOptions(t);
@@ -404,7 +404,7 @@ export default function GitImportWindow() {
           padding: "10px 16px", borderBottom: "1px solid #E5E7EB",
           display: "flex", gap: 8, alignItems: "center", flexShrink: 0,
         }}>
-          <span style={{ color: "#9CA3AF", flexShrink: 0 }}><SearchIcon /></span>
+          <span style={{ color: "var(--th-text-muted)", flexShrink: 0 }}><SearchIcon /></span>
           <input
             value={directUrl}
             onChange={(e) => setDirectUrl(e.target.value)}
@@ -412,8 +412,8 @@ export default function GitImportWindow() {
             placeholder={t({ ko: "owner/repo 또는 GitHub URL 입력...", en: "owner/repo or GitHub URL...", ja: "owner/repo または GitHub URL...", zh: "owner/repo 或 GitHub URL..." })}
             style={{
               ...mono, flex: 1, fontSize: 12, padding: "7px 10px", borderRadius: 10,
-              border: "1px solid #E5E7EB", background: "#FFFFFF",
-              color: "#111827", outline: "none",
+              border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+              color: "var(--th-text-primary)", outline: "none",
             }}
           />
           <button
@@ -422,8 +422,8 @@ export default function GitImportWindow() {
             disabled={!directUrl.trim()}
             style={{
               ...mono, fontSize: 11, fontWeight: 700, padding: "7px 16px", borderRadius: 10,
-              border: "none", background: directUrl.trim() ? "#3B82F6" : "rgba(59,130,246,0.2)",
-              color: directUrl.trim() ? "#FFFFFF" : "#9CA3AF",
+              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "rgba(59,130,246,0.2)",
+              color: directUrl.trim() ? "var(--th-bg-elevated)" : "var(--th-text-muted)",
               cursor: directUrl.trim() ? "pointer" : "not-allowed",
               display: "flex", alignItems: "center", gap: 5,
             }}
@@ -437,7 +437,7 @@ export default function GitImportWindow() {
             <div style={{ padding: 16 }}>
               {/* Download path + Filters */}
               <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
-                <span style={{ ...mono, fontSize: 9, fontWeight: 700, color: "#9CA3AF", flexShrink: 0, letterSpacing: "0.06em" }}>
+                <span style={{ ...mono, fontSize: 9, fontWeight: 700, color: "var(--th-text-muted)", flexShrink: 0, letterSpacing: "0.06em" }}>
                   {t({ ko: "저장 위치", en: "PATH", ja: "保存先", zh: "路径" })}
                 </span>
                 <input
@@ -445,8 +445,8 @@ export default function GitImportWindow() {
                   onChange={(e) => setDownloadPath(e.target.value)}
                   style={{
                     ...mono, flex: 1, fontSize: 11, padding: "4px 8px", borderRadius: 10,
-                    border: "1px solid #E5E7EB", background: "#FFFFFF",
-                    color: "#111827", outline: "none",
+                    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+                    color: "var(--th-text-primary)", outline: "none",
                   }}
                 />
                 <button
@@ -457,8 +457,8 @@ export default function GitImportWindow() {
                   }}
                   style={{
                     ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-                    border: "1px solid #E5E7EB", background: "#FFFFFF",
-                    color: "#111827", cursor: "pointer", flexShrink: 0,
+                    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+                    color: "var(--th-text-primary)", cursor: "pointer", flexShrink: 0,
                     display: "flex", alignItems: "center", gap: 4,
                   }}
                 >
@@ -476,7 +476,7 @@ export default function GitImportWindow() {
                   {LANG_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t({ ko: o.ko, en: o.en, ja: o.ja, zh: o.zh })}</option>)}
                 </select>
                 {loading && (
-                  <span style={{ ...mono, fontSize: 10, color: "#9CA3AF", marginLeft: "auto" }}>
+                  <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
                     {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
                   </span>
                 )}
@@ -484,7 +484,7 @@ export default function GitImportWindow() {
 
               {/* Card grid */}
               {repos.length === 0 && !loading && (
-                <div style={{ ...mono, fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "40px 0" }}>
+                <div style={{ ...mono, fontSize: 12, color: "var(--th-text-muted)", textAlign: "center", padding: "40px 0" }}>
                   {t({ ko: "트렌딩 데이터를 불러올 수 없습니다", en: "Could not load trending data", ja: "トレンドデータを読み込めません", zh: "无法加载趋势数据" })}
                 </div>
               )}

@@ -23,7 +23,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
         </div>
         <h2 style={{
           margin: 0, fontSize: 15, fontWeight: 700,
-          color: "#111827", fontFamily: MONO_FONT,
+          color: "var(--th-text-primary)", fontFamily: MONO_FONT,
         }}>
           {chapter.title}
         </h2>
@@ -36,7 +36,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
             <h3 style={{
               margin: 0, fontSize: 12, fontWeight: 600,
               letterSpacing: "0.01em",
-              color: "#111827", fontFamily: MONO_FONT,
+              color: "var(--th-text-primary)", fontFamily: MONO_FONT,
             }}>
               {sec.heading}
             </h3>
@@ -52,16 +52,16 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
                 <div key={ki} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "7px 12px", gap: 12,
-                  background: ki % 2 === 0 ? "transparent" : "#F3F4F6",
+                  background: ki % 2 === 0 ? "transparent" : "var(--th-bg-primary)",
                   borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid #E5E7EB" : "none",
                 }}>
-                  <span style={{ fontSize: 11, color: "#6B7280", fontFamily: MONO_FONT, flex: 1, minWidth: 0 }}>{desc}</span>
+                  <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: MONO_FONT, flex: 1, minWidth: 0 }}>{desc}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                     {keys.map((k, i) => (
                       <span key={i}>
                         <kbd style={KBD_STYLE}>{k}</kbd>
                         {i < keys.length - 1 && (
-                          <span style={{ fontFamily: MONO_FONT, fontSize: 10, color: "#9CA3AF", margin: "0 2px" }}>+</span>
+                          <span style={{ fontFamily: MONO_FONT, fontSize: 10, color: "var(--th-text-muted)", margin: "0 2px" }}>+</span>
                         )}
                       </span>
                     ))}
@@ -76,7 +76,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
           {sec.body && (
             <p style={{
               margin: 0, fontSize: 12, lineHeight: 1.75,
-              color: "#6B7280",
+              color: "var(--th-text-secondary)",
               fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
               whiteSpace: "pre-line",
             }}>

@@ -49,7 +49,7 @@ export default function EmojiPicker({
         type="button"
         onClick={() => setOpen(!open)}
         className={`${btnSize} border flex items-center justify-center transition-all hover:scale-105 hover:shadow-md`}
-        style={{ borderRadius: 8, background: "#FFFFFF", borderColor: "#E5E7EB" }}
+        style={{ borderRadius: 8, background: "var(--th-bg-elevated)", borderColor: "var(--th-border)" }}
       >
         {value || "❓"}
       </button>
@@ -58,16 +58,16 @@ export default function EmojiPicker({
           className="absolute z-[60] top-full mt-1 left-0 shadow-2xl p-3 w-72 max-h-[60vh] overflow-y-auto overscroll-contain"
           style={{
             borderRadius: "16px",
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
             border: "1px solid #E5E7EB",
-            backdropFilter: "blur(20px)",
+            backdropFilter: "var(--th-glass-blur)",
           }}
         >
           {EMOJI_GROUPS.map((group) => (
             <div key={group.label} className="mb-2 last:mb-0">
               <div
                 className="text-[10px] font-semibold uppercase tracking-widest mb-1"
-                style={{ color: "#9CA3AF" }}
+                style={{ color: "var(--th-text-muted)" }}
               >
                 {group.label}
               </div>

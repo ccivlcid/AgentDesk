@@ -4,7 +4,7 @@ import type { AgentDetailData } from "./AgentDetailPanel";
 const mono = "var(--th-font-mono)";
 
 const SCOPE_COLOR: Record<string, string> = {
-  project: "#3B82F6",
+  project: "var(--th-accent)",
   agent:   "#0ea5e9",
   global:  "#30d158",
 };
@@ -28,22 +28,22 @@ interface Props {
 export default function AgentDetailSections({ data, loading, isLight }: Props) {
   const { t } = useI18n();
 
-  const skeletonBg   = "#E5E7EB";
-  const dividerBdr   = "#E5E7EB";
-  const labelClr     = "#9CA3AF";
-  const skillBg      = "#F3F4F6";
-  const skillBorder  = "#E5E7EB";
-  const skillColor   = "#6B7280";
-  const moreColor    = "#9CA3AF";
-  const ruleColor    = "#6B7280";
-  const defaultScope = "#9CA3AF";
-  const memColor     = "#6B7280";
-  const dateColor    = "#9CA3AF";
-  const taskColor    = "#6B7280";
-  const costSubColor = "#9CA3AF";
-  const tokenColor   = "#111827";
-  const tokenTotalCl = "#6B7280";
-  const tokenTotalSb = "#9CA3AF";
+  const skeletonBg   = "var(--th-border)";
+  const dividerBdr   = "var(--th-border)";
+  const labelClr     = "var(--th-text-muted)";
+  const skillBg      = "var(--th-bg-primary)";
+  const skillBorder  = "var(--th-border)";
+  const skillColor   = "var(--th-text-secondary)";
+  const moreColor    = "var(--th-text-muted)";
+  const ruleColor    = "var(--th-text-secondary)";
+  const defaultScope = "var(--th-text-muted)";
+  const memColor     = "var(--th-text-secondary)";
+  const dateColor    = "var(--th-text-muted)";
+  const taskColor    = "var(--th-text-secondary)";
+  const costSubColor = "var(--th-text-muted)";
+  const tokenColor   = "var(--th-text-primary)";
+  const tokenTotalCl = "var(--th-text-secondary)";
+  const tokenTotalSb = "var(--th-text-muted)";
 
   const dividerStyle = { borderBottom: `1px solid ${dividerBdr}` };
 
@@ -235,7 +235,7 @@ export default function AgentDetailSections({ data, loading, isLight }: Props) {
           ) : data.cost ? (
             <div style={{ display: "flex", gap: 20, alignItems: "baseline" }}>
               <div style={{ fontFamily: mono }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#3B82F6", letterSpacing: "-0.02em" }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--th-accent)", letterSpacing: "-0.02em" }}>
                   ${data.cost.thisMonthUsd.toFixed(4)}
                 </div>
                 <div style={{ fontSize: 9, color: costSubColor, marginTop: 2 }}>

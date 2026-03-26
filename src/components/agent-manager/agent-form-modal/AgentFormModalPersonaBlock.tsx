@@ -27,7 +27,7 @@ export function AgentFormModalPersonaBlock({
     <>
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-xs font-medium" style={{ color: "#6B7280" }}>
+          <label className="block text-xs font-medium" style={{ color: "var(--th-text-secondary)" }}>
             {tr("캐릭터 페르소나", "Character Persona")}
           </label>
           {form.name && (
@@ -36,7 +36,7 @@ export function AgentFormModalPersonaBlock({
               size="sm"
               disabled={generatingPersona || !form.name.trim()}
               onClick={handleGeneratePersona}
-              style={{ borderColor: "#BFDBFE", background: "#EBF5FF", color: "#3B82F6" }}
+              style={{ borderColor: "var(--th-accent-border)", background: "var(--th-accent-glow)", color: "var(--th-accent)" }}
             >
               {generatingPersona
                 ? tr("생성 중...", "Generating...")
@@ -56,7 +56,7 @@ export function AgentFormModalPersonaBlock({
               : "e.g. I am Ada Lovelace, the world's first programmer. I approach problems by grasping the underlying structure first. I speak with Victorian formality, combining technical rigor with poetic expression..."
           }
         />
-        <p className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
+        <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
           {tr(
             "말투, 사고방식, 입버릇, 습관 등을 구체적으로 작성하면 AI가 그 인물처럼 행동합니다.",
             "Define speech patterns, thinking style, catchphrases, and habits for the AI to embody this character.",
@@ -74,7 +74,7 @@ export function AgentFormModalPersonaBlock({
           <div className="flex items-center gap-2">
             <span
               className="text-[10px] font-semibold uppercase tracking-widest font-mono"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--th-text-muted)" }}
             >
               {tr("유명인 페르소나", "Famous Persona")}
             </span>
@@ -100,7 +100,7 @@ export function AgentFormModalPersonaBlock({
           <span
             className="font-mono text-[10px]"
             style={{
-              color: "#9CA3AF",
+              color: "var(--th-text-muted)",
               transform: showPersonaCatalog ? "rotate(90deg)" : "rotate(0deg)",
               display: "inline-block",
               transition: "transform 0.1s linear",
@@ -115,7 +115,7 @@ export function AgentFormModalPersonaBlock({
               selectedId={form.persona_id ?? ""}
               onSelect={(id) => setForm({ ...form, persona_id: id || undefined })}
             />
-            <p className="mt-2 text-[10px]" style={{ color: "#9CA3AF" }}>
+            <p className="mt-2 text-[10px]" style={{ color: "var(--th-text-muted)" }}>
               {tr(
                 "유명인의 사고방식과 철학이 AI 시스템 프롬프트에 주입됩니다.",
                 "The selected persona's philosophy is injected into the AI system prompt.",

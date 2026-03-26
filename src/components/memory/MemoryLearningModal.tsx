@@ -132,11 +132,11 @@ export default function MemoryLearningModal({
       onClose={learnInProgress ? () => {} : onClose}
     >
       <div className="space-y-4 overflow-y-auto px-5 py-4">
-        <div className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {learningEntry.title} &middot; {categoryLabel(learningEntry.category, t)}
         </div>
           {/* Memory content preview */}
-          <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "#1E1E2E" }}>
+          <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
               {t({ ko: "\uBA54\uBAA8\uB9AC \uB0B4\uC6A9", en: "Memory content", ja: "\u30E1\u30E2\u30EA\u5185\u5BB9", zh: "\u8BB0\u5FC6\u5185\u5BB9" })}
             </div>
@@ -147,7 +147,7 @@ export default function MemoryLearningModal({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+            <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "CLI \uB300\uD45C\uC790\uB97C \uC120\uD0DD\uD558\uC138\uC694 (\uBCF5\uC218 \uC120\uD0DD \uAC00\uB2A5)",
                 en: "Select CLI representatives (multi-select)",
@@ -155,7 +155,7 @@ export default function MemoryLearningModal({
                 zh: "\u9009\u62E9 CLI \u4EE3\u8868\uFF08\u53EF\u591A\u9009\uFF09",
               })}
             </div>
-            <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+            <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
               {selectedProviders.length}
               {t({ ko: "\uBA85 \uC120\uD0DD\uB428", en: " selected", ja: "\u540D\u3092\u9078\u629E", zh: " \u5DF2\u9009\u62E9" })}
             </div>
@@ -232,9 +232,9 @@ export default function MemoryLearningModal({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>{memoryProviderLabel(row.provider)}</div>
-                      <div className="text-sm font-medium font-mono truncate" style={{ color: "#111827" }}>{displayName}</div>
-                      <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+                      <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{memoryProviderLabel(row.provider)}</div>
+                      <div className="text-sm font-medium font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{displayName}</div>
+                      <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                         {row.agent
                           ? roleLabel(row.agent.role, t)
                           : t({ ko: "\uC0AC\uC6A9 \uBD88\uAC00", en: "Unavailable", ja: "\u5229\u7528\u4E0D\u53EF", zh: "\u4E0D\u53EF\u7528" })}
@@ -247,7 +247,7 @@ export default function MemoryLearningModal({
                         style={{
                           borderRadius: 0,
                           border: `1px solid ${isAlreadyLearned ? "rgba(52,211,153,0.5)" : isSelected ? "rgba(251,191,36,0.5)" : "rgba(71,85,105,1)"}`,
-                          color: isAlreadyLearned ? "rgb(110,231,183)" : isSelected ? "#3B82F6" : "#9CA3AF",
+                          color: isAlreadyLearned ? "rgb(110,231,183)" : isSelected ? "var(--th-accent)" : "var(--th-text-muted)",
                           background: isAlreadyLearned ? "rgba(52,211,153,0.15)" : isSelected ? "rgba(251,191,36,0.1)" : "rgba(51,65,85,0.4)",
                         }}
                       >
@@ -269,7 +269,7 @@ export default function MemoryLearningModal({
                           style={{
                             borderRadius: 0,
                             border: `1px solid ${learnInProgress || isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
-                            color: learnInProgress || isUnlearning ? "#9CA3AF" : "rgb(253,164,175)",
+                            color: learnInProgress || isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
                             background: learnInProgress || isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
                           }}
                         >
@@ -326,11 +326,11 @@ export default function MemoryLearningModal({
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+                        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {agentProvider ? memoryProviderLabel(agentProvider) : "—"}
                         </div>
-                        <div className="text-sm font-medium font-mono truncate" style={{ color: "#111827" }}>{displayName}</div>
-                        <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>{roleLabel(agent.role, t)}</div>
+                        <div className="text-sm font-medium font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{displayName}</div>
+                        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{roleLabel(agent.role, t)}</div>
                       </div>
 
                       <button
@@ -341,7 +341,7 @@ export default function MemoryLearningModal({
                         style={{
                           borderRadius: 0,
                           border: `1px solid ${learnInProgress ? "rgba(51,65,85,1)" : "rgba(71,85,105,1)"}`,
-                          color: learnInProgress ? "#9CA3AF" : "#6B7280",
+                          color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                           background: "transparent",
                         }}
                       >
@@ -368,7 +368,7 @@ export default function MemoryLearningModal({
               style={{
                 borderRadius: 0,
                 border: `1px dashed ${learnInProgress ? "rgba(51,65,85,1)" : "rgba(71,85,105,1)"}`,
-                color: learnInProgress ? "#9CA3AF" : "#6B7280",
+                color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
               }}
             >
@@ -376,7 +376,7 @@ export default function MemoryLearningModal({
             </button>
 
             {showAgentPicker && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#F3F4F6" }}>
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}>
                 <div className="px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <input
                     type="text"
@@ -384,13 +384,13 @@ export default function MemoryLearningModal({
                     onChange={(e) => setAgentSearch(e.target.value)}
                     placeholder={t({ ko: "\uAC80\uC0C9...", en: "Search...", ja: "\u691C\u7D22...", zh: "\u641C\u7D22..." })}
                     className="w-full bg-transparent text-xs font-mono outline-none"
-                    style={{ color: "#111827" }}
+                    style={{ color: "var(--th-text-primary)" }}
                     autoFocus
                   />
                 </div>
                 <div className="max-h-40 overflow-y-auto">
                   {availableAgents.length === 0 ? (
-                    <div className="px-3 py-3 text-center text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+                    <div className="px-3 py-3 text-center text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {t({
                         ko: "\uCD94\uAC00 \uAC00\uB2A5\uD55C \uC5D0\uC774\uC804\uD2B8\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4",
                         en: "No agents available",
@@ -416,8 +416,8 @@ export default function MemoryLearningModal({
                         >
                           <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs font-medium font-mono truncate" style={{ color: "#111827" }}>{displayName}</div>
-                            <div className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+                            <div className="text-xs font-medium font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{displayName}</div>
+                            <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                               {agent.cli_provider ? memoryProviderLabel(agent.cli_provider as MemoryLearnProvider) : "—"} · {roleLabel(agent.role, t)}
                             </div>
                           </div>
@@ -431,9 +431,9 @@ export default function MemoryLearningModal({
           </div>
 
           {/* Job status */}
-          <div className="p-3" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+          <div className="p-3" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="font-mono" style={{ color: "#6B7280" }}>
+              <div className="font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 {t({ ko: "\uC791\uC5C5 \uC0C1\uD0DC", en: "Job status", ja: "\u30B8\u30E7\u30D6\u72B6\u614B", zh: "\u4EFB\u52A1\u72B6\u6001" })}:{" "}
                 <span
                   className={`font-medium ${
@@ -451,7 +451,7 @@ export default function MemoryLearningModal({
               </div>
 
               {learnJob?.completedAt && (
-                <div className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
+                <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {new Intl.DateTimeFormat(localeTag, {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -466,12 +466,12 @@ export default function MemoryLearningModal({
             {learnJob?.error && <div className="mt-2 text-[11px] text-rose-300">{learnJob.error}</div>}
 
             {learnJob && (
-              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#1E1E2E", color: "#6B7280" }}>
-                <div style={{ color: "#9CA3AF" }}>$ {learnJob.command}</div>
+              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
+                <div style={{ color: "var(--th-text-muted)" }}>$ {learnJob.command}</div>
                 {learnJob.logTail.length > 0 ? (
                   learnJob.logTail.slice(-10).map((line, idx) => <div key={`${learnJob.id}-log-${idx}`}>{line}</div>)
                 ) : (
-                  <div style={{ color: "#9CA3AF" }}>
+                  <div style={{ color: "var(--th-text-muted)" }}>
                     {t({ ko: "\uB85C\uADF8\uAC00 \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4", en: "No logs yet", ja: "\u30ED\u30B0\u306F\u307E\u3060\u3042\u308A\u307E\u305B\u3093", zh: "\u6682\u65E0\u65E5\u5FD7" })}
                   </div>
                 )}
@@ -486,8 +486,8 @@ export default function MemoryLearningModal({
               className={`px-3 py-1.5 text-xs font-mono transition-all ${learnInProgress ? "cursor-not-allowed" : ""}`}
               style={{
                 borderRadius: 0,
-                border: `1px solid ${learnInProgress ? "rgba(51,65,85,1)" : "#E5E7EB"}`,
-                color: learnInProgress ? "#9CA3AF" : "#6B7280",
+                border: `1px solid ${learnInProgress ? "rgba(51,65,85,1)" : "var(--th-border)"}`,
+                color: learnInProgress ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
               }}
             >
@@ -507,7 +507,7 @@ export default function MemoryLearningModal({
               style={{
                 borderRadius: 0,
                 border: `1px solid ${selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "rgba(51,65,85,1)" : "rgba(52,211,153,0.5)"}`,
-                color: selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "#9CA3AF" : "rgb(167,243,208)",
+                color: selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "var(--th-text-muted)" : "rgb(167,243,208)",
                 background: selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0 ? "transparent" : "rgba(52,211,153,0.2)",
               }}
             >

@@ -50,12 +50,12 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 420,
-          background: "#FFFFFF",
+          background: "var(--th-bg-elevated)",
           backdropFilter: "blur(32px) saturate(180%)",
           WebkitBackdropFilter: "blur(32px) saturate(180%)",
           border: "1px solid #D1D5DB",
           borderRadius: 16,
-          boxShadow: "0 32px 64px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)",
+          boxShadow: "0 32px 64px var(--th-glass-shadow), inset 0 1px 0 rgba(255,255,255,0.5)",
           overflow: "hidden",
         }}
       >
@@ -67,7 +67,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             gap: 8,
             padding: "10px 14px",
             borderBottom: "1px solid #E5E7EB",
-            background: "#FFFFFF",
+            background: "var(--th-bg-elevated)",
           }}
         >
           <div style={{ display: "flex", gap: 5 }}>
@@ -78,10 +78,10 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
           </div>
-          <span style={{ fontFamily: mono, fontSize: 11, color: "#6B7280", marginLeft: 4 }}>
+          <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", marginLeft: 4 }}>
             {t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" })}
           </span>
-          <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", marginLeft: "auto" }}>
+          <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
             esc
           </span>
         </div>
@@ -107,10 +107,10 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
               📂
             </div>
             <div>
-              <div style={{ fontFamily: mono, fontSize: 15, color: "#111827", fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ fontFamily: mono, fontSize: 15, color: "var(--th-text-primary)", fontWeight: 600, marginBottom: 4 }}>
                 {project.name}
               </div>
-              <div style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF" }}>
+              <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
                 {project.project_path || t({ ko: "경로 없음", en: "No path", ja: "パ스なし", zh: "무路径" })}
               </div>
             </div>
@@ -127,13 +127,13 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             <Row label={t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })} value={projectTasks.length > 0 ? `${doneTasks.length}/${projectTasks.length}` : String(project.task_count ?? 0)} />
             {completionPct !== null && (
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", minWidth: 72, flexShrink: 0 }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", minWidth: 72, flexShrink: 0 }}>
                   {t({ ko: "완료율", en: "Progress", ja: "進捗率", zh: "进度" })}
                 </span>
-                <div style={{ flex: 1, height: 6, background: "#E5E7EB", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ width: `${completionPct}%`, height: "100%", background: completionPct === 100 ? "#22c55e" : "#3B82F6", borderRadius: 4, transition: "width 0.4s ease" }} />
+                <div style={{ flex: 1, height: 6, background: "var(--th-border)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: `${completionPct}%`, height: "100%", background: completionPct === 100 ? "#22c55e" : "var(--th-accent)", borderRadius: 4, transition: "width 0.4s ease" }} />
                 </div>
-                <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", minWidth: 32, textAlign: "right" }}>{completionPct}%</span>
+                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", minWidth: 32, textAlign: "right" }}>{completionPct}%</span>
               </div>
             )}
             <Row label={t({ ko: "마지막 사용", en: "Last used", ja: "最終使用", zh: "最近使用" })} value={fmt(project.last_used_at)} />
@@ -146,7 +146,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           {/* 에이전트 아바타 */}
           {agentIds.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", letterSpacing: "0.08em", marginBottom: 8 }}>
+              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.08em", marginBottom: 8 }}>
                 {t({ ko: "배정된 에이전트", en: "Assigned agents", ja: "割り当てエージェント", zh: "分配的代理" })} ({agentIds.length})
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -164,11 +164,11 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
                         gap: 4,
                         padding: "2px 8px 2px 4px",
                         borderRadius: 12,
-                        background: "#EBF5FF",
+                        background: "var(--th-accent-glow)",
                         border: "1px solid #BFDBFE",
                         fontFamily: mono,
                         fontSize: 10,
-                        color: "#111827",
+                        color: "var(--th-text-primary)",
                       }}
                     >
                       <span style={{ fontSize: 12 }}>{label}</span>
@@ -192,7 +192,7 @@ function Row({ label, value, multiline }: { label: string; value: string; multil
         style={{
           fontFamily: mono,
           fontSize: 10,
-          color: "#9CA3AF",
+          color: "var(--th-text-muted)",
           minWidth: 72,
           flexShrink: 0,
           paddingTop: multiline ? 1 : 0,
@@ -204,7 +204,7 @@ function Row({ label, value, multiline }: { label: string; value: string; multil
         style={{
           fontFamily: mono,
           fontSize: 11,
-          color: "#111827",
+          color: "var(--th-text-primary)",
           lineHeight: 1.5,
         }}
       >

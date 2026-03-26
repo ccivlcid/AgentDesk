@@ -104,13 +104,13 @@ export default function AgentDetailTabContent({
     return (
       <div className="space-y-3">
         {/* ── 페르소나 섹션 ── */}
-        <div className="border rounded" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14, overflow: "hidden" }}>
+        <div className="border rounded" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14, overflow: "hidden" }}>
           {/* 섹션 헤더 + 탭 전환 */}
           <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
-            <div className="text-[10px] font-mono uppercase tracking-widest font-bold" style={{ color: "#9CA3AF" }}>
+            <div className="text-[10px] font-mono uppercase tracking-widest font-bold" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "// 페르소나", en: "// PERSONA", ja: "// ペルソナ", zh: "// 人格" })}
               {savingPersonaId && (
-                <span className="ml-2 text-[9px]" style={{ color: "#3B82F6" }}>
+                <span className="ml-2 text-[9px]" style={{ color: "var(--th-accent)" }}>
                   {t({ ko: "저장중...", en: "saving...", ja: "保存中...", zh: "保存中..." })}
                 </span>
               )}
@@ -121,8 +121,8 @@ export default function AgentDetailTabContent({
                 className="text-[9px] px-2 py-0.5 font-mono"
                 style={{
                   background: catalogMode === "catalog" ? "rgba(59,130,246,0.08)" : "transparent",
-                  border: `1px solid ${catalogMode === "catalog" ? "rgba(59,130,246,0.35)" : "#E5E7EB"}`,
-                  color: catalogMode === "catalog" ? "#3B82F6" : "#9CA3AF",
+                  border: `1px solid ${catalogMode === "catalog" ? "rgba(59,130,246,0.35)" : "var(--th-border)"}`,
+                  color: catalogMode === "catalog" ? "var(--th-accent)" : "var(--th-text-muted)",
                   borderRadius: 8,
                 }}
               >
@@ -133,8 +133,8 @@ export default function AgentDetailTabContent({
                 className="text-[9px] px-2 py-0.5 font-mono"
                 style={{
                   background: catalogMode === "raw" ? "rgba(59,130,246,0.08)" : "transparent",
-                  border: `1px solid ${catalogMode === "raw" ? "rgba(59,130,246,0.35)" : "#E5E7EB"}`,
-                  color: catalogMode === "raw" ? "#3B82F6" : "#9CA3AF",
+                  border: `1px solid ${catalogMode === "raw" ? "rgba(59,130,246,0.35)" : "var(--th-border)"}`,
+                  color: catalogMode === "raw" ? "var(--th-accent)" : "var(--th-text-muted)",
                   borderRadius: 8,
                 }}
               >
@@ -153,7 +153,7 @@ export default function AgentDetailTabContent({
                   onSelect={(id) => { void handlePersonaIdSelect(id); }}
                 />
               ) : (
-                <div className="text-[11px] text-center py-4" style={{ color: "#9CA3AF" }}>
+                <div className="text-[11px] text-center py-4" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "페르소나 로딩중...", en: "Loading personas...", ja: "ペルソナを読み込み中...", zh: "加载人格中..." })}
                 </div>
               )}
@@ -166,14 +166,14 @@ export default function AgentDetailTabContent({
             /* Raw text 편집 */
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+                <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "페르소나 텍스트 (Markdown)", en: "Persona text (Markdown)", ja: "ペルソナテキスト (Markdown)", zh: "人格文本 (Markdown)" })}
                 </div>
                 {!isEditingPersona && (
                   <button
                     onClick={startEditPersona}
                     className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
-                    style={{ color: "#3B82F6", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 8, background: "rgba(59,130,246,0.07)" }}
+                    style={{ color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 8, background: "rgba(59,130,246,0.07)" }}
                   >
                     {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                   </button>
@@ -187,14 +187,14 @@ export default function AgentDetailTabContent({
                     onChange={(e) => setEditDraft(e.target.value)}
                     rows={6}
                     className="w-full text-xs font-mono resize-y p-2 outline-none"
-                    style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, color: "#111827" }}
+                    style={{ background: "var(--th-bg-primary)", border: "1px solid #E5E7EB", borderRadius: 8, color: "var(--th-text-primary)" }}
                     placeholder={t({ ko: "페르소나를 입력하세요...", en: "Enter persona...", ja: "ペルソナを入力...", zh: "输入人格..." })}
                   />
                   <div className="flex gap-1.5 justify-end">
                     <button
                       onClick={cancelEditPersona}
                       className="text-[10px] px-2 py-1 font-mono"
-                      style={{ color: "#9CA3AF", border: "1px solid #E5E7EB", borderRadius: 8 }}
+                      style={{ color: "var(--th-text-muted)", border: "1px solid #E5E7EB", borderRadius: 8 }}
                     >
                       {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                     </button>
@@ -202,15 +202,15 @@ export default function AgentDetailTabContent({
                       onClick={() => { void savePersona(); }}
                       disabled={savingPersona}
                       className="text-[10px] px-2 py-1 font-mono"
-                      style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.35)", borderRadius: 8, color: "#3B82F6", opacity: savingPersona ? 0.6 : 1 }}
+                      style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.35)", borderRadius: 8, color: "var(--th-accent)", opacity: savingPersona ? 0.6 : 1 }}
                     >
                       {savingPersona ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." }) : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-sm whitespace-pre-wrap" style={{ color: "#6B7280" }}>
-                  {personaText ?? <span style={{ color: "#9CA3AF", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
+                <div className="text-sm whitespace-pre-wrap" style={{ color: "var(--th-text-secondary)" }}>
+                  {personaText ?? <span style={{ color: "var(--th-text-muted)", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
                 </div>
               )}
             </div>
@@ -218,17 +218,17 @@ export default function AgentDetailTabContent({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="border rounded p-3 text-center" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14 }}>
-            <div className="text-lg font-bold font-mono" style={{ color: "#3B82F6" }}>{agent.stats_tasks_done}</div>
-            <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+          <div className="border rounded p-3 text-center" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14 }}>
+            <div className="text-lg font-bold font-mono" style={{ color: "var(--th-accent)" }}>{agent.stats_tasks_done}</div>
+            <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "완료 업무", en: "Completed", ja: "完了タスク", zh: "已完成任务" })}
             </div>
           </div>
-          <div className="border rounded p-3 text-center" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14 }}>
-            <div className="text-lg font-bold font-mono" style={{ color: "#3B82F6" }}>
+          <div className="border rounded p-3 text-center" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14 }}>
+            <div className="text-lg font-bold font-mono" style={{ color: "var(--th-accent)" }}>
               {agentSubAgents.filter((subAgent) => subAgent.status === "working").length}
             </div>
-            <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+            <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "서브에이전트", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })}
             </div>
           </div>
@@ -236,14 +236,14 @@ export default function AgentDetailTabContent({
 
         <div
           className="border p-3 flex items-center justify-between"
-          style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14 }}
+          style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14 }}
         >
-          <div className="text-[10px] font-mono uppercase" style={{ color: "#9CA3AF", letterSpacing: "0.05em" }}>
+          <div className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)", letterSpacing: "0.05em" }}>
             {t({ ko: "// 이번 달 비용", en: "// THIS MONTH COST", ja: "// 今月のコスト", zh: "// 本月费用" })}
           </div>
           <div
             className="text-sm font-mono font-bold px-2 py-0.5"
-            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)", color: "#3B82F6", borderRadius: 8 }}
+            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)", color: "var(--th-accent)", borderRadius: 8 }}
           >
             {costSummary != null
               ? `$${costSummary.thisMonthUsd.toFixed(2)}`
@@ -255,7 +255,7 @@ export default function AgentDetailTabContent({
           <button
             onClick={() => onChat(agent)}
             className="flex-1 py-2 rounded text-sm font-medium font-mono transition-colors"
-            style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.25)", color: "#3B82F6", borderRadius: 10 }}
+            style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.25)", color: "var(--th-accent)", borderRadius: 10 }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             {t({ ko: "대화하기", en: "Chat", ja: "チャット", zh: "对话" })}
@@ -263,7 +263,7 @@ export default function AgentDetailTabContent({
           <button
             onClick={() => onAssignTask(agent.id)}
             className="flex-1 py-2 rounded text-sm font-medium font-mono transition-colors"
-            style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.25)", color: "#3B82F6", borderRadius: 10 }}
+            style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.25)", color: "var(--th-accent)", borderRadius: 10 }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>{" "}{t({ ko: "업무 배정", en: "Assign Task", ja: "タスク割り当て", zh: "分配任务" })}
           </button>
@@ -272,7 +272,7 @@ export default function AgentDetailTabContent({
           <button
             onClick={() => onOpenTerminal(agent.current_task_id!)}
             className="w-full mt-2 py-2 rounded text-sm font-medium font-mono transition-colors flex items-center justify-center gap-1.5"
-            style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", color: "#6B7280", borderRadius: 10 }}
+            style={{ background: "var(--th-bg-surface)", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", borderRadius: 10 }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
             {t({ ko: "터미널 보기", en: "View Terminal", ja: "ターミナル表示", zh: "查看终端" })}
@@ -298,7 +298,7 @@ export default function AgentDetailTabContent({
             const subTotal = taskItem.subtask_total ?? taskSubtasks.length;
             const subDone = taskItem.subtask_done ?? taskSubtasks.filter((subtask) => subtask.status === "done").length;
             return (
-              <div key={taskItem.id} className="border rounded p-3" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14 }}>
+              <div key={taskItem.id} className="border rounded p-3" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14 }}>
                 <button
                   onClick={() => setExpandedTaskId(isExpanded ? null : taskItem.id)}
                   className="flex items-start gap-3 w-full text-left"
@@ -310,24 +310,24 @@ export default function AgentDetailTabContent({
                       background: taskItem.status === "done"
                         ? "rgb(34,197,94)"
                         : taskItem.status === "in_progress"
-                          ? "#3B82F6"
-                          : "#E5E7EB",
+                          ? "var(--th-accent)"
+                          : "var(--th-border)",
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate" style={{ color: "#111827" }}>{taskItem.title}</div>
-                    <div className="text-xs mt-0.5 font-mono" style={{ color: "#9CA3AF" }}>
+                    <div className="text-sm truncate" style={{ color: "var(--th-text-primary)" }}>{taskItem.title}</div>
+                    <div className="text-xs mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {taskStatusLabel(taskItem.status, t)} · {taskTypeLabel(taskItem.task_type, t)}
                     </div>
                     {subTotal > 0 && (
                       <div className="flex items-center gap-2 mt-1.5">
-                        <div className="flex-1 h-1 overflow-hidden" style={{ borderRadius: 4, background: "#E5E7EB" }}>
+                        <div className="flex-1 h-1 overflow-hidden" style={{ borderRadius: 4, background: "var(--th-border)" }}>
                           <div
                             className="h-full transition-all"
                             style={{ width: `${Math.round((subDone / subTotal) * 100)}%`, background: "#22c55e" }}
                           />
                         </div>
-                        <span className="text-[10px] font-mono whitespace-nowrap" style={{ color: "#9CA3AF" }}>
+                        <span className="text-[10px] font-mono whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
                           {subDone}/{subTotal}
                         </span>
                       </div>
@@ -345,7 +345,7 @@ export default function AgentDetailTabContent({
                           <span>{SUBTASK_STATUS_ICON[subtask.status] || "\u23F3"}</span>
                           <span
                             className="flex-1 truncate"
-                            style={{ color: subtask.status === "done" ? "#9CA3AF" : "#6B7280", textDecoration: subtask.status === "done" ? "line-through" : "none" }}
+                            style={{ color: subtask.status === "done" ? "var(--th-text-muted)" : "var(--th-text-secondary)", textDecoration: subtask.status === "done" ? "line-through" : "none" }}
                           >
                             {subtask.title}
                           </span>
@@ -360,7 +360,7 @@ export default function AgentDetailTabContent({
                           {subtask.delegated_task_id && subtask.status !== "done" && (
                             <span
                               className="shrink-0"
-                              style={{ color: "#3B82F6" }}
+                              style={{ color: "var(--th-accent)" }}
                               title={t({ ko: "위임됨", en: "Delegated", ja: "委任済み", zh: "已委派" })}
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -404,22 +404,22 @@ export default function AgentDetailTabContent({
           <div
             key={subAgent.id}
             className={`border rounded p-3 flex items-center gap-3 ${subAgent.status === "working" ? "animate-alba-spawn" : ""}`}
-            style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14 }}
+            style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 14 }}
           >
-            <div className="w-8 h-8 flex items-center justify-center" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "#3B82F6" }}>
+            <div className="w-8 h-8 flex items-center justify-center" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "var(--th-accent)" }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="10" cy="7" r="3" />
                 <path d="M4 18v-1a6 6 0 0112 0v1" />
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "#111827" }}>
-                <span className="text-[10px] px-1 py-0.5 font-mono" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "#3B82F6" }}>
+              <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--th-text-primary)" }}>
+                <span className="text-[10px] px-1 py-0.5 font-mono" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "var(--th-accent)" }}>
                   {t({ ko: "서브", en: "Sub", ja: "サブ", zh: "子任务" })}
                 </span>
                 {subAgent.task}
               </div>
-              <div className="text-xs mt-0.5 font-mono flex items-center gap-1" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs mt-0.5 font-mono flex items-center gap-1" style={{ color: "var(--th-text-muted)" }}>
                 {subAgent.status === "working" ? (
                   <>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0" aria-hidden>
@@ -438,7 +438,7 @@ export default function AgentDetailTabContent({
               </div>
             </div>
             {subAgent.status === "working" && (
-              <div className="w-4 h-4 border-2 border-t-transparent animate-spin" style={{ borderRadius: "50%", borderColor: "#3B82F6", borderTopColor: "transparent" }} />
+              <div className="w-4 h-4 border-2 border-t-transparent animate-spin" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
             )}
           </div>
         ))

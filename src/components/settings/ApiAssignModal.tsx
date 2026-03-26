@@ -28,12 +28,12 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
     const text = label ? t(label as Record<"ko" | "en" | "ja" | "zh", string>) : role;
     const colorStyle =
       role === "team_leader"
-        ? { color: "#3B82F6", background: "rgba(251,191,36,0.15)" }
+        ? { color: "var(--th-accent)", background: "rgba(251,191,36,0.15)" }
         : role === "senior"
           ? { color: "rgb(196,181,253)", background: "rgba(167,139,250,0.1)" }
           : role === "junior"
             ? { color: "rgb(167,243,208)", background: "rgba(52,211,153,0.15)" }
-            : { color: "#9CA3AF", background: "#FFFFFF" };
+            : { color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" };
     return <span className="text-[9px] px-1.5 py-0.5 font-medium font-mono" style={{ borderRadius: 0, ...colorStyle }}>{text}</span>;
   };
 
@@ -59,7 +59,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         disabled={apiAssigning || isAssigned}
         onClick={() => void handleApiAssignToAgent(agent.id)}
         className="w-full text-left px-2 py-1.5 text-xs font-mono transition flex items-center gap-2.5 disabled:opacity-60"
-        style={{ borderRadius: 0, ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "#111827" }) }}
+        style={{ borderRadius: 0, ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
       >
         <AgentAvatar agent={agent} size={28} rounded="xl" />
         <div className="flex-1 min-w-0">
@@ -67,7 +67,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
             <span className="text-xs font-medium truncate">{localName(agent.name, agent.name_ko)}</span>
             {roleBadge(agent.role)}
           </div>
-          <div className="text-[10px] truncate mt-0.5 font-mono" style={{ color: "#9CA3AF" }}>
+          <div className="text-[10px] truncate mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
             {agent.cli_provider === "api" && agent.api_model ? `API: ${agent.api_model}` : agent.cli_provider}
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
   return (
     <div
       className="fixed inset-0 z-[1200] flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.4)" }}
+      style={{ background: "var(--th-modal-overlay)" }}
       onClick={() => setApiAssignTarget(null)}
     >
       <div
@@ -89,19 +89,19 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         style={{
           borderRadius: 10,
           border: "1px solid #E5E7EB",
-          background: "#FFFFFF",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+          background: "var(--th-bg-elevated)",
+          boxShadow: "0 20px 50px var(--th-modal-overlay)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <HeaderModalChrome macOSStyle={false} title={title} onClose={() => setApiAssignTarget(null)} />
         <div className="border-b border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2">
-          <p className="truncate text-[11px] font-mono" style={{ color: "#9CA3AF" }}>{apiAssignTarget.model}</p>
+          <p className="truncate text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{apiAssignTarget.model}</p>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto p-2 space-y-3">
           {apiAssignAgents.length === 0 ? (
-            <p className="text-xs text-center py-4 font-mono" style={{ color: "#9CA3AF" }}>
+            <p className="text-xs text-center py-4 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "에이전트를 불러오는 중...",
                 en: "Loading agents...",
@@ -115,10 +115,10 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
                 <div key={dept.id}>
                   <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
                     <span className="text-sm">{dept.icon}</span>
-                    <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "#6B7280" }}>
+                    <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "var(--th-text-secondary)" }}>
                       {localName(dept.name, dept.name_ko)}
                     </span>
-                    <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>({agents.length})</span>
+                    <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({agents.length})</span>
                   </div>
                   {agents.map(renderAgentRow)}
                 </div>
@@ -126,8 +126,8 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
               {unassigned.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                    <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "12px", color: "#9CA3AF" }}>◌</span>
-                    <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "#9CA3AF" }}>
+                    <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "12px", color: "var(--th-text-muted)" }}>◌</span>
+                    <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "미배정", en: "Unassigned", ja: "未配属", zh: "未分配" })}
                     </span>
                   </div>
@@ -142,7 +142,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
           <button
             onClick={() => setApiAssignTarget(null)}
             className="text-xs px-3 py-1.5 font-mono transition-colors"
-            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>

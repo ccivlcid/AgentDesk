@@ -42,8 +42,8 @@ export function InterventionSection({
   if (!open) return null;
 
   return (
-    <div className="border-b px-4 py-3 space-y-2" style={{ borderColor: "#E5E7EB" }}>
-      <div className="text-[11px]" style={{ color: "#6B7280" }}>
+    <div className="border-b px-4 py-3 space-y-2" style={{ borderColor: "var(--th-border)" }}>
+      <div className="text-[11px]" style={{ color: "var(--th-text-secondary)" }}>
         {taskStatus === "in_progress"
           ? tr(
               "실행 중 작업을 보류하고, 새 프롬프트를 주입한 뒤 자동 재개합니다.",
@@ -76,9 +76,9 @@ export function InterventionSection({
         className="w-full border px-2 py-1.5 text-xs font-mono resize-y focus:outline-none"
         style={{
           borderRadius: 0,
-          borderColor: "#E5E7EB",
-          background: "#F9FAFB",
-          color: "#111827",
+          borderColor: "var(--th-border)",
+          background: "var(--th-bg-surface)",
+          color: "var(--th-text-primary)",
         }}
         placeholder={tr(
           "예) 방금 방식 대신 테스트를 먼저 실행하고 실패 원인을 정리해.",
@@ -87,7 +87,7 @@ export function InterventionSection({
           "例如：先执行测试，再整理失败原因后继续。",
         )}
       />
-      <div className="flex items-center justify-between text-[10px]" style={{ color: "#9CA3AF" }}>
+      <div className="flex items-center justify-between text-[10px]" style={{ color: "var(--th-text-muted)" }}>
         <span>{`${prompt.length} / ${INTERVENTION_PROMPT_MAX_LENGTH}`}</span>
         <span>{tr("Ctrl+Enter로 실행", "Ctrl+Enter to run", "Ctrl+Enterで実行", "Ctrl+Enter 执行")}</span>
       </div>
@@ -102,8 +102,8 @@ export function InterventionSection({
             className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
             style={{
               borderRadius: 0,
-              borderColor: "#E5E7EB",
-              color: "#6B7280",
+              borderColor: "var(--th-border)",
+              color: "var(--th-text-secondary)",
             }}
           >
             {busy ? tr("처리 중...", "Processing...", "処理中...", "处理中...") : tr("일시중지", "Pause", "一時停止", "暂停")}
@@ -116,9 +116,9 @@ export function InterventionSection({
           className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-70 disabled:cursor-not-allowed"
           style={{
             borderRadius: 0,
-            borderColor: "#FECACA",
-            background: "#FEF2F2",
-            color: "#DC2626",
+            borderColor: "var(--th-danger-border)",
+            background: "var(--th-danger-bg)",
+            color: "var(--th-danger-text)",
             fontWeight: 600,
           }}
         >
@@ -132,8 +132,8 @@ export function InterventionSection({
             className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
             style={{
               borderRadius: 0,
-              borderColor: "#E5E7EB",
-              color: "#6B7280",
+              borderColor: "var(--th-border)",
+              color: "var(--th-text-secondary)",
             }}
           >
             {tr("재개만", "Resume only", "再開のみ", "仅恢复")}

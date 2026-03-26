@@ -56,7 +56,7 @@ export default function AgentAvatar({
       {agent?.avatar_emoji?.trim() ? (
         <span>{agent.avatar_emoji.trim()}</span>
       ) : (
-        <IconRobot size={Math.max(14, Math.round(size * 0.55))} style={{ color: "#9CA3AF" }} />
+        <IconRobot size={Math.max(14, Math.round(size * 0.55))} style={{ color: "var(--th-text-muted)" }} />
       )}
     </div>
   );
@@ -80,8 +80,8 @@ export default function AgentAvatar({
         <div 
           className="absolute bottom-0 right-0 w-[25%] h-[25%] rounded-full border border-[#F9FAFB]"
           style={{ 
-            background: agent.status === "working" ? "#059669" : 
-                        agent.status === "idle" ? "#3B82F6" : "#9CA3AF",
+            background: agent.status === "working" ? "var(--th-success)" : 
+                        agent.status === "idle" ? "var(--th-accent)" : "var(--th-text-muted)",
             boxShadow: agent.status === "working" ? "0 0 4px #059669" : "none"
           }}
         />

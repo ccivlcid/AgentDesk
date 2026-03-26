@@ -122,24 +122,24 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
 
   const inputStyle: React.CSSProperties = {
     ...mono, fontSize: 11, padding: "7px 10px",
-    background: "#FFFFFF", border: "1px solid #E5E7EB",
-    borderRadius: 4, color: "#111827", outline: "none", width: "100%",
+    background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB",
+    borderRadius: 4, color: "var(--th-text-primary)", outline: "none", width: "100%",
   };
 
   function Label({ children }: { children: React.ReactNode }) {
-    return <div style={{ ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#9CA3AF", textTransform: "uppercase", marginBottom: 4 }}>{children}</div>;
+    return <div style={{ ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "var(--th-text-muted)", textTransform: "uppercase", marginBottom: 4 }}>{children}</div>;
   }
 
   if (step === "cloning") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "40px 0" }}>
-        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "#111827" }}>
+        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-primary)" }}>
           {t({ ko: "클론 중...", en: "Cloning...", ja: "クローン中...", zh: "正在克隆..." })}
         </div>
-        <div style={{ width: 280, height: 6, borderRadius: 3, background: "#E5E7EB", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${progress}%`, background: "#3B82F6", transition: "width 0.4s ease", borderRadius: 3 }} />
+        <div style={{ width: 280, height: 6, borderRadius: 3, background: "var(--th-border)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${progress}%`, background: "var(--th-accent)", transition: "width 0.4s ease", borderRadius: 3 }} />
         </div>
-        <div style={{ ...mono, fontSize: 10, color: "#9CA3AF" }}>{progress}%</div>
+        <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>{progress}%</div>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* 에러 */}
       {step === "error" && (
-        <div style={{ ...mono, fontSize: 11, color: "#DC2626", padding: "8px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 4 }}>
+        <div style={{ ...mono, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid #FECACA", borderRadius: 4 }}>
           {errorMsg}
         </div>
       )}
@@ -167,8 +167,8 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
                 padding: "8px 0",
                 border: "none",
                 borderRight: i === 0 ? "1px solid #E5E7EB" : undefined,
-                background: active ? "#3B82F6" : "transparent",
-                color: active ? "#000" : "#9CA3AF",
+                background: active ? "var(--th-accent)" : "transparent",
+                color: active ? "#000" : "var(--th-text-muted)",
                 cursor: "pointer", transition: "all 0.12s",
               }}
             >
@@ -204,7 +204,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
           style={inputStyle}
         />
         {provider === "gitlab" && (
-          <div style={{ ...mono, fontSize: 9, color: "#9CA3AF", marginTop: 4, opacity: 0.8 }}>
+          <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 4, opacity: 0.8 }}>
             {t({ ko: "Settings → Access Tokens → read_repository 스코프", en: "Settings → Access Tokens → read_repository scope", ja: "Settings → Access Tokens → read_repositoryスコープ", zh: "Settings → Access Tokens → read_repository 权限" })}
           </div>
         )}
@@ -230,14 +230,14 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
 
       {/* 버튼 */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
-        <button type="button" onClick={onCancel} style={{ ...mono, fontSize: 11, padding: "6px 14px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer" }}>
+        <button type="button" onClick={onCancel} style={{ ...mono, fontSize: 11, padding: "6px 14px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
         <button
           type="button"
           onClick={handleImport}
           disabled={!canImport}
-          style={{ ...mono, fontSize: 11, fontWeight: 700, padding: "6px 18px", borderRadius: 4, border: "none", background: canImport ? "#3B82F6" : "rgba(245,158,11,0.2)", color: canImport ? "#000" : "#9CA3AF", cursor: canImport ? "pointer" : "not-allowed" }}
+          style={{ ...mono, fontSize: 11, fontWeight: 700, padding: "6px 18px", borderRadius: 4, border: "none", background: canImport ? "var(--th-accent)" : "rgba(245,158,11,0.2)", color: canImport ? "#000" : "var(--th-text-muted)", cursor: canImport ? "pointer" : "not-allowed" }}
         >
           {t({ ko: "가져오기", en: "Import", ja: "インポート", zh: "导入" })}
         </button>

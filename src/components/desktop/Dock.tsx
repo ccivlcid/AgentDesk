@@ -142,9 +142,9 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
         display: "flex",
         alignItems: "flex-end",
         gap: 12,
-        background: "#F9FAFB",
-        backdropFilter: "blur(20px) saturate(200%)",
-        WebkitBackdropFilter: "blur(20px) saturate(200%)",
+        background: "var(--th-bg-surface)",
+        backdropFilter: "var(--th-glass-blur) saturate(200%)",
+        WebkitBackdropFilter: "var(--th-glass-blur) saturate(200%)",
         border: "1px solid #D1D5DB",
         borderRadius: 28,
         padding: "12px 20px 10px",
@@ -158,7 +158,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
         left: "10%",
         right: "10%",
         height: 20,
-        background: "#3B82F6",
+        background: "var(--th-accent)",
         filter: "blur(30px)",
         opacity: 0.08,
         pointerEvents: "none",
@@ -259,13 +259,13 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
               left: "50%",
               transform: "translateX(-50%)",
               zIndex: 1001,
-              background: "#F9FAFB",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
+              background: "var(--th-bg-surface)",
+              backdropFilter: "var(--th-glass-blur)",
+              WebkitBackdropFilter: "var(--th-glass-blur)",
               border: "1px solid #D1D5DB",
               borderRadius: 14,
               padding: "6px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+              boxShadow: "var(--th-glass-shadow-active)",
               display: "flex",
               flexDirection: "column",
               gap: 2,
@@ -279,7 +279,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
                 transform: "translateX(-50%) rotate(45deg)",
                 width: 10,
                 height: 10,
-                background: "#F9FAFB",
+                background: "var(--th-bg-surface)",
                 border: "1px solid #D1D5DB",
                 borderTop: "none",
                 borderLeft: "none",
@@ -299,7 +299,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
                     border: "none",
                     borderRadius: 9,
                     cursor: "pointer",
-                    color: "#111827",
+                    color: "var(--th-text-primary)",
                     fontFamily: mono,
                     fontSize: 12,
                     fontWeight: 500,
@@ -313,7 +313,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.background = "transparent";
-                    (e.currentTarget as HTMLElement).style.color = "#111827";
+                    (e.currentTarget as HTMLElement).style.color = "var(--th-text-primary)";
                   }}
                 >
                   <span style={{ color: item.accentColor, display: "flex", alignItems: "center" }}>

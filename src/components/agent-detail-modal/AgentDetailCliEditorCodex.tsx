@@ -48,7 +48,7 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
           ))}
         </select>
         {cliModelsLoading ? (
-          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "모델 로딩...",
               en: "Loading models...",
@@ -110,7 +110,7 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
             )}
           </>
         ) : (
-          <span className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "모델 목록이 없습니다",
               en: "No model list available",
@@ -128,7 +128,7 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
             void handleSaveCli();
           }}
           className="text-[10px] px-1.5 py-0.5 font-mono font-bold uppercase transition-colors disabled:opacity-50"
-          style={{ borderRadius: 8, background: "#3B82F6", color: "#FFFFFF" }}
+          style={{ borderRadius: 8, background: "var(--th-accent)", color: "var(--th-bg-elevated)" }}
         >
           {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
         </button>
@@ -139,8 +139,8 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
           style={{
             borderRadius: 8,
             border: "1px solid #E5E7EB",
-            background: "#F9FAFB",
-            color: "#6B7280",
+            background: "var(--th-bg-surface)",
+            color: "var(--th-text-secondary)",
           }}
         >
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
