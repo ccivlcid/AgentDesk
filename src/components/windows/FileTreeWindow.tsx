@@ -79,7 +79,7 @@ export default function FileTreeWindow() {
 
   useEffect(() => {
     loadPath(""); // 초기 로드
-  }, []);
+  }, [loadPath]);
 
   const goBack = () => {
     if (historyIdx > 0) {

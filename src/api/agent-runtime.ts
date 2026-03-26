@@ -1,4 +1,4 @@
-import { post, request } from "./core";
+import { post } from "./core";
 
 export interface RuntimeRun {
   id: string;

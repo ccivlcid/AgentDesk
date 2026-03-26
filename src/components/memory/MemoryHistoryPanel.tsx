@@ -58,13 +58,13 @@ export default function MemoryHistoryPanel({
   const unlearnEffectTimersRef = useRef<Partial<Record<string, number>>>({});
   const centerBonkTimerRef = useRef<number | null>(null);
 
-  function agentDisplayName(agent: Agent | null): string {
+  const agentDisplayName = useCallback((agent: Agent | null): string => {
     if (!agent) return "";
     if (localeTag.startsWith("ko") && agent.name_ko) return agent.name_ko;
     if (localeTag.startsWith("ja") && agent.name_ja) return agent.name_ja;
     if (localeTag.startsWith("zh") && agent.name_zh) return agent.name_zh;
     return agent.name;
-  }
+  }, [localeTag]);
 
   // map provider → all matching agents
   const agentsByProvider = useMemo(() => {
@@ -240,7 +240,7 @@ export default function MemoryHistoryPanel({
       return agent ? agentDisplayName(agent) : t({ ko: "1명 선택", en: "1 selected", ja: "1人選択", zh: "已选1个" });
     }
     return t({ ko: `${agentFilters.size}명 선택`, en: `${agentFilters.size} selected`, ja: `${agentFilters.size}人選択`, zh: `已选${agentFilters.size}个` });
-  }, [agentFilters, agents, localeTag]);
+  }, [agentFilters, agents, agentDisplayName, t]);
 
   function toggleAgentFilter(agentId: string) {
     setAgentFilters((prev) => {

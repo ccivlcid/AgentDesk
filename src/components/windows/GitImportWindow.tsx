@@ -279,8 +279,9 @@ export default function GitImportWindow() {
 
   // cleanup polls
   useEffect(() => {
+    const polls = pollRefs.current;
     return () => {
-      Object.values(pollRefs.current).forEach(clearInterval);
+      Object.values(polls).forEach(clearInterval);
     };
   }, []);
 

@@ -209,7 +209,7 @@ function FileTreeTab({ folder }: { folder: ProjectFolder }) {
         setError(t({ ko: "경로를 읽을 수 없습니다.", en: "Cannot read path.", ja: "パスを読み取れません。", zh: "无法读取路径。" }));
         setLoading(false);
       });
-  }, [folder.base_path]);
+  }, [folder.base_path, t]);
 
   if (loading) return (
     <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>

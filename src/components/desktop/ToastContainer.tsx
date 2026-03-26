@@ -52,30 +52,31 @@ export default function ToastContainer() {
   const prevIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    const timers = timersRef.current;
     toasts.forEach((t) => {
       const duration = t.duration ?? (t.type === "error" ? 6000 : 4000);
-      if (duration > 0 && !timersRef.current.has(t.id)) {
+      if (duration > 0 && !timers.has(t.id)) {
         const tid = setTimeout(() => {
           dismissToast(t.id);
-          timersRef.current.delete(t.id);
+          timers.delete(t.id);
         }, duration);
-        timersRef.current.set(t.id, tid);
+        timers.set(t.id, tid);
       }
     });
     const currentIds = new Set(toasts.map((x) => x.id));
     prevIdsRef.current.forEach((id) => {
       if (!currentIds.has(id)) {
-        const tid = timersRef.current.get(id);
+        const tid = timers.get(id);
         if (tid) {
           clearTimeout(tid);
-          timersRef.current.delete(id);
+          timers.delete(id);
         }
       }
     });
     prevIdsRef.current = currentIds;
     return () => {
-      timersRef.current.forEach((tid) => clearTimeout(tid));
-      timersRef.current.clear();
+      timers.forEach((tid) => clearTimeout(tid));
+      timers.clear();
     };
   }, [toasts, dismissToast]);
 

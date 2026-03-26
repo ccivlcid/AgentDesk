@@ -93,7 +93,7 @@ export function RunProjectModal({
 
   useEffect(() => {
     if (!selectedAgentId && availableAgents.length > 0) setSelectedAgentId(availableAgents[0].id);
-  }, [availableAgents.length]);
+  }, [availableAgents, selectedAgentId]);
 
   return (
     <div

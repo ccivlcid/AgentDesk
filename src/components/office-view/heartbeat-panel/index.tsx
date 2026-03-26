@@ -14,11 +14,12 @@ import { ALL_CHECKS } from "./constants";
 import { HeartbeatBody } from "./HeartbeatBody";
 import type { HeartbeatPanelProps, EditFormState } from "./types";
 
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
 export default function HeartbeatPanel({ language, agents = [], standalone = false, projectAgentIds }: HeartbeatPanelProps) {
   const isKo = language === "ko";
   const { confirm } = useConfirm();
   const { showToast } = useToast();
-  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   const [filterProjectOnly, setFilterProjectOnly] = useState(false);
   const [configs, setConfigs] = useState<HeartbeatConfig[]>([]);
@@ -152,7 +153,6 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     }),
     [
       isKo,
-      mono,
       standalone,
       filterProjectOnly,
       projectAgentIds,

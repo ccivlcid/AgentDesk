@@ -110,6 +110,7 @@ export default function AgentCli({ agents, currentProject, initialAgentId }: Pro
     setEntries(session.entries);
     setHistory(session.history);
     setRunningTaskId(session.lastTaskId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getOrCreateSession is a stable ref-based helper defined in render; adding it would cause infinite loops
   }, [selectedAgentId]);
 
   const switchAgent = (agentId: string) => {

@@ -70,6 +70,23 @@ export default function GitLabImportPanel({ onComplete, onCancel }: GitLabImport
   const stopPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
 
   const handleImport = useCallback(async () => {
+    async function finishWithProj(path: string) {
+      try {
+        const name = projectName.trim() || path.split(/[\\/]/).pop() || "gitlab-project";
+        const proj = await createProject({
+          name,
+          project_path: path,
+          core_goal: `${name} GitLab 프로젝트`,
+          create_path_if_missing: false,
+        });
+        setStep("done");
+        onComplete({ projectId: proj.id, projectPath: proj.project_path, branch: branch.trim() || "main" });
+      } catch (e) {
+        setErrorMsg(e instanceof Error ? e.message : String(e));
+        setStep("error");
+      }
+    }
+
     const url = repoUrl.trim();
     if (!url || !token.trim()) return;
     setStep("cloning");
@@ -85,7 +102,7 @@ export default function GitLabImportPanel({ onComplete, onCancel }: GitLabImport
 
       if (result.already_exists) {
         setClonedPath(result.target_path);
-        await finishWithProject(result.target_path);
+        await finishWithProj(result.target_path);
         return;
       }
 
@@ -100,7 +117,7 @@ export default function GitLabImportPanel({ onComplete, onCancel }: GitLabImport
           if (status.status === "done") {
             stopPoll();
             setProgress(100);
-            await finishWithProject(result.target_path);
+            await finishWithProj(result.target_path);
           } else if (status.status === "error") {
             stopPoll();
             setErrorMsg(status.error ?? (language === "ko" ? "클론 실패" : "Clone failed"));
@@ -112,24 +129,7 @@ export default function GitLabImportPanel({ onComplete, onCancel }: GitLabImport
       setErrorMsg(e instanceof Error ? e.message : String(e));
       setStep("error");
     }
-  }, [repoUrl, token, branch, targetPath, language]);
-
-  async function finishWithProject(path: string) {
-    try {
-      const name = projectName.trim() || path.split(/[\\/]/).pop() || "gitlab-project";
-      const proj = await createProject({
-        name,
-        project_path: path,
-        core_goal: `${name} GitLab 프로젝트`,
-        create_path_if_missing: false,
-      });
-      setStep("done");
-      onComplete({ projectId: proj.id, projectPath: proj.project_path, branch: branch || "main" });
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : String(e));
-      setStep("error");
-    }
-  }
+  }, [repoUrl, token, branch, targetPath, language, projectName, onComplete]);
 
   const canImport = repoUrl.trim().length > 0 && token.trim().length > 0;
 
