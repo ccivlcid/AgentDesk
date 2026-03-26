@@ -161,7 +161,7 @@ export function AgentDetailCliEditorStandard({ t, cli }: Props) {
         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
         style={{
           borderRadius: 8,
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           background: "transparent",
           color: "var(--th-text-secondary)",
         }}

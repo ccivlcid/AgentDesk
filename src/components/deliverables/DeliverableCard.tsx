@@ -38,7 +38,7 @@ function CliSection({ label, open, onToggle, action, children }: {
   label: string; open: boolean; onToggle: () => void; action?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <div style={{ borderBottom: "1px solid #E5E7EB" }}>
+    <div style={{ borderBottom: "1px solid var(--th-border)" }}>
       <div
         style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "var(--th-bg-elevated)", cursor: "pointer" }}
         onClick={onToggle}
@@ -114,7 +114,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
 
   return (
     <>
-      <div style={{ borderBottom: "1px solid #E5E7EB", borderLeft: `3px solid ${statusColor}` }}>
+      <div style={{ borderBottom: "1px solid var(--th-border)", borderLeft: `3px solid ${statusColor}` }}>
 
         {/* ── 행 헤더 (항상 표시) ── */}
         <button
@@ -180,9 +180,9 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
 
         {/* ── 확장 바디 ── */}
         {expanded && (
-          <div style={{ borderTop: "1px solid #E5E7EB" }}>
+          <div style={{ borderTop: "1px solid var(--th-border)" }}>
             {/* expand/collapse all */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>cat report/{report.id.slice(0, 8)}</span>
               <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
@@ -235,7 +235,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                     <button
                       onClick={() => uploadInputRef.current?.click()}
                       disabled={uploading}
-                      style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid #E5E7EB", background: uploading ? "var(--th-bg-elevated)" : "transparent", color: uploading ? "var(--th-text-muted)" : "var(--th-text-secondary)", cursor: uploading ? "not-allowed" : "pointer", letterSpacing: "0.04em" }}
+                      style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-border)", background: uploading ? "var(--th-bg-elevated)" : "transparent", color: uploading ? "var(--th-text-muted)" : "var(--th-text-secondary)", cursor: uploading ? "not-allowed" : "pointer", letterSpacing: "0.04em" }}
                       title={t({ ko: "파일 업로드", en: "Upload files", ja: "ファイルアップロード", zh: "上传文件" })}
                     >
                       {uploading ? "…" : "↑ Upload"}

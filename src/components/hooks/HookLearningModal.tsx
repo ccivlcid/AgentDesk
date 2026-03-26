@@ -241,9 +241,9 @@ export default function HookLearningModal({
                         className="text-[11px] px-2 py-0.5 font-mono"
                         style={{
                           borderRadius: 8,
-                          border: `1px solid ${isAlreadyLearned ? "rgba(52,211,153,0.5)" : isSelected ? "rgba(59,130,246,0.3)" : "rgba(71,85,105,1)"}`,
+                          border: `1px solid ${isAlreadyLearned ? "rgba(52,211,153,0.5)" : isSelected ? "var(--th-accent-focus)" : "rgba(71,85,105,1)"}`,
                           color: isAlreadyLearned ? "rgb(110,231,183)" : isSelected ? "var(--th-accent)" : "var(--th-text-muted)",
-                          background: isAlreadyLearned ? "rgba(52,211,153,0.15)" : isSelected ? "rgba(59,130,246,0.06)" : "rgba(51,65,85,0.4)",
+                          background: isAlreadyLearned ? "rgba(52,211,153,0.15)" : isSelected ? "var(--th-accent-bg)" : "rgba(51,65,85,0.4)",
                         }}
                       >
                         {isAlreadyLearned
@@ -371,8 +371,8 @@ export default function HookLearningModal({
             </button>
 
             {showAgentPicker && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}>
-                <div className="px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+                <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
                   <input
                     type="text"
                     value={agentSearch}
@@ -407,7 +407,7 @@ export default function HookLearningModal({
                             setShowAgentPicker(false);
                             setAgentSearch("");
                           }}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[#F3F4F6]"
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--th-bg-primary)]"
                         >
                           <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
                           <div className="min-w-0 flex-1">
@@ -426,7 +426,7 @@ export default function HookLearningModal({
           </div>
 
           {/* Job status */}
-          <div className="p-3" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+          <div className="p-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 {t({ ko: "\uC791\uC5C5 \uC0C1\uD0DC", en: "Job status", ja: "\u30B8\u30E7\u30D6\u72B6\u614B", zh: "\u4EFB\u52A1\u72B6\u6001" })}:{" "}
@@ -461,7 +461,7 @@ export default function HookLearningModal({
             {learnJob?.error && <div className="mt-2 text-[11px] text-rose-300">{learnJob.error}</div>}
 
             {learnJob && (
-              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
+              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
                 <div style={{ color: "var(--th-text-muted)" }}>$ {learnJob.command}</div>
                 {learnJob.logTail.length > 0 ? (
                   learnJob.logTail.slice(-10).map((line, idx) => <div key={`${learnJob.id}-log-${idx}`}>{line}</div>)

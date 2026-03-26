@@ -115,7 +115,7 @@ function TrendingCard({
   return (
     <div
       style={{
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 16,
         padding: "14px 16px",
         background: "var(--th-bg-elevated)",
@@ -193,7 +193,7 @@ function TrendingCard({
               onClick={onSelectInstalled}
               style={{
                 ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 10,
-                border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
+                border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
                 cursor: "pointer",
               }}
             >
@@ -384,7 +384,7 @@ export default function GitImportWindow() {
 
   const selectStyle: React.CSSProperties = {
     ...mono, fontSize: 10, padding: "4px 6px", borderRadius: 10,
-    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
     color: "var(--th-text-primary)", outline: "none", cursor: "pointer",
   };
 
@@ -401,7 +401,7 @@ export default function GitImportWindow() {
       <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
         {/* URL input bar */}
         <div style={{
-          padding: "10px 16px", borderBottom: "1px solid #E5E7EB",
+          padding: "10px 16px", borderBottom: "1px solid var(--th-border)",
           display: "flex", gap: 8, alignItems: "center", flexShrink: 0,
         }}>
           <span style={{ color: "var(--th-text-muted)", flexShrink: 0 }}><SearchIcon /></span>
@@ -412,7 +412,7 @@ export default function GitImportWindow() {
             placeholder={t({ ko: "owner/repo 또는 GitHub URL 입력...", en: "owner/repo or GitHub URL...", ja: "owner/repo または GitHub URL...", zh: "owner/repo 或 GitHub URL..." })}
             style={{
               ...mono, flex: 1, fontSize: 12, padding: "7px 10px", borderRadius: 10,
-              border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+              border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
               color: "var(--th-text-primary)", outline: "none",
             }}
           />
@@ -422,7 +422,7 @@ export default function GitImportWindow() {
             disabled={!directUrl.trim()}
             style={{
               ...mono, fontSize: 11, fontWeight: 700, padding: "7px 16px", borderRadius: 10,
-              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "rgba(59,130,246,0.2)",
+              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "var(--th-accent-border-subtle)",
               color: directUrl.trim() ? "var(--th-bg-elevated)" : "var(--th-text-muted)",
               cursor: directUrl.trim() ? "pointer" : "not-allowed",
               display: "flex", alignItems: "center", gap: 5,
@@ -445,7 +445,7 @@ export default function GitImportWindow() {
                   onChange={(e) => setDownloadPath(e.target.value)}
                   style={{
                     ...mono, flex: 1, fontSize: 11, padding: "4px 8px", borderRadius: 10,
-                    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
                     color: "var(--th-text-primary)", outline: "none",
                   }}
                 />
@@ -457,7 +457,7 @@ export default function GitImportWindow() {
                   }}
                   style={{
                     ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
-                    border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
                     color: "var(--th-text-primary)", cursor: "pointer", flexShrink: 0,
                     display: "flex", alignItems: "center", gap: 4,
                   }}

@@ -105,7 +105,7 @@ export default function RuleFormModal({
               zh: "例如: Always write tests first",
             })}
             className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
           />
         </div>
 
@@ -117,7 +117,7 @@ export default function RuleFormModal({
             value={category}
             onChange={(e) => setCategory(e.target.value as AgentRuleCategory)}
             className="w-full px-3 py-2 text-sm font-mono outline-none"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
           >
             {RULE_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -135,7 +135,7 @@ export default function RuleFormModal({
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono transition"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
               <span>📎</span>
               {t({ ko: "파일 선택", en: "Choose File", ja: "ファイル選択", zh: "选择文件" })}
@@ -165,7 +165,7 @@ export default function RuleFormModal({
             )}
           </div>
           {ruleContent && (
-            <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)" }}>
+            <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
               <pre className="text-[10px] font-mono whitespace-pre-wrap break-all" style={{ color: "var(--th-text-muted)" }}>
                 {ruleContent.slice(0, 500)}
                 {ruleContent.length > 500 && "..."}
@@ -185,7 +185,7 @@ export default function RuleFormModal({
             onClick={onClose}
             disabled={submitting}
             className="px-3 py-1.5 text-xs font-mono transition"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -194,8 +194,8 @@ export default function RuleFormModal({
             disabled={!canSubmit || submitting}
             className="px-4 py-1.5 text-xs font-mono border transition flex items-center gap-1.5"
             style={!canSubmit
-              ? { borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "not-allowed" }
-              : { borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.08)", color: "var(--th-text-primary)" }}
+              ? { borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+              : { borderRadius: 8, border: "1px solid var(--th-accent-focus)", background: "var(--th-accent-bg)", color: "var(--th-text-primary)" }}
           >
             {submitting ? (
               <>

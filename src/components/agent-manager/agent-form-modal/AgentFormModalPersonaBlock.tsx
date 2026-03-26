@@ -64,12 +64,12 @@ export function AgentFormModalPersonaBlock({
         </p>
       </div>
 
-      <div style={{ borderTop: "1px solid #E5E7EB" }}>
+      <div style={{ borderTop: "1px solid var(--th-border)" }}>
         <button
           type="button"
           onClick={() => setShowPersonaCatalog((v) => !v)}
           className="flex w-full items-center justify-between py-2"
-          style={{ borderLeft: "3px solid #3B82F6", paddingLeft: "0.5rem" }}
+          style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.5rem" }}
         >
           <div className="flex items-center gap-2">
             <span

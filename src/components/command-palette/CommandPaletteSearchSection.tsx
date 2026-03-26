@@ -49,7 +49,7 @@ export function CommandPaletteSearchSection({
           padding: "0 18px",
           height: 56,
           borderBottom: showSearchBottomBorder
-            ? "1px solid #E5E7EB"
+            ? "1px solid var(--th-border)"
             : "none",
         }}
       >
@@ -100,7 +100,7 @@ export function CommandPaletteSearchSection({
               fontSize: 11,
               color: "var(--th-text-muted)",
               background: "var(--th-bg-elevated)",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 5,
               padding: "2px 7px",
               flexShrink: 0,
@@ -115,7 +115,7 @@ export function CommandPaletteSearchSection({
         <div
           style={{
             padding: "5px 18px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             display: "flex",
             alignItems: "center",
             gap: 6,

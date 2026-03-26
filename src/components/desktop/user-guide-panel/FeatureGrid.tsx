@@ -13,7 +13,7 @@ export function FeatureGrid({ features }: FeatureGridProps) {
           display: "flex", alignItems: "flex-start", gap: 10,
           padding: "7px 10px",
           background: "var(--th-bg-primary)",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           borderRadius: 6,
         }}>
           <span style={{ fontSize: 15, flexShrink: 0, width: 20, textAlign: "center", marginTop: 1 }}>{f.icon}</span>

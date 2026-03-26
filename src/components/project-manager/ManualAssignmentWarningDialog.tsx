@@ -45,7 +45,7 @@ export default function ManualAssignmentWarningDialog({
                   zh: "当前仅选择了组长。若无下属成员，运行时可能由组长直接执行。是否继续？",
                 })}
           </p>
-          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             <p>
               {t({ ko: "선택 요약", en: "Selection Summary", ja: "選択サマリー", zh: "选择摘要" })}: {stats.total}
             </p>
@@ -55,12 +55,12 @@ export default function ManualAssignmentWarningDialog({
             </p>
           </div>
         </div>
-        <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             type="button"
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-semibold font-mono transition"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>

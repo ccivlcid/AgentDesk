@@ -99,7 +99,7 @@ export default function DirectiveEditorStep({
           className="flex items-center gap-1 transition-colors"
           style={{
             ...mono, fontSize: "10px", padding: "5px 10px",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             background: "transparent",
             color: "var(--th-text-muted)",
             cursor: "pointer",
@@ -136,7 +136,7 @@ export default function DirectiveEditorStep({
             <div
               className="absolute right-0 top-full mt-1 z-50 w-60"
               style={{
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 background: "var(--th-bg-elevated)",
                 boxShadow: "0 8px 24px var(--th-modal-overlay)",
                 maxHeight: 280,
@@ -154,7 +154,7 @@ export default function DirectiveEditorStep({
                   className="w-full text-left flex items-center gap-3 transition-colors"
                   style={{
                     padding: "10px 14px",
-                    borderBottom: "1px solid #E5E7EB",
+                    borderBottom: "1px solid var(--th-border)",
                     background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.06)" : "transparent",
                     cursor: "pointer",
                   }}
@@ -199,7 +199,7 @@ export default function DirectiveEditorStep({
           fontSize: "11px",
           lineHeight: "1.7",
           padding: "16px",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           background: "var(--th-bg-elevated)",
           color: "var(--th-text-primary)",
           minHeight: "300px",

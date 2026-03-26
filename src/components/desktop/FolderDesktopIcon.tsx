@@ -234,7 +234,7 @@ export default function FolderDesktopIcon({
             top: ctxPos.y,
             zIndex: 9999,
             background: "var(--th-bg-elevated)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             borderRadius: 8,
             minWidth: 160,
             fontFamily: "var(--th-font-mono)",

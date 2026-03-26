@@ -74,7 +74,7 @@ export function AgentFormModalBasicSection({
     <div>
       {/* ── ROLE SELECTOR (prominent, at top) ── */}
       <div className="mb-4">
-        <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+        <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <span style={agentFormSectionLabelStyle}>
             {t({ ko: "역할 선택", en: "ROLE", ja: "役割", zh: "角色" })}
           </span>
@@ -92,7 +92,7 @@ export function AgentFormModalBasicSection({
                 style={{
                   borderRadius: 6,
                   ...(!active ? { borderColor: "var(--th-border)", color: "var(--th-text-muted)" } : {}),
-                  ...(isPm && active ? { boxShadow: "0 0 0 1px #3B82F6, 0 0 8px var(--th-amber-glow)" } : {}),
+                  ...(isPm && active ? { boxShadow: "0 0 0 1px var(--th-accent), 0 0 8px var(--th-amber-glow)" } : {}),
                 }}
               >
                 {ROLE_ICON[r](active)}
@@ -113,10 +113,10 @@ export function AgentFormModalBasicSection({
           <div
             className="flex items-start gap-2 mt-3 px-3 py-2"
             style={{
-              background: "rgba(59,130,246,0.06)",
-              border: "1px solid rgba(59,130,246,0.2)",
+              background: "var(--th-accent-bg)",
+              border: "1px solid var(--th-accent-border-subtle)",
               borderRadius: 6,
-              borderLeft: "3px solid #3B82F6",
+              borderLeft: "3px solid var(--th-accent)",
             }}
           >
             <svg
@@ -150,7 +150,7 @@ export function AgentFormModalBasicSection({
       </div>
 
       {/* ── BASIC INFO ── */}
-      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <span style={agentFormSectionLabelStyle}>
           {t({ ko: "기본 정보", en: "BASIC INFO", ja: "基本情報", zh: "基本信息" })}
         </span>
@@ -180,7 +180,7 @@ export function AgentFormModalBasicSection({
             className="relative w-14 h-14 overflow-hidden flex items-center justify-center transition-all group"
             style={{
               background: "var(--th-bg-elevated)",
-              border: "2px solid #E5E7EB",
+              border: "2px solid var(--th-border)",
               borderRadius: 8,
             }}
             onClick={() => avatarInputRef.current?.click()}

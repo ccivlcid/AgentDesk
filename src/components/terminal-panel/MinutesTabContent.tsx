@@ -78,7 +78,7 @@ export function MinutesTabContent({
         <div style={{
           display: "flex", alignItems: "center", gap: 4,
           padding: "7px 16px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           flexShrink: 0,
         }}>
           {rounds.map(([round, meetings]) => {
@@ -93,7 +93,7 @@ export function MinutesTabContent({
                   fontFamily: mono, fontSize: 10, fontWeight: isActive ? 700 : 500,
                   padding: "2px 10px",
                   borderRadius: 20,
-                  border: isActive ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+                  border: isActive ? "1px solid #BFDBFE" : "1px solid var(--th-border)",
                   background: isActive ? "rgba(245,158,11,0.1)" : "transparent",
                   color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
                   cursor: "pointer",
@@ -149,7 +149,7 @@ export function MinutesTabContent({
                         display: "flex", gap: 12,
                         paddingBottom: isLast ? 0 : 12,
                         marginBottom: isLast ? 0 : 12,
-                        borderBottom: isLast ? "none" : "1px solid #E5E7EB",
+                        borderBottom: isLast ? "none" : "1px solid var(--th-border)",
                       }}
                     >
                       {/* 아바타 컬럼 */}
@@ -208,7 +208,7 @@ export function MinutesTabContent({
 
               {/* 회의 사이 구분 (마지막 제외) */}
               {mi < currentMeetings.length - 1 && (
-                <div style={{ marginTop: 20, borderTop: "1px dashed #E5E7EB" }} />
+                <div style={{ marginTop: 20, borderTop: "1px dashed var(--th-border)" }} />
               )}
             </div>
           );

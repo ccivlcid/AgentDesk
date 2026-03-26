@@ -47,7 +47,7 @@ export default function LibraryWindow() {
         justifyContent: "center",
         width: 22,
         height: 22,
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: "50%",
         background: "transparent",
         color: "var(--th-text-muted)",

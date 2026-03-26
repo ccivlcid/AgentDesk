@@ -93,7 +93,7 @@ export default function HooksGrid({
           className="flex flex-col items-center justify-center gap-2 p-8 transition-all group"
           style={{
             borderRadius: 8,
-            border: "1px dashed #E5E7EB",
+            border: "1px dashed var(--th-border)",
             background: "transparent",
             cursor: "pointer",
             minHeight: 120,
@@ -115,7 +115,7 @@ export default function HooksGrid({
           </span>
           <span
             className="flex items-center gap-1 px-3 py-1 text-xs font-mono font-medium transition-all"
-            style={{ borderRadius: 6, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
           >
             + {t({ ko: "Add Hook", en: "Add Hook", ja: "Add Hook", zh: "Add Hook" })}
           </span>
@@ -137,7 +137,7 @@ export default function HooksGrid({
             className={`relative p-4 transition-all group ${
               !hook.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             {/* Header: event type icon + title + learned avatars */}
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -265,7 +265,7 @@ export default function HooksGrid({
                   <button
                     onClick={() => onEdit(hook)}
                     className="px-2 py-1 text-[10px] font-medium font-mono transition-all"
-                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+                    style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
                   >
                     {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
                   </button>
@@ -289,7 +289,7 @@ export default function HooksGrid({
         className="flex flex-col items-center justify-center gap-2 p-6 transition-all group"
         style={{
           borderRadius: 8,
-          border: "1px dashed #E5E7EB",
+          border: "1px dashed var(--th-border)",
           background: "transparent",
           cursor: "pointer",
           minHeight: 80,

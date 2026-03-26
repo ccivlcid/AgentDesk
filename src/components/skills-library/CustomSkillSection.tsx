@@ -88,7 +88,7 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
           <div
             key={skill.skillName}
             className="custom-skill-card flex items-center justify-between px-3 py-2"
-            style={{ borderRadius: 6, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}
+            style={{ borderRadius: 6, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
           >
             <div className="min-w-0 flex-1">
               <div className="text-xs font-medium text-white truncate">{skill.skillName}</div>

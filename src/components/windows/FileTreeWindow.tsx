@@ -243,7 +243,7 @@ export default function FileTreeWindow() {
         {/* ── Explorer Toolbar ── */}
         <div style={{
           display: "flex", alignItems: "center", gap: 12, padding: "12px 24px",
-          borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)"
+          borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)"
         }}>
           <div style={{ display: "flex", gap: 4 }}>
             <button onClick={goBack} disabled={historyIdx <= 0} style={{ padding: 6, background: "none", border: "none", color: historyIdx <= 0 ? "var(--th-text-muted)" : "var(--th-text-primary)", cursor: "pointer", opacity: historyIdx <= 0 ? 0.3 : 1 }}>
@@ -257,7 +257,7 @@ export default function FileTreeWindow() {
           {/* Real Address Bar (Editable) */}
           <div style={{
             flex: 1, display: "flex", alignItems: "center", gap: 10,
-            background: "var(--th-bg-elevated)", border: "1px solid #D1D5DB",
+            background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-strong)",
             borderRadius: 12, padding: "0 14px", height: 36, fontSize: 13, color: "var(--th-text-secondary)"
           }}>
             <IconHardDrive size={14} style={{ color: "var(--th-accent)", opacity: 0.7 }} />
@@ -270,7 +270,7 @@ export default function FileTreeWindow() {
             <IconRotateCw size={14} style={{ opacity: 0.5, cursor: "pointer" }} onClick={() => loadPath(currentPath)} />
           </div>
 
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "var(--th-bg-primary)", border: "1px solid #E5E7EB", borderRadius: 12, padding: "0 12px", height: 36 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 12, padding: "0 12px", height: 36 }}>
             <IconSearch size={14} style={{ opacity: 0.5 }} />
             <input placeholder="Search files" style={{ background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", fontSize: 12, width: 120 }} />
           </div>
@@ -281,7 +281,7 @@ export default function FileTreeWindow() {
 
           {/* Sidebar: Quick Access */}
           <div style={{
-            width: 240, flexShrink: 0, borderRight: "1px solid #E5E7EB",
+            width: 240, flexShrink: 0, borderRight: "1px solid var(--th-border)",
             display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--th-bg-surface)"
           }}>
             <div style={{ padding: "20px 24px 10px", fontSize: 10, fontWeight: 800, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Favorites</div>
@@ -315,7 +315,7 @@ export default function FileTreeWindow() {
                       style={{
                         display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "16px 10px",
                         background: selectedEntry?.path === entry.path ? "var(--th-accent-glow)" : "var(--th-bg-elevated)",
-                        border: selectedEntry?.path === entry.path ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+                        border: selectedEntry?.path === entry.path ? "1px solid #BFDBFE" : "1px solid var(--th-border)",
                         borderRadius: 16, cursor: "pointer", transition: "all 0.2s"
                       }}
                     >
@@ -334,7 +334,7 @@ export default function FileTreeWindow() {
 
             {/* Footer Bar */}
             <div style={{
-              padding: "10px 24px", borderTop: "1px solid #E5E7EB",
+              padding: "10px 24px", borderTop: "1px solid var(--th-border)",
               fontSize: 11, color: "var(--th-text-muted)", display: "flex", justifyContent: "space-between",
               background: "var(--th-bg-surface)"
             }}>
@@ -348,9 +348,9 @@ export default function FileTreeWindow() {
             {selectedEntry && (
               <motion.div
                 initial={{ x: 300 }} animate={{ x: 0 }} exit={{ x: 300 }}
-                style={{ width: 320, borderLeft: "1px solid #E5E7EB", background: "var(--th-bg-surface)", display: "flex", flexDirection: "column" }}
+                style={{ width: 320, borderLeft: "1px solid var(--th-border)", background: "var(--th-bg-surface)", display: "flex", flexDirection: "column" }}
               >
-                <div style={{ padding: "20px 24px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ fontSize: 14, fontWeight: 800 }}>Preview</div>
                   <button onClick={() => setSelectedEntry(null)} style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer" }}><XCircle size={18} /></button>
                 </div>
@@ -362,7 +362,7 @@ export default function FileTreeWindow() {
                   <div style={{ fontSize: 11, color: "var(--th-text-muted)", marginBottom: 20, wordBreak: "break-all" }}>{selectedEntry.path}</div>
 
                   {previewContent && (
-                    <pre style={{ fontSize: 11, lineHeight: 1.6, background: "var(--th-bg-elevated)", padding: 12, borderRadius: 12, overflowX: "auto", color: "var(--th-text-secondary)", border: "1px solid #E5E7EB" }}>
+                    <pre style={{ fontSize: 11, lineHeight: 1.6, background: "var(--th-bg-elevated)", padding: 12, borderRadius: 12, overflowX: "auto", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}>
                       {previewContent.slice(0, 1000)}{previewContent.length > 1000 ? "..." : ""}
                     </pre>
                   )}

@@ -104,7 +104,7 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
               style={{
                 background: "var(--th-bg-elevated)",
                 color: "var(--th-text-secondary)",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
               }}
             >
               {tag}

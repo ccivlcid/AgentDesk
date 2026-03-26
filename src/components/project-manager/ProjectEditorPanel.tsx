@@ -164,7 +164,7 @@ function ProjectSourcesSection({
           ))}
         </div>
       ) : sources.length === 0 ? (
-        <div className="px-3 py-3 text-[10px] font-mono" style={{ border: "1px dashed #E5E7EB", color: "var(--th-text-muted)" }}>
+        <div className="px-3 py-3 text-[10px] font-mono" style={{ border: "1px dashed var(--th-border)", color: "var(--th-text-muted)" }}>
           <p>$ ls sources/</p>
           <p style={{ opacity: 0.6 }}>(empty)</p>
           <p className="mt-1.5">
@@ -177,7 +177,7 @@ function ProjectSourcesSection({
             <div
               key={src.id}
               className="flex items-center gap-2 px-2.5 py-1.5"
-              style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", borderRadius: 8 }}
+              style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 8 }}
             >
               {/* Category dot */}
               <span
@@ -228,7 +228,7 @@ function ProjectSourcesSection({
             className="w-full px-2.5 py-1.5 text-[11px] font-mono text-left transition"
             style={{
               borderRadius: 8,
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               background: "transparent",
               color: maxReached ? "var(--th-text-muted)" : "var(--th-text-secondary)",
               opacity: maxReached ? 0.4 : 1,
@@ -242,9 +242,9 @@ function ProjectSourcesSection({
           {dropdownOpen && (
             <div
               className="absolute left-0 top-full z-50 w-full"
-              style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", maxHeight: 200, overflowY: "auto", borderRadius: 8 }}
+              style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", maxHeight: 200, overflowY: "auto", borderRadius: 8 }}
             >
-              <div className="sticky top-0" style={{ background: "var(--th-bg-elevated)", borderBottom: "1px solid #E5E7EB" }}>
+              <div className="sticky top-0" style={{ background: "var(--th-bg-elevated)", borderBottom: "1px solid var(--th-border)" }}>
                 <input
                   autoFocus
                   type="text"
@@ -267,7 +267,7 @@ function ProjectSourcesSection({
                     disabled={addingId === p.id}
                     onClick={() => void handleAdd(p.id)}
                     className="w-full px-2.5 py-1.5 text-left text-[11px] font-mono transition"
-                    style={{ borderBottom: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-primary)", cursor: "pointer" }}
+                    style={{ borderBottom: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-primary)", cursor: "pointer" }}
                   >
                     {p.name}
                   </button>
@@ -353,7 +353,7 @@ export default function ProjectEditorPanel({
 }: ProjectEditorPanelProps) {
   const { openWindow } = useUiStore();
   return (
-    <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       {isCreating && templates.length > 0 && onApplyTemplate && (
         <div>
           <p className="mb-1.5 text-[11px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>
@@ -367,7 +367,7 @@ export default function ProjectEditorPanel({
                 onClick={() => onApplyTemplate(tpl)}
                 title={tpl.description ?? tpl.name}
                 className="px-2.5 py-1 text-[11px] font-mono font-medium transition"
-                style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
               >
                 {tpl.name}
               </button>
@@ -386,7 +386,7 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
         />
       </label>
       <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -401,7 +401,7 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
         />
       </label>
       {pathToolsVisible && (
@@ -416,7 +416,7 @@ export default function ProjectEditorPanel({
                 void loadManualPathEntries(projectPath.trim() || undefined);
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({
                 ko: "앱 내 폴더 탐색",
@@ -433,7 +433,7 @@ export default function ProjectEditorPanel({
                 setPathSuggestionsOpen((prev) => !prev);
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {pathSuggestionsOpen
                 ? t({ ko: "자동 경로찾기 닫기", en: "Close Auto Finder", ja: "自動候補を閉じる", zh: "关闭自动查找" })
@@ -481,7 +481,7 @@ export default function ProjectEditorPanel({
                 }
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {nativePathPicking
                 ? t({
@@ -501,7 +501,7 @@ export default function ProjectEditorPanel({
             </button>
           </div>
           {pathSuggestionsOpen && (
-            <div className="max-h-40 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+            <div className="max-h-40 overflow-y-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
               {pathSuggestionsLoading ? (
                 <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({
@@ -576,7 +576,7 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full resize-none px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
         />
       </label>
       {showFigmaField && (
@@ -605,7 +605,7 @@ export default function ProjectEditorPanel({
                 <path d="M13.333 8A2.667 2.667 0 1 1 8 8a2.667 2.667 0 0 1 5.333 0Z" fill="#1ABCFE"/>
               </svg>
               {t({ ko: "Figma 디자인 URL", en: "Figma Design URL", ja: "Figma デザイン URL", zh: "Figma 设计 URL" })}
-              <span style={{ color: "var(--th-text-disabled, #9CA3AF)", opacity: 0.6 }}>
+              <span style={{ color: "var(--th-text-disabled, var(--th-text-muted))", opacity: 0.6 }}>
                 {t({ ko: "(선택)", en: "(optional)", ja: "(任意)", zh: "(选填)" })}
               </span>
             </span>
@@ -616,7 +616,7 @@ export default function ProjectEditorPanel({
               disabled={!isCreating && !editingProjectId}
               placeholder="https://www.figma.com/design/..."
               className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
             />
             <span className="mt-0.5 block text-[10px]" style={{ color: "var(--th-text-muted)", opacity: 0.7 }}>
               {t({
@@ -688,7 +688,7 @@ export default function ProjectEditorPanel({
             type="button"
             onClick={onCancelEdit}
             className="px-3 py-1.5 text-xs font-mono"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -698,7 +698,7 @@ export default function ProjectEditorPanel({
           onClick={onStartEditSelected}
           disabled={!selectedProject || isCreating || !!editingProjectId}
           className="px-3 py-1.5 text-xs font-mono disabled:opacity-40"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "선택 프로젝트 편집", en: "Edit Selected", ja: "選択編集", zh: "编辑选中项" })}
         </button>

@@ -21,7 +21,7 @@ export default function MemoryMemorySection({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
+    <div style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
       {/* 헤더 — 클릭으로 접기/펴기 */}
       <button
         type="button"
@@ -30,7 +30,7 @@ export default function MemoryMemorySection({
         style={{
           background: "none",
           border: "none",
-          borderBottom: collapsed ? "none" : "1px solid #E5E7EB",
+          borderBottom: collapsed ? "none" : "1px solid var(--th-border)",
           cursor: "pointer",
           textAlign: "left",
         }}

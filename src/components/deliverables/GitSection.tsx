@@ -29,7 +29,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   if (loading) {
     return (
-      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "Git 정보 로딩중...", en: "Loading Git info...", ja: "Git情報を読み込み中...", zh: "加载Git信息..." })}
       </div>
     );
@@ -92,11 +92,11 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
 
   return (
     <>
-      <div className="overflow-hidden" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}>
+      <div className="overflow-hidden" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <button
           type="button"
           onClick={onToggleSection}
-          className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[#F3F4F6] transition"
+          className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-primary)] transition"
         >
           <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "Git 변경사항", en: "Git Changes", ja: "Git変更", zh: "Git变更" })}
@@ -109,7 +109,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
           </svg>
         </button>
         {sectionOpen && (
-          <div className="px-3 py-2 space-y-2" style={{ borderTop: "1px solid #E5E7EB" }}>
+          <div className="px-3 py-2 space-y-2" style={{ borderTop: "1px solid var(--th-border)" }}>
             <div className="flex items-center gap-2 text-xs font-mono">
               <span style={{ color: "var(--th-accent)" }}>{diff.branchName || "unknown"}</span>
               <span style={{ color: "var(--th-text-muted)" }}>{summaryLine}</span>

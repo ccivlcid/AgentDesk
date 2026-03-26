@@ -29,7 +29,7 @@ export function AgentFormModalAdvancedSection({
       <AgentFormModalPmSection tr={tr} form={form} setForm={setForm} />
 
       {/* CLI settings */}
-      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <span style={agentFormSectionLabelStyle}>ADVANCED</span>
       </div>
 

@@ -21,7 +21,7 @@ export function TerminalPanelTabs({ activeTab, setActiveTab, tr }: TerminalPanel
     <div style={{
       display: "inline-flex",
       borderRadius: 7,
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--th-border)",
       background: "var(--th-bg-surface)",
       overflow: "hidden",
       flexShrink: 0,

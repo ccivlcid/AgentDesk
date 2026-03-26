@@ -85,7 +85,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
       {/* Agent sidebar */}
       <div style={{
         width: 170,
-        borderRight: "1px solid #E5E7EB",
+        borderRight: "1px solid var(--th-border)",
         padding: "16px 10px",
         display: "flex",
         flexDirection: "column",
@@ -158,7 +158,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           alignItems: "center",
           gap: 16,
           padding: "8px 16px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
           fontFamily: mono,
           fontSize: 10,
@@ -174,7 +174,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           alignItems: "center",
           gap: 8,
           padding: "8px 16px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           fontFamily: mono,
           fontSize: 10,
           color: "var(--th-text-secondary)",
@@ -233,7 +233,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             style={{
               fontFamily: mono, fontSize: 10, cursor: "pointer",
               background: autoScroll ? "#ECFDF5" : "transparent",
-              border: autoScroll ? "1px solid #A7F3D0" : "1px solid #E5E7EB",
+              border: autoScroll ? "1px solid #A7F3D0" : "1px solid var(--th-border)",
               color: autoScroll ? "var(--th-success)" : "var(--th-text-muted)",
               fontWeight: autoScroll ? 700 : 500,
               padding: "2px 10px",
@@ -296,7 +296,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               </div>
               <div style={{
                 background: "var(--th-bg-surface)",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 borderRadius: 14,
                 padding: "14px 18px",
                 whiteSpace: "pre-wrap",
@@ -325,7 +325,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           alignItems: "center",
           gap: 8,
           padding: "10px 16px",
-          borderTop: "1px solid #E5E7EB",
+          borderTop: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
         }}>
           <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)" }}>/</span>
@@ -352,7 +352,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           </button>
           <button type="button" style={{
             fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-secondary)",
-            background: "transparent", border: "1px solid #E5E7EB",
+            background: "transparent", border: "1px solid var(--th-border)",
             padding: "4px 14px", cursor: "pointer",
             borderRadius: 8,
           }}>

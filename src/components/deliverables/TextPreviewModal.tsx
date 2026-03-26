@@ -27,9 +27,9 @@ export default function TextPreviewModal({ taskId, artifact, onClose }: TextPrev
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", padding: 16 }}>
-      <div style={{ width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}>
+      <div style={{ width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 20px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "12px 20px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 13, fontWeight: 600, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{artifact.title}</div>
             <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginTop: 2 }}>{artifact.relativePath}</div>
@@ -38,13 +38,13 @@ export default function TextPreviewModal({ taskId, artifact, onClose }: TextPrev
             <a
               href={getTaskArtifactDownloadUrl(taskId, artifact.relativePath)}
               download
-              style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "4px 10px", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent", textDecoration: "none", cursor: "pointer" }}
+              style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "4px 10px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", textDecoration: "none", cursor: "pointer" }}
             >
               {t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
             </a>
             <button
               onClick={onClose}
-              style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "4px 10px", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer" }}
+              style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "4px 10px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer" }}
             >
               {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             </button>

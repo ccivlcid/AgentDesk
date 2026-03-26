@@ -36,7 +36,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
   } = apiState;
 
   const mono = "var(--th-font-mono)";
-  const inputStyle: React.CSSProperties = { borderRadius: 12, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)", transition: "all 0.2s" };
+  const inputStyle: React.CSSProperties = { borderRadius: 12, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)", transition: "all 0.2s" };
 
   return (
     <>
@@ -205,7 +205,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
               const testResult = apiTestResult[provider.id];
               const isExpanded = apiModelsExpanded[provider.id];
               return (
-                <div key={provider.id} className="p-5 transition-all hover:shadow-sm" style={{ borderRadius: 20, border: "1px solid #E5E7EB", background: provider.enabled ? "var(--th-bg-elevated)" : "var(--th-bg-surface)", opacity: provider.enabled ? 1 : 0.7 }}>
+                <div key={provider.id} className="p-5 transition-all hover:shadow-sm" style={{ borderRadius: 20, border: "1px solid var(--th-border)", background: provider.enabled ? "var(--th-bg-elevated)" : "var(--th-bg-surface)", opacity: provider.enabled ? 1 : 0.7 }}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-2.5 h-2.5 rounded-full ${provider.enabled ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-gray-300"}`} />

@@ -37,7 +37,7 @@ export function AgentDetailModalProfileHeader({
     <div
       className="relative px-6 py-5"
       style={{
-        borderBottom: "1px solid #E5E7EB",
+        borderBottom: "1px solid var(--th-border)",
         background: department ? `linear-gradient(135deg, ${department.color}22, transparent)` : undefined,
       }}
     >
@@ -46,7 +46,7 @@ export function AgentDetailModalProfileHeader({
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center transition-colors"
         style={{
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
           color: "var(--th-text-muted)",
           borderRadius: 8,
@@ -76,7 +76,7 @@ export function AgentDetailModalProfileHeader({
                     ? "bg-yellow-500"
                     : "bg-gray-400"
             }`}
-            style={{ border: "2px solid #F3F4F6" }}
+            style={{ border: "2px solid var(--th-bg-primary)" }}
           />
         </div>
 

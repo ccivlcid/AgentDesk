@@ -38,7 +38,7 @@ export default function CliCostWindow() {
       title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
       style={{
         background: "transparent",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 8,
         padding: "3px 10px",
         cursor: refreshing ? "not-allowed" : "pointer",
@@ -84,7 +84,7 @@ export default function CliCostWindow() {
           </div>
         ) : !usage || Object.keys(usage).length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--th-text-muted)", gap: 10 }}>
-            <div style={{ padding: 12, background: "var(--th-bg-surface)", borderRadius: 16, border: "1px solid #E5E7EB" }}>
+            <div style={{ padding: 12, background: "var(--th-bg-surface)", borderRadius: 16, border: "1px solid var(--th-border)" }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--th-border-strong)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="1" x2="12" y2="23"/>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -111,9 +111,9 @@ export default function CliCostWindow() {
             </div>
 
             {Object.entries(usage).map(([provider, entry]) => (
-              <div key={provider} style={{ border: "1px solid #E5E7EB", borderRadius: 16, overflow: "hidden", background: "var(--th-bg-elevated)" }}>
+              <div key={provider} style={{ border: "1px solid var(--th-border)", borderRadius: 16, overflow: "hidden", background: "var(--th-bg-elevated)" }}>
                 {/* Provider header */}
-                <div style={{ padding: "12px 18px", background: "var(--th-bg-surface)", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6" }}>
+                <div style={{ padding: "12px 18px", background: "var(--th-bg-surface)", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--th-bg-primary)" }}>
                   <span style={{ fontWeight: 800, fontSize: 12, color: "var(--th-text-primary)", textTransform: "capitalize" }}>{provider}</span>
                   {entry.error && (
                     <span style={{ fontSize: 9, fontWeight: 700, color: "var(--th-danger-text)", background: "var(--th-danger-bg)", border: "1px solid #FECACA", padding: "2px 8px", borderRadius: 6 }}>

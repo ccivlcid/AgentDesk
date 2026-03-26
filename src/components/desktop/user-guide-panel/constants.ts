@@ -10,9 +10,9 @@ export const KBD_STYLE: CSSProperties = {
   fontSize: 10,
   color: "var(--th-text-secondary)",
   background: "var(--th-bg-elevated)",
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--th-border)",
   borderRadius: 4,
   padding: "2px 6px",
-  boxShadow: "0 1px 0 #E5E7EB",
+  boxShadow: "0 1px 0 var(--th-border)",
   display: "inline-block",
 };

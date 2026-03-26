@@ -478,7 +478,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           background: "var(--th-bg-surface)",
           backdropFilter: "blur(28px) saturate(160%)",
           WebkitBackdropFilter: "blur(28px) saturate(160%)",
-          borderLeft: "1px solid #D1D5DB",
+          borderLeft: "1px solid var(--th-border-strong)",
           borderTopLeftRadius: 12,
           display: "flex", flexDirection: "column",
           transform: open ? "translateX(0)" : "translateX(340px)",
@@ -493,7 +493,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           padding: "0 14px",
           height: 44,
           background: "var(--th-bg-elevated)",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           borderTopLeftRadius: 12,
           flexShrink: 0,
           gap: 10,
@@ -590,7 +590,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         <div style={{
           display: "flex", alignItems: "center", gap: 5,
           padding: "8px 12px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           flexShrink: 0, overflowX: "auto",
         }}>
           {TYPE_FILTERS.map((f) => {
@@ -709,7 +709,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         {items.length > 0 && (
           <div style={{
             padding: "7px 14px",
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--th-border)",
             flexShrink: 0,
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
@@ -780,7 +780,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
             fontSize: 9, fontWeight: 700, color: "#fff",
             fontFamily: mono,
             lineHeight: 1,
-            boxShadow: "0 0 0 2px #F3F4F6",
+            boxShadow: "0 0 0 2px var(--th-bg-primary)",
           }}>
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>

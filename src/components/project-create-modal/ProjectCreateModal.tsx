@@ -325,7 +325,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                   className="w-full flex items-center gap-4 transition-colors"
                   style={{
                     padding: "14px 16px",
-                    border: "1px dashed #E5E7EB",
+                    border: "1px dashed var(--th-border)",
                     background: "transparent",
                     color: "var(--th-text-secondary)",
                     cursor: "pointer",
@@ -419,7 +419,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                       <button
                         type="button"
                         onClick={() => void handleOpenBrowser()}
-                        style={{ padding: "0 12px", border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", ...mono, fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                        style={{ padding: "0 12px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", ...mono, fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
                       >
                         {t({ ko: "탐색", en: "Browse", ja: "参照", zh: "浏览" })}
                       </button>
@@ -544,7 +544,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                         disabled={autoAssignBusy}
                         style={{
                           ...mono, fontSize: "11px", padding: "6px 14px",
-                          border: "1px solid #3B82F6",
+                          border: "1px solid var(--th-accent)",
                           background: "rgba(245,158,11,0.06)",
                           color: "var(--th-accent)",
                           cursor: autoAssignBusy ? "wait" : "pointer",
@@ -567,7 +567,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                   {cliAgents.length === 0 ? (
                     <div style={{
                       padding: "40px 20px", textAlign: "center",
-                      border: "1px dashed #E5E7EB",
+                      border: "1px dashed var(--th-border)",
                     }}>
                       <p style={{ ...display, fontSize: "14px", color: "var(--th-text-muted)" }}>
                         {t({ ko: "CLI 에이전트가 없습니다", en: "No CLI agents found", ja: "CLIエージェントがありません", zh: "没有 CLI 代理" })}
@@ -670,7 +670,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                             </div>
                             {/* Dropdown */}
                             {isOpen && (
-                              <div style={{ border: "1.5px solid #3B82F6", borderTop: "none", maxHeight: 200, overflowY: "auto", background: "var(--th-bg-elevated)" }}>
+                              <div style={{ border: "1.5px solid var(--th-accent)", borderTop: "none", maxHeight: 200, overflowY: "auto", background: "var(--th-bg-elevated)" }}>
                                 {cliAgents.map(agent => {
                                   const isCurrent = agent.id === slot.agentId;
                                   return (
@@ -684,7 +684,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       className="w-full flex items-center gap-3"
                                       style={{
                                         padding: "10px 14px",
-                                        borderBottom: "1px solid #E5E7EB",
+                                        borderBottom: "1px solid var(--th-border)",
                                         background: isCurrent ? "rgba(245,158,11,0.08)" : "transparent",
                                         cursor: "pointer", textAlign: "left",
                                       }}
@@ -732,7 +732,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                         className="w-full flex items-center justify-center gap-2"
                         style={{
                           ...mono, fontSize: "11px", padding: "10px",
-                          border: "1px dashed #E5E7EB",
+                          border: "1px dashed var(--th-border)",
                           background: "transparent",
                           color: "var(--th-text-muted)",
                           cursor: "pointer",
@@ -760,7 +760,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
         {/* ── Footer: clean and focused ── */}
         <div
           className="flex items-center justify-between gap-2 px-5 py-3 flex-shrink-0"
-          style={{ borderTop: "1px solid #E5E7EB", fontFamily: "var(--th-font-mono)" }}
+          style={{ borderTop: "1px solid var(--th-border)", fontFamily: "var(--th-font-mono)" }}
         >
           {step === "github" ? (
             <button

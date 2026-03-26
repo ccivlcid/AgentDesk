@@ -21,7 +21,7 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
   }, [projectId]);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "비용 요약", en: "Cost Summary", ja: "コスト概要", zh: "成本摘要" })}
       </h4>
@@ -35,13 +35,13 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <div className="p-2" style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}>
+            <div className="p-2" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
               <p className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "이번 달", en: "This Month", ja: "今月", zh: "本月" })}
               </p>
               <p className="mt-0.5 text-sm font-bold font-mono text-amber-400">{fmtUsd(cost.thisMonthUsd)}</p>
             </div>
-            <div className="p-2" style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}>
+            <div className="p-2" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
               <p className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "총 비용", en: "Total", ja: "合計", zh: "总计" })}
               </p>
@@ -94,7 +94,7 @@ export function ProjectCostSection({ t, projectId }: ProjectCostSectionProps) {
                   <div
                     key={row.packKey}
                     className="flex items-center gap-1 px-2 py-0.5"
-                    style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}
+                    style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
                   >
                     <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.packKey}</span>
                     <span className="text-[10px] font-mono text-amber-400">{fmtUsd(row.totalUsd)}</span>

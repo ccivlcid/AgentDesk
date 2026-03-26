@@ -145,7 +145,7 @@ export default function BurndownChart({ projectId, t }: Props) {
 
           {/* Lines */}
           <path d={chartData.totalPath} fill="none" stroke="rgba(148,163,184,0.6)" strokeWidth={1.5} />
-          <path d={chartData.remainingPath} fill="none" stroke="rgba(59,130,246,0.5)" strokeWidth={1.5} strokeDasharray="3 2" />
+          <path d={chartData.remainingPath} fill="none" stroke="var(--th-accent-overlay)" strokeWidth={1.5} strokeDasharray="3 2" />
           <path d={chartData.donePath} fill="none" stroke="rgba(52,211,153,0.8)" strokeWidth={1.5} />
 
           {/* X-axis labels */}

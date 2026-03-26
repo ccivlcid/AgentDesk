@@ -114,7 +114,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     borderRadius: 24,
     padding: "24px",
     background: "var(--th-bg-elevated)",
-    border: "1px solid #E5E7EB",
+    border: "1px solid var(--th-border)",
     transition: "all 0.2s",
   };
 
@@ -128,7 +128,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     letterSpacing: "0.05em",
     transition: "all 0.2s",
     cursor: "pointer",
-    border: variant === "secondary" ? "1px solid #E5E7EB" : "none",
+    border: variant === "secondary" ? "1px solid var(--th-border)" : "none",
     background: variant === "primary" ? "var(--th-accent)" : variant === "danger" ? "#EF4444" : "var(--th-bg-elevated)",
     color: variant === "secondary" ? "#4B5563" : "var(--th-bg-elevated)",
     boxShadow: variant === "secondary" ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",

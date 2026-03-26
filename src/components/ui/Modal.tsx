@@ -99,7 +99,7 @@ export default function Modal({
         className={`${WIDTH_CLASS[width]} max-h-[90vh] flex flex-col overflow-hidden ${className}`}
         style={{
           borderRadius: 10,
-          border: "1px solid #D1D5DB",
+          border: "1px solid var(--th-border-strong)",
           background: "var(--th-bg-elevated)",
           fontFamily: mono,
           boxShadow: "0 20px 50px var(--th-modal-overlay)",
@@ -127,7 +127,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
     <div
       className="flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
       style={{
-        borderBottom: "1px solid #E5E7EB",
+        borderBottom: "1px solid var(--th-border)",
         background: "var(--th-bg-elevated)",
         fontFamily: mono,
         borderTopLeftRadius: 10,
@@ -157,7 +157,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
           style={{
             flexShrink: 0,
             background: "transparent",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             borderRadius: 8,
             padding: "2px 8px",
             fontFamily: mono,
@@ -165,7 +165,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
             color: "var(--th-text-muted)",
             cursor: "pointer",
           }}
-          className="hover:!text-[#111827] hover:!border-[#D1D5DB]"
+          className="hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]"
         >
           ✕
         </button>
@@ -196,7 +196,7 @@ export function ModalFooter({ children, className = "" }: ModalFooterProps) {
   return (
     <div
       className={`flex items-center justify-end gap-2 px-4 py-3 flex-shrink-0 ${className}`}
-      style={{ borderTop: "1px solid #E5E7EB", fontFamily: mono }}
+      style={{ borderTop: "1px solid var(--th-border)", fontFamily: mono }}
     >
       {children}
     </div>

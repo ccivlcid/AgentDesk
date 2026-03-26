@@ -31,7 +31,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
               onClick={() => setCategory(cat.id as PersonaCategory | "all")}
               className="font-mono text-[9px] uppercase transition-colors"
               style={{
-                border: active ? "1px solid var(--th-accent, #f59e0b)" : "1px solid #E5E7EB",
+                border: active ? "1px solid var(--th-accent, #f59e0b)" : "1px solid var(--th-border)",
                 borderRadius: 8,
                 padding: "2px 6px",
                 background: active ? "rgba(245,158,11,0.1)" : "var(--th-bg-primary)",

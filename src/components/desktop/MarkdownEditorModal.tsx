@@ -112,7 +112,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
           width: "min(820px, 96vw)",
           height: "min(640px, 90vh)",
           background: "var(--th-bg-surface)",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           borderRadius: 12,
           display: "flex",
           flexDirection: "column",
@@ -129,7 +129,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 12,
             padding: "10px 16px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
             flexShrink: 0,
           }}
@@ -141,7 +141,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               : t({ ko: "새 마크다운 문서", en: "New Markdown Document", ja: "新規Markdownドキュメント", zh: "新建 Markdown 文档" })}
           </span>
           {defaultProjectName && (
-            <span style={{ fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", padding: "2px 8px", borderRadius: 4, border: "1px solid #E5E7EB" }}>
+            <span style={{ fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", padding: "2px 8px", borderRadius: 4, border: "1px solid var(--th-border)" }}>
               📁 {defaultProjectName}
             </span>
           )}
@@ -151,7 +151,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
         <div
           style={{
             padding: "12px 16px 8px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             flexShrink: 0,
           }}
         >
@@ -182,7 +182,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 4,
             padding: "6px 14px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             flexShrink: 0,
             background: "var(--th-bg-primary)",
           }}
@@ -218,7 +218,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               }}
               style={{
                 background: "none",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 borderRadius: 4,
                 padding: "2px 7px",
                 fontFamily: mono,
@@ -276,7 +276,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
                 fontSize: 14,
                 lineHeight: 1.75,
               }}
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) || `<p style="color:#9CA3AF; font-style:italic">${t({ ko: "미리볼 내용이 없습니다", en: "Nothing to preview", ja: "プレビューなし", zh: "暂无预览内容" })}</p>` }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) || `<p style="color:var(--th-text-muted); font-style:italic">${t({ ko: "미리볼 내용이 없습니다", en: "Nothing to preview", ja: "プレビューなし", zh: "暂无预览内容" })}</p>` }}
             />
           ) : (
             <textarea
@@ -315,7 +315,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             alignItems: "center",
             gap: 12,
             padding: "8px 16px",
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
             flexShrink: 0,
           }}
@@ -354,7 +354,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             onClick={onClose}
             style={{
               background: "none",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 6,
               padding: "4px 14px",
               fontFamily: mono,

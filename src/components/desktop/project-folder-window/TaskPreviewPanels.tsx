@@ -57,7 +57,7 @@ export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {subtasks.map((st) => (
-        <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, padding: "6px 0", borderBottom: "1px solid #E5E7EB" }}>
+        <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, padding: "6px 0", borderBottom: "1px solid var(--th-border)" }}>
           <span style={{ fontSize: 9, color: st.status === "done" ? "var(--th-success, #22c55e)" : "var(--th-text-muted)", display: "inline-flex", alignItems: "center" }}>
             {st.status === "done" ? (
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -79,7 +79,7 @@ export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title
 
 export function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
       <span style={{ color: "var(--th-text-muted)" }}>{label}:</span>
       <span style={{ color: "var(--th-text-primary)" }}>{value}</span>
     </div>
@@ -117,7 +117,7 @@ export function DonePreview({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: 0, padding: "0 16px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 0, padding: "0 16px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", flexShrink: 0 }}>
         {RTABS.map((tab) => (
           <button
             key={tab.id}
@@ -131,7 +131,7 @@ export function DonePreview({
               color: reportTab === tab.id ? "var(--th-accent)" : "var(--th-text-secondary)",
               background: "none",
               border: "none",
-              borderBottom: reportTab === tab.id ? "2px solid #3B82F6" : "2px solid transparent",
+              borderBottom: reportTab === tab.id ? "2px solid var(--th-accent)" : "2px solid transparent",
               cursor: "pointer",
               marginBottom: -1,
             }}

@@ -19,7 +19,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
     borderRadius: 14, 
     padding: "12px 16px", 
     background: "var(--th-bg-surface)", 
-    border: "1px solid #E5E7EB",
+    border: "1px solid var(--th-border)",
     color: "var(--th-text-primary)",
     fontSize: "13px",
     transition: "all 0.2s"

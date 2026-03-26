@@ -171,7 +171,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
           lineHeight: 1,
           transition: "color 0.1s",
         }}
-        className="hover:!text-[#6B7280]"
+        className="hover:!text-[var(--th-text-secondary)]"
       >
         [×]
       </button>

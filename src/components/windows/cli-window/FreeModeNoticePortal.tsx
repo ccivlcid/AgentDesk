@@ -42,7 +42,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
           display: "flex",
           flexDirection: "column",
           background: "var(--th-bg-elevated)",
-          border: "1px solid #D1D5DB",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 12,
           boxShadow:
             "0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.45), 0 12px 24px rgba(0,0,0,0.25)",
@@ -52,7 +52,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
           style={{
             position: "relative",
             padding: "18px 20px 14px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "linear-gradient(180deg, #EBF5FF 0%, transparent 100%)",
           }}
         >
@@ -138,7 +138,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
           <div
             style={{
               borderRadius: 10,
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               background: "var(--th-bg-surface)",
               overflow: "hidden",
             }}
@@ -156,7 +156,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 color: "var(--th-text-secondary)",
-                borderBottom: "1px solid #E5E7EB",
+                borderBottom: "1px solid var(--th-border)",
                 background: "var(--th-bg-surface)",
               }}
             >
@@ -179,7 +179,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
                   fontFamily: "var(--th-font-body)",
                   fontSize: 12,
                   color: "var(--th-text-primary)",
-                  borderBottom: i < rows.length - 1 ? "1px solid #E5E7EB" : "none",
+                  borderBottom: i < rows.length - 1 ? "1px solid var(--th-border)" : "none",
                   background: i % 2 === 1 ? "var(--th-bg-primary)" : "transparent",
                 }}
               >
@@ -218,7 +218,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
             gap: 12,
             flexWrap: "wrap",
             padding: "14px 20px 18px",
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--th-border)",
             background: "var(--th-bg-surface)",
           }}
         >
@@ -256,7 +256,7 @@ export function FreeModeNoticePortal({ open, t, rows, onDismiss }: FreeModeNotic
               fontWeight: 600,
               color: "var(--th-bg-primary)",
               background: "var(--th-text-primary)",
-              border: "1px solid #D1D5DB",
+              border: "1px solid var(--th-border-strong)",
               borderRadius: 8,
               cursor: "pointer",
               padding: "9px 22px",

@@ -107,7 +107,7 @@ export default function ToastContainer() {
               pointerEvents: "auto",
               display: "flex",
               background: "var(--th-bg-surface)",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 10,
               boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
               overflow: "hidden",
@@ -164,7 +164,7 @@ export default function ToastContainer() {
             style={{
               pointerEvents: "auto",
               background: "var(--th-bg-surface)",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 10,
               boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
               padding: "8px 12px",

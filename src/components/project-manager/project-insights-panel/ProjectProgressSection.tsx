@@ -71,7 +71,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
   ].filter((item) => (stats.counts[item.key] ?? 0) > 0);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "프로젝트 진행률", en: "Project Progress", ja: "プロジェクト進捗", zh: "项目进度" })}
       </h4>

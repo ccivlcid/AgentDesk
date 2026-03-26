@@ -27,7 +27,7 @@ export const EVENT_TYPE_ICONS: Record<string, string> = {
 };
 
 export const EVENT_TYPE_COLORS: Record<string, string> = {
-  "pre-task": "text-[#60a5fa] bg-[var(--th-amber-glow)] border-[rgba(59,130,246,0.3)]",
+  "pre-task": "text-[#60a5fa] bg-[var(--th-amber-glow)] border-[var(--th-accent-focus)]",
   "post-task": "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
   "on-error": "text-red-400 bg-red-500/15 border-red-500/30",
   "on-complete": "text-green-400 bg-green-500/15 border-green-500/30",

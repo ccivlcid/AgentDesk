@@ -16,7 +16,7 @@ export default function SnapPreviewOverlay() {
     position: "fixed",
     zIndex: 1800,
     background: "rgba(245,158,11,0.15)",
-    border: "1px solid #3B82F6",
+    border: "1px solid var(--th-accent)",
     pointerEvents: "none",
     transition: "opacity 0.15s",
   };

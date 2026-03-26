@@ -29,8 +29,8 @@ export default function MemoryCategoryBar({
               className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
               style={{
                 borderRadius: 6,
-                background: isActive ? "rgba(59,130,246,0.06)" : "var(--th-bg-elevated)",
-                borderColor: isActive ? "rgba(59,130,246,0.3)" : "var(--th-border)",
+                background: isActive ? "var(--th-accent-bg)" : "var(--th-bg-elevated)",
+                borderColor: isActive ? "var(--th-accent-focus)" : "var(--th-border)",
                 color: isActive ? "var(--th-accent)" : "var(--th-text-secondary)",
               }}
             >

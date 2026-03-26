@@ -30,7 +30,7 @@ export const CATEGORY_ICONS: Record<string, ReactNode> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  coding: "bg-[rgba(59,130,246,0.2)] text-[#93c5fd] border-[rgba(59,130,246,0.3)]",
+  coding: "bg-[var(--th-accent-border-subtle)] text-[#93c5fd] border-[var(--th-accent-focus)]",
   communication: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   quality: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
   execution: "bg-purple-500/20 text-purple-300 border-purple-500/30",

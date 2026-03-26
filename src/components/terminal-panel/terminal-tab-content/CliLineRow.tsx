@@ -12,7 +12,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
     const parts = text.split(new RegExp(`(${escaped})`, "gi"));
     return parts.map((part, i) =>
       i % 2 === 1
-        ? <mark key={i} style={{ background: "rgba(59,130,246,0.2)", color: "#fcd34d", borderRadius: 2, padding: "0 1px" }}>{part}</mark>
+        ? <mark key={i} style={{ background: "var(--th-accent-border-subtle)", color: "#fcd34d", borderRadius: 2, padding: "0 1px" }}>{part}</mark>
         : part,
     );
   }
@@ -26,7 +26,7 @@ export function CliLineRow({ line, search, isLight = false }: { line: CliLine; s
           color: "var(--th-text-muted)",
           opacity: 0.5,
           padding: "3px 0 3px 6px",
-          borderLeft: "2px solid #E5E7EB",
+          borderLeft: "2px solid var(--th-border)",
           letterSpacing: "0.04em",
         }}
       >

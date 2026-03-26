@@ -79,7 +79,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                 display: "flex",
                 alignItems: "center",
                 gap: 0,
-                borderBottom: idx < artifacts.length - 1 || isExpanded ? "1px solid #E5E7EB" : "none",
+                borderBottom: idx < artifacts.length - 1 || isExpanded ? "1px solid var(--th-border)" : "none",
                 background: "var(--th-bg-primary)",
                 transition: "background 0.1s",
               }}
@@ -113,7 +113,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
               </span>
 
               {/* 액션 버튼 */}
-              <div style={{ display: "flex", borderLeft: "1px solid #E5E7EB", flexShrink: 0 }}>
+              <div style={{ display: "flex", borderLeft: "1px solid var(--th-border)", flexShrink: 0 }}>
                 {canInline && (
                   <button
                     type="button"
@@ -126,7 +126,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                       minHeight: 38,
                       background: isExpanded ? "rgba(245,158,11,0.08)" : "none",
                       border: "none",
-                      borderRight: "1px solid #E5E7EB",
+                      borderRight: "1px solid var(--th-border)",
                       color: isExpanded ? "var(--th-accent)" : "var(--th-text-muted)",
                       cursor: "pointer",
                       letterSpacing: "0.04em",
@@ -141,7 +141,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                   <button
                     type="button"
                     onClick={() => onPreview(art)}
-                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, background: "none", border: "none", borderRight: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.04em" }}
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, background: "none", border: "none", borderRight: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.04em" }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   >
@@ -153,7 +153,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                     href={previewUrl}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "rgba(167,139,250,0.08)", borderRight: "1px solid #E5E7EB", color: "rgb(196,181,253)", textDecoration: "none", letterSpacing: "0.04em" }}
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "rgba(167,139,250,0.08)", borderRight: "1px solid var(--th-border)", color: "rgb(196,181,253)", textDecoration: "none", letterSpacing: "0.04em" }}
                   >
                     {t({ ko: "열기", en: "OPEN", ja: "開く", zh: "打开" })}
                   </a>
@@ -180,12 +180,12 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
 
             {/* 인라인 미리보기 */}
             {isExpanded && isImage && (
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 <img src={previewUrl} alt={art.title} style={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain", display: "block" }} loading="lazy" />
               </div>
             )}
             {isExpanded && isPdf && (
-              <div style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div style={{ borderBottom: "1px solid var(--th-border)" }}>
                 <iframe src={previewUrl} title={art.title} style={{ width: "100%", height: 400, background: "#fff", display: "block", border: "none" }} />
               </div>
             )}

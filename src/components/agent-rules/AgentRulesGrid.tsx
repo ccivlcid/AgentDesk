@@ -81,7 +81,7 @@ export default function AgentRulesGrid({
             className={`relative p-4 transition-all group ${
               !rule.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             {/* Top: icon + title/desc + learned avatars — same as SkillsGrid */}
             <div className="mb-3 flex items-start justify-between gap-2">
@@ -162,7 +162,7 @@ export default function AgentRulesGrid({
                   <button
                     onClick={() => handleCopy(rule)}
                     className="px-2 py-1 text-[10px] font-mono transition-all"
-                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+                    style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
                     title={rule.rule_content.slice(0, 80)}
                   >
                     {copiedRuleId === rule.id
@@ -182,7 +182,7 @@ export default function AgentRulesGrid({
                     ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                     : ""
                 }`}
-                style={rule.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
+                style={rule.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
                 title={rule.enabled
                   ? t({ ko: "비활성화", en: "Disable", ja: "無効化", zh: "禁用" })
                   : t({ ko: "활성화", en: "Enable", ja: "有効化", zh: "启用" })}
@@ -194,7 +194,7 @@ export default function AgentRulesGrid({
               <button
                 onClick={() => onEdit(rule)}
                 className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+                style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
               >
                 {t({ ko: "수정", en: "Edit", ja: "編集", zh: "编辑" })}
               </button>

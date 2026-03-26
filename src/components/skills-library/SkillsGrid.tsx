@@ -69,7 +69,7 @@ export default function SkillsGrid({
             <div
               key={`${skill.rank}-${detailId}`}
               className="relative p-4 transition-all group"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               onMouseEnter={() => onHoverEnter(skill)}
               onMouseLeave={onHoverLeave}
             >
@@ -153,7 +153,7 @@ export default function SkillsGrid({
                     <button
                       onClick={() => onCopy(skill)}
                       className="px-2 py-1 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.2)" }}
+                      style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
                       title={`npx skills add ${skill.repo}`}
                     >
                       {copiedSkill === skill.name
@@ -168,7 +168,7 @@ export default function SkillsGrid({
                 <div
                   ref={tooltipRef}
                   className="absolute z-50 left-0 right-0 top-full mt-2 p-4 shadow-2xl shadow-black/40 animate-in fade-in slide-in-from-top-1 duration-200"
-                  style={{ borderRadius: 8, border: "1px solid #D1D5DB", background: "var(--th-bg-elevated)" }}
+                  style={{ borderRadius: 8, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}
                   onMouseEnter={() => {
                     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
                     setHoveredSkill(detailKey);

@@ -33,13 +33,13 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
         display: "flex",
         flexDirection: "column",
         background: "var(--th-bg-elevated)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 16,
         overflow: "hidden",
       }}>
         <div style={{
           padding: "12px 20px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           fontFamily: mono,
           fontSize: 11,
           display: "flex",
@@ -88,7 +88,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
                 </div>
                 <div style={{
                   fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
-                  background: "var(--th-bg-surface)", border: "1px solid #E5E7EB",
+                  background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
                   borderRadius: 14,
                   padding: "12px 16px",
                 }}>
@@ -110,7 +110,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
           alignItems: "center",
           gap: 8,
           padding: "10px 16px",
-          borderTop: "1px solid #E5E7EB",
+          borderTop: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
         }}>
           <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-accent)", fontWeight: 700 }}>{">"}_</span>
@@ -124,7 +124,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
           />
           <span style={{
             fontFamily: mono, fontSize: 9, fontWeight: 600, color: "var(--th-text-muted)",
-            border: "1px solid #E5E7EB", padding: "3px 8px", borderRadius: 6,
+            border: "1px solid var(--th-border)", padding: "3px 8px", borderRadius: 6,
           }}>
             ESC
           </span>
@@ -145,12 +145,12 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
         overflow: "auto",
         flexShrink: 0,
         background: "var(--th-bg-elevated)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 16,
       }}>
         <div style={{
           padding: "12px 20px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           fontFamily: mono,
           fontSize: 11,
           display: "flex",
@@ -176,7 +176,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
               Mission Objective
             </div>
             <div style={{
-              background: "var(--th-bg-surface)", border: "1px solid #E5E7EB",
+              background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
               borderRadius: 14,
               padding: "12px 16px",
             }}>
@@ -392,7 +392,7 @@ function ActiveDependencies({ tasks }: { tasks: Task[] }) {
         Active Dependencies
       </div>
       <div style={{
-        background: "var(--th-bg-surface)", border: "1px solid #E5E7EB",
+        background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
         borderRadius: 14,
         padding: "10px 14px",
       }}>

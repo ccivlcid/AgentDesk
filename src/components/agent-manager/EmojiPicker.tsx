@@ -59,7 +59,7 @@ export default function EmojiPicker({
           style={{
             borderRadius: "16px",
             background: "var(--th-bg-elevated)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             backdropFilter: "var(--th-glass-blur)",
           }}
         >
@@ -80,8 +80,8 @@ export default function EmojiPicker({
                       onChange(emoji);
                       setOpen(false);
                     }}
-                    className={`w-8 h-8 text-base flex items-center justify-center transition-all hover:scale-125 hover:bg-[#F3F4F6] ${
-                      value === emoji ? "ring-2 ring-[#3B82F6] bg-[rgba(59,130,246,0.1)]" : ""
+                    className={`w-8 h-8 text-base flex items-center justify-center transition-all hover:scale-125 hover:bg-[var(--th-bg-primary)] ${
+                      value === emoji ? "ring-2 ring-[var(--th-accent)] bg-[var(--th-accent-bg)]" : ""
                     }`}
                     style={{ borderRadius: 8 }}
                   >

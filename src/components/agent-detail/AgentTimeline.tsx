@@ -103,7 +103,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
           key={ev.id}
           className="flex gap-3 py-2"
           style={{
-            borderBottom: idx < events.length - 1 ? "1px solid #E5E7EB" : "none",
+            borderBottom: idx < events.length - 1 ? "1px solid var(--th-border)" : "none",
           }}
         >
           {/* Time column */}

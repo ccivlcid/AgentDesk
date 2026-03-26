@@ -67,7 +67,7 @@ export default function ProjectFolderWindow({
         background: "var(--th-bg-surface)",
         backdropFilter: "var(--th-glass-blur)",
         WebkitBackdropFilter: "var(--th-glass-blur)",
-        border: "1px solid #D1D5DB",
+        border: "1px solid var(--th-border-strong)",
         borderRadius: 12,
         boxShadow: "0 24px 64px var(--th-glass-shadow)",
         fontFamily: "var(--th-font-mono)",
@@ -84,7 +84,7 @@ export default function ProjectFolderWindow({
           height: 40,
           flexShrink: 0,
           background: "var(--th-bg-elevated)",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           cursor: "default",
           userSelect: "none",
           borderTopLeftRadius: 12,
@@ -116,7 +116,7 @@ export default function ProjectFolderWindow({
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 0, height: 30, borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-primary)", flexShrink: 0, padding: "0 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 0, height: 30, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", flexShrink: 0, padding: "0 16px" }}>
         <StatPill icon={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>} value={`${activeTasks.length} ${t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}`} color={activeTasks.length > 0 ? "var(--th-success, #22c55e)" : "var(--th-text-muted)"} />
         <Divider />
         <StatPill
@@ -142,7 +142,7 @@ export default function ProjectFolderWindow({
         )}
       </div>
 
-      <div style={{ display: "flex", padding: "0 12px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", flexShrink: 0 }}>
+      <div style={{ display: "flex", padding: "0 12px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", flexShrink: 0 }}>
         {TABS.map((tabEntry) => (
           <button
             key={tabEntry.id}
@@ -156,7 +156,7 @@ export default function ProjectFolderWindow({
               color: tab === tabEntry.id ? "var(--th-accent)" : "var(--th-text-secondary)",
               background: "none",
               border: "none",
-              borderBottom: tab === tabEntry.id ? "2px solid #3B82F6" : "2px solid transparent",
+              borderBottom: tab === tabEntry.id ? "2px solid var(--th-accent)" : "2px solid transparent",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -166,7 +166,7 @@ export default function ProjectFolderWindow({
           >
             {tabEntry.label}
             {tabEntry.count !== undefined && (
-              <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 10, background: tab === tabEntry.id ? "var(--th-accent-glow)" : "var(--th-bg-surface)", color: tab === tabEntry.id ? "var(--th-accent)" : "var(--th-text-muted)", border: "1px solid #E5E7EB" }}>
+              <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 10, background: tab === tabEntry.id ? "var(--th-accent-glow)" : "var(--th-bg-surface)", color: tab === tabEntry.id ? "var(--th-accent)" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}>
                 {tabEntry.count}
               </span>
             )}

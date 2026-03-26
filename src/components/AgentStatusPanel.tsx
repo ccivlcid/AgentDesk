@@ -129,7 +129,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         className={`relative mx-4 w-full flex flex-col overflow-hidden ${inspectorMode ? "max-w-3xl" : "max-w-xl"}`}
         style={{
           borderRadius: 10,
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           background: "var(--th-bg-elevated)",
           maxHeight: "85vh",
           fontFamily: "var(--th-font-mono)",
@@ -145,7 +145,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* ── 상태 요약 헤더 (ps aux --agents): 다크=터미널 배경, 라이트=패널 배경 ── */}
         <div
           className="agent-status-bar px-4 py-3 flex-shrink-0"
-          style={{ borderBottom: "1px solid #E5E7EB" }}
+          style={{ borderBottom: "1px solid var(--th-border)" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -243,7 +243,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   className="grid gap-2 px-4 py-2.5 items-center group"
                   style={{
                     gridTemplateColumns: "32px 1fr 80px 60px 60px 60px",
-                    borderBottom: "1px solid #E5E7EB",
+                    borderBottom: "1px solid var(--th-border)",
                     background: idx % 2 === 0 ? "transparent" : "var(--th-bg-elevated)",
                   }}
                 >
@@ -256,7 +256,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)" }}>{agentName}</span>
-                      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "0 4px", border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+                      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "0 4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                         {deptName}
                       </span>
                     </div>
@@ -318,10 +318,10 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
 
           {/* ── CLI Inspector ── */}
           {inspectorMode && (
-            <div style={{ borderTop: "2px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+            <div style={{ borderTop: "2px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
               <div
                 className="flex items-center justify-between px-4 py-2"
-                style={{ borderBottom: "1px solid #E5E7EB" }}
+                style={{ borderBottom: "1px solid var(--th-border)" }}
               >
                 <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   {inspectorMode === "script" ? "SCRIPT PROCESSES" : "IDLE CLI PROCESSES"}
@@ -330,7 +330,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); refreshCli(); }}
-                  style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "1px solid #E5E7EB", cursor: "pointer", padding: "1px 6px" }}
+                  style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "1px solid var(--th-border)", cursor: "pointer", padding: "1px 6px" }}
                 >
                   ↺ {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
                 </button>
@@ -352,7 +352,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                     <div
                       key={proc.pid}
                       className="flex items-start gap-3 px-4 py-2.5"
-                      style={{ borderBottom: "1px solid #E5E7EB" }}
+                      style={{ borderBottom: "1px solid var(--th-border)" }}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -363,7 +363,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           <span
                             style={{
                               ...mono, fontSize: "9px", padding: "0 4px",
-                              border: proc.is_idle ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+                              border: proc.is_idle ? "1px solid #BFDBFE" : "1px solid var(--th-border)",
                               color: proc.is_idle ? "var(--th-accent)" : "var(--th-attr-elite)",
                               background: proc.is_idle ? "var(--th-amber-glow)" : "var(--th-green-glow)",
                             }}
@@ -407,7 +407,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* ── 푸터 ── */}
         <div
           className="flex items-center justify-between px-4 py-2 flex-shrink-0"
-          style={{ borderTop: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+          style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
         >
           <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.04em" }}>
             AUTO-REFRESH 5s · {new Date().toLocaleTimeString()}
@@ -417,7 +417,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
             style={{
               ...mono, fontSize: "10px", fontWeight: 700,
               padding: "2px 12px",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               background: "var(--th-bg-surface)",
               color: "var(--th-text-secondary)",
               cursor: "pointer",

@@ -110,12 +110,12 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
       style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px var(--th-modal-overlay)" }}>
+      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px var(--th-modal-overlay)" }}>
         {/* Header (macOS) */}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
@@ -163,7 +163,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
 
         {/* Action result */}
         {actionResult && (
-          <div className="px-5 py-2 text-sm font-mono" style={{ borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-accent)" }}>{actionResult}</div>
+          <div className="px-5 py-2 text-sm font-mono" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-accent)" }}>{actionResult}</div>
         )}
 
         {/* Content */}
@@ -198,7 +198,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
                   <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
                     {t({ ko: "요약", en: "Summary", ja: "概要", zh: "摘要" })}
                   </h3>
-                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
                     {diffData.stat}
                   </pre>
                 </div>
@@ -209,7 +209,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
                   <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
                     {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
                   </h3>
-                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-terminal-bg)" }}>
+                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
                     {diffData.diff.split("\n").map((line, i) => {
                       let cls = "text-[#94a3b8]";
                       if (line.startsWith("+") && !line.startsWith("+++")) cls = "text-green-400";

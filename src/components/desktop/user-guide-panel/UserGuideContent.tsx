@@ -44,7 +44,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
 
           {sec.keys && sec.keys.length > 0 && (
             <div style={{
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 8, overflow: "hidden",
               marginBottom: sec.body ? 12 : 0,
             }}>
@@ -53,7 +53,7 @@ export function UserGuideContent({ chapter }: UserGuideContentProps) {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "7px 12px", gap: 12,
                   background: ki % 2 === 0 ? "transparent" : "var(--th-bg-primary)",
-                  borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid #E5E7EB" : "none",
+                  borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid var(--th-border)" : "none",
                 }}>
                   <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: MONO_FONT, flex: 1, minWidth: 0 }}>{desc}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>

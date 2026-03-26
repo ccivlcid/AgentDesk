@@ -84,7 +84,7 @@ export function GitTab({ project }: { project: Project }) {
   const s: React.CSSProperties = { fontFamily: mono };
   const inputStyle: React.CSSProperties = {
     ...s, fontSize: 11, padding: "6px 10px",
-    background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB",
+    background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
     borderRadius: 6, color: "var(--th-text-primary)", outline: "none", width: "100%",
   };
 
@@ -115,7 +115,7 @@ export function GitTab({ project }: { project: Project }) {
           {t({ ko: "완료!", en: "Done!", ja: "完了!", zh: "完成!" })}
         </div>
         <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{project.project_path}</div>
-        <button onClick={() => { setStep("idle"); setProgress(0); }} style={{ ...s, fontSize: 11, padding: "5px 16px", borderRadius: 6, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
+        <button onClick={() => { setStep("idle"); setProgress(0); }} style={{ ...s, fontSize: 11, padding: "5px 16px", borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
           {t({ ko: "다시 가져오기", en: "Import again", ja: "再インポート", zh: "重新导入" })}
         </button>
       </div>

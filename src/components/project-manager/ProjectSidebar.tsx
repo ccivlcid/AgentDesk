@@ -36,10 +36,10 @@ export default function ProjectSidebar({
   totalPages,
 }: ProjectSidebarProps) {
   return (
-    <aside className="flex w-full flex-col md:w-[330px]" style={{ borderRight: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+    <aside className="flex w-full flex-col md:w-[330px]" style={{ borderRight: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
       <HeaderModalChrome title={headerTitle} onClose={onClose} />
 
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <input
           type="text"
           value={search}
@@ -56,7 +56,7 @@ export default function ProjectSidebar({
             zh: "搜索项目",
           })}
           className="w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
         />
         <div className="mt-2 flex gap-2">
           <button
@@ -65,7 +65,7 @@ export default function ProjectSidebar({
               void loadProjects(1, search);
             }}
             className="px-2.5 py-1 text-xs font-mono transition"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "조회", en: "Search", ja: "検索", zh: "查询" })}
           </button>
@@ -81,7 +81,7 @@ export default function ProjectSidebar({
             type="button"
             onClick={onOpenGitHubImport}
             className="px-2.5 py-1 text-xs font-mono transition"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "GitHub 가져오기", en: "GitHub Import", ja: "GitHub インポート", zh: "GitHub 导入" })}
           </button>
@@ -106,7 +106,7 @@ export default function ProjectSidebar({
                 onClick={() => onSelectProject(project.id)}
                 className="w-full px-4 py-3 text-left transition"
                 style={{
-                  borderLeft: selectedProjectId === project.id ? "3px solid #3B82F6" : "3px solid transparent",
+                  borderLeft: selectedProjectId === project.id ? "3px solid var(--th-accent)" : "3px solid transparent",
                   background: selectedProjectId === project.id ? "var(--th-bg-surface)" : "transparent",
                 }}
               >
@@ -136,13 +136,13 @@ export default function ProjectSidebar({
         )}
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2" style={{ borderTop: "1px solid #E5E7EB" }}>
+      <div className="flex items-center justify-between px-4 py-2" style={{ borderTop: "1px solid var(--th-border)" }}>
         <button
           type="button"
           disabled={page <= 1}
           onClick={() => void loadProjects(page - 1, search)}
           className="px-2 py-1 text-xs font-mono disabled:opacity-40"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "이전", en: "Prev", ja: "前へ", zh: "上一页" })}
         </button>
@@ -154,7 +154,7 @@ export default function ProjectSidebar({
           disabled={page >= totalPages}
           onClick={() => void loadProjects(page + 1, search)}
           className="px-2 py-1 text-xs font-mono disabled:opacity-40"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一页" })}
         </button>

@@ -146,7 +146,7 @@ export default function CommandPalette({
           background: "var(--th-bg-surface)",
           backdropFilter: "var(--th-glass-blur) saturate(180%)",
           WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
-          border: "1px solid #D1D5DB",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 22,
           boxShadow: "var(--th-glass-shadow-active)",
           overflow: "hidden",

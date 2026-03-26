@@ -5,7 +5,7 @@ const mono = "var(--th-font-mono)";
 const INPUT_INLINE: React.CSSProperties = {
   padding: "6px 10px",
   background: "var(--th-bg-elevated)",
-  border: "1px solid #E5E7EB",
+  border: "1px solid var(--th-border)",
   borderRadius: 8,
   color: "var(--th-text-primary)",
   fontFamily: mono,

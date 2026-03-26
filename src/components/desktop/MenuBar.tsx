@@ -84,7 +84,7 @@ function ProjectProgressIndicator() {
       display: "flex", alignItems: "center", gap: 8,
       padding: "3px 14px",
       background: "var(--th-hover-overlay-subtle, rgba(255,255,255,0.03))",
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--th-border)",
       borderRadius: 8,
     }}>
       {/* Running dot + count */}
@@ -269,7 +269,7 @@ export default function MenuBar({
   };
 
   const menuSepStyle: React.CSSProperties = {
-    borderTop: "1px solid #E5E7EB",
+    borderTop: "1px solid var(--th-border)",
     margin: "4px 0",
   };
 
@@ -290,7 +290,7 @@ export default function MenuBar({
         background: "var(--th-bg-surface)",
         backdropFilter: "var(--th-glass-blur) saturate(180%)",
         WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
-        borderBottom: "1px solid #E5E7EB",
+        borderBottom: "1px solid var(--th-border)",
         display: "flex",
         alignItems: "center",
         padding: "0 20px",
@@ -341,7 +341,7 @@ export default function MenuBar({
               background: "var(--th-bg-surface)",
               backdropFilter: "var(--th-glass-blur)",
               WebkitBackdropFilter: "var(--th-glass-blur)",
-              border: "1px solid #D1D5DB",
+              border: "1px solid var(--th-border-strong)",
               borderRadius: 12,
               boxShadow: "var(--th-glass-shadow-active)",
               padding: "4px 0",
@@ -478,7 +478,7 @@ export default function MenuBar({
         title={t({ ko: "검색  ⌘K", en: "Search  ⌘K", ja: "検索  ⌘K", zh: "搜索  ⌘K" })}
         style={{
           background: "var(--th-hover-overlay-subtle)",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           borderRadius: 6,
           color: "var(--th-text-muted)",
           fontFamily: mono,
@@ -573,7 +573,7 @@ export default function MenuBar({
             background: "var(--th-panel-bg, rgba(18,18,18,0.96))",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             borderRadius: 12,
             boxShadow: "0 24px 56px rgba(0,0,0,0.5)",
             zIndex: 2000,
@@ -584,7 +584,7 @@ export default function MenuBar({
           {/* 시간 헤더 */}
           <div style={{
             padding: "20px 20px 14px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-accent-glow)",
           }}>
             <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: "-1px", lineHeight: 1 }}>

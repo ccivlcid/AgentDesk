@@ -33,7 +33,7 @@ export function getSubAgentSpriteNum(subAgentId: string): number {
 
 export const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   idle: { label: "idle", color: "text-green-400", bg: "bg-green-500/20" },
-  working: { label: "working", color: "text-[#60a5fa]", bg: "bg-[rgba(59,130,246,0.2)]" },
+  working: { label: "working", color: "text-[#60a5fa]", bg: "bg-[var(--th-accent-border-subtle)]" },
   break: { label: "break", color: "text-yellow-400", bg: "bg-yellow-500/20" },
   offline: {
     label: "offline",

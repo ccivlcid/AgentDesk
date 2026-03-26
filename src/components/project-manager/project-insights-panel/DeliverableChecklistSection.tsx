@@ -36,7 +36,7 @@ export function DeliverableChecklistSection({ t, projectId }: { t: ProjectI18nTr
   const doneCount = items.filter((i) => i.checked).length;
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-surface)" }}>
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "결과물 체크리스트", en: "Deliverables", ja: "成果物チェック", zh: "交付物清单" })}

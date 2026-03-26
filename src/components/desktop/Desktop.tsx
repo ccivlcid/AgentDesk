@@ -79,7 +79,7 @@ function KickoffStageOverlay() {
             background: "var(--th-panel-bg, rgba(18,18,18,0.92))",
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             borderRadius: 12,
             padding: "12px 24px",
             boxShadow: "0 12px 40px var(--th-modal-overlay)",
@@ -128,7 +128,7 @@ function KickoffStageOverlay() {
                       background: "var(--th-accent)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: "0 0 8px #3B82F6",
+                      boxShadow: "0 0 8px var(--th-accent)",
                       animation: "kickoff-pulse 1.5s ease-in-out infinite",
                       color: "#fff",
                     }}>
@@ -140,7 +140,7 @@ function KickoffStageOverlay() {
                     /* Pending: gray outline */
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      border: "2px solid #9CA3AF",
+                      border: "2px solid var(--th-text-muted)",
                       background: "transparent",
                       flexShrink: 0,
                     }} />

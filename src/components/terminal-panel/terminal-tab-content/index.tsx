@@ -94,7 +94,7 @@ export function TerminalTabContent({
         className="flex-shrink-0 flex items-center"
         style={{
           padding: "0 14px",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           background: "var(--th-bg-elevated)",
           height: 34,
           gap: 0,
@@ -116,7 +116,7 @@ export function TerminalTabContent({
                 padding: "0 12px",
                 height: 33,
                 border: "none",
-                borderBottom: isActive ? "2px solid #3B82F6" : "2px solid transparent",
+                borderBottom: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
                 background: "transparent",
                 color: isActive ? "var(--th-accent)" : isError ? "rgb(253,164,175)" : "var(--th-text-muted)",
                 cursor: "pointer",
@@ -155,7 +155,7 @@ export function TerminalTabContent({
           {showSearchBar && (
             <div
               className="flex items-center gap-2 flex-shrink-0"
-              style={{ padding: "6px 14px", borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+              style={{ padding: "6px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
             >
               <input
                 ref={searchInputRef}
@@ -172,7 +172,7 @@ export function TerminalTabContent({
                   fontSize: 11,
                   padding: "4px 8px",
                   borderRadius: 5,
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   background: "var(--th-bg-surface)",
                   color: "var(--th-text-primary)",
                   outline: "none",
@@ -191,7 +191,7 @@ export function TerminalTabContent({
                   fontSize: 10,
                   padding: "3px 6px",
                   borderRadius: 5,
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   background: "var(--th-bg-surface)",
                   color: "var(--th-text-secondary)",
                   outline: "none",
@@ -359,7 +359,7 @@ export function TerminalTabContent({
                       fontFamily: mono,
                       fontSize: 11,
                       lineHeight: 1.65,
-                      color: isLight ? "#92400e" : "rgba(59,130,246,0.6)",
+                      color: isLight ? "#92400e" : "var(--th-accent-overlay)",
                       margin: 0,
                       padding: "10px 14px",
                       whiteSpace: "pre-wrap",

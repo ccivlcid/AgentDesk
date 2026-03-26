@@ -84,7 +84,7 @@ export default function AppSwitcher() {
           gap: 24,
           padding: "24px 32px",
           background: "var(--th-bg-surface)",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           borderRadius: 16,
           boxShadow: "0 24px 64px var(--th-modal-overlay)",
         }}

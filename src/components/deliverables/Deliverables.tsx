@@ -129,7 +129,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       {/* ── 터미널 헤더 (설정과 동일 macOS) ── */}
       <div
         style={{
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--th-border)",
           padding: "12px 18px",
           background: "var(--th-bg-elevated)",
           display: "flex",
@@ -155,18 +155,18 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       </div>
 
       {/* ── 검색 + 정렬 바 ── */}
-      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "6px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "6px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 6 }}>
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t({ ko: "검색 (제목, 에이전트, 프로젝트...)", en: "Search (title, agent, project...)", ja: "検索...", zh: "搜索..." })}
-          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
+          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
         />
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortBy)}
-          style={{ ...mono, fontSize: "9px", padding: "3px 6px", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", borderRadius: 4, color: "var(--th-text-muted)", outline: "none", cursor: "pointer" }}
+          style={{ ...mono, fontSize: "9px", padding: "3px 6px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-muted)", outline: "none", cursor: "pointer" }}
         >
           <option value="date">{t({ ko: "날짜순", en: "By Date", ja: "日付順", zh: "按日期" })}</option>
           <option value="title">{t({ ko: "제목순", en: "By Title", ja: "タイトル順", zh: "按标题" })}</option>
@@ -175,13 +175,13 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         </select>
         <button
           onClick={() => { setArtifacts({}); void fetchItems(); }}
-          style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+          style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
           title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         >↻</button>
       </div>
 
       {/* ── 필터 바 ── */}
-      <div style={{ borderBottom: "1px solid #E5E7EB", padding: "4px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "4px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -223,7 +223,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       <div style={{ flex: 1, overflow: "auto", background: "var(--th-bg-primary)", padding: "20px 18px 24px" }}>
       {/* ── 컬럼 헤더 ── */}
       {!loading && filtered.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid #E5E7EB", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", gap: 8 }}>
           <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 44, flexShrink: 0 }}>{t({ ko: "상태", en: "STATUS", ja: "状態", zh: "状态" })}</span>
           <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>{t({ ko: "제목", en: "TITLE", ja: "タイトル", zh: "标题" })}</span>
           <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 130, flexShrink: 0 }}>{t({ ko: "에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}</span>
@@ -238,7 +238,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={`skel-${i}`}
-              style={{ height: 48, borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid #E5E7EB" }}
+              style={{ height: 48, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid var(--th-border)" }}
             />
           ))}
         </div>
@@ -267,7 +267,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
 
       {/* ── footer ── */}
       {!loading && (
-        <div style={{ borderTop: "1px solid #E5E7EB", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
+        <div style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
           <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
             $ {filtered.length} {t({ ko: "건", en: "entries", ja: "件", zh: "条" })}{statusFilter !== "all" ? ` (${t({ ko: "필터", en: "filtered", ja: "フィルタ", zh: "过滤" })}: ${statusFilter})` : ""}
           </span>

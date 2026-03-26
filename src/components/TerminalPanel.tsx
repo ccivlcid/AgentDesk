@@ -156,7 +156,7 @@ export default function TerminalPanel({
           <div
             onMouseDown={onHeaderMouseDown}
             style={{
-              borderBottom: `1px solid #E5E7EB`,
+              borderBottom: `1px solid var(--th-border)`,
               background: isLight ? "rgba(255,255,255,0.85)" : "var(--th-bg-elevated)",
               borderTopLeftRadius: 14,
               borderTopRightRadius: 14,
@@ -328,7 +328,7 @@ export default function TerminalPanel({
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "5px 16px",
-              borderTop: "1px solid #E5E7EB",
+              borderTop: "1px solid var(--th-border)",
               background: isLight ? "rgba(255,255,255,0.7)" : "var(--th-bg-elevated)",
               flexShrink: 0,
             }}
@@ -397,7 +397,7 @@ function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en:
           onClick={() => navigator.clipboard.writeText(prompt)}
           style={{
             fontFamily: "var(--th-font-mono)", fontSize: 10, padding: "3px 10px",
-            border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)",
+            border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
             color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 4,
           }}
         >

@@ -80,7 +80,7 @@ export default function AgentFormModal({
           </div>
           <div
             style={{
-              borderTop: "1px solid #E5E7EB",
+              borderTop: "1px solid var(--th-border)",
               padding: "10px 16px",
               display: "flex",
               alignItems: "center",

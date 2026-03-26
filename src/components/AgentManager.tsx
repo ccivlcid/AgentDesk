@@ -351,7 +351,7 @@ export default function AgentManager({
         display: "flex", 
         alignItems: "center", 
         justifyContent: "space-between",
-        borderBottom: "1px solid #E5E7EB",
+        borderBottom: "1px solid var(--th-border)",
         background: "var(--th-bg-surface)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -373,7 +373,7 @@ export default function AgentManager({
           <button
             onClick={openCreateDept}
             style={{
-              padding: "8px 16px", borderRadius: 10, border: "1px solid #D1D5DB",
+              padding: "8px 16px", borderRadius: 10, border: "1px solid var(--th-border-strong)",
               background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
               fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8
@@ -390,7 +390,7 @@ export default function AgentManager({
               background: "var(--th-accent)", color: "white",
               fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8,
-              boxShadow: "0 4px 12px rgba(59,130,246,0.3)"
+              boxShadow: "0 4px 12px var(--th-accent-focus)"
             }}
             onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
             onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
@@ -404,7 +404,7 @@ export default function AgentManager({
       <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ 
           flex: 1, display: "flex", alignItems: "center", gap: 12,
-          background: "var(--th-bg-elevated)", border: "1px solid #D1D5DB",
+          background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-strong)",
           borderRadius: 14, padding: "0 16px", height: 42
         }}>
           <Search size={16} className="text-muted opacity-50" />
@@ -420,7 +420,7 @@ export default function AgentManager({
         {/* Sub-Tab Toggle */}
         <div style={{ 
           display: "flex", background: "var(--th-bg-primary)",
-          padding: 2, borderRadius: 12, border: "1px solid #E5E7EB" 
+          padding: 2, borderRadius: 12, border: "1px solid var(--th-border)" 
         }}>
           <button
             onClick={() => setSubTab("agents")}

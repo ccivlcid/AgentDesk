@@ -81,7 +81,7 @@ export default function MemoryGrid({
             className={`relative p-4 transition-all group ${
               !entry.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             {/* Top: icon + title/desc + learned avatars */}
             <div className="mb-3 flex items-start justify-between gap-2">
@@ -162,7 +162,7 @@ export default function MemoryGrid({
                   <button
                     onClick={() => handleCopy(entry)}
                     className="px-2 py-1 text-[10px] font-mono transition-all"
-                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+                    style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
                     title={entry.content.slice(0, 80)}
                   >
                     {copiedEntryId === entry.id
@@ -182,7 +182,7 @@ export default function MemoryGrid({
                     ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                     : ""
                 }`}
-                style={entry.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid #E5E7EB" }}
+                style={entry.enabled ? { borderRadius: 8 } : { borderRadius: 8, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
                 title={entry.enabled
                   ? t({ ko: "\uBE44\uD65C\uC131\uD654", en: "Disable", ja: "\u7121\u52B9\u5316", zh: "\u7981\u7528" })
                   : t({ ko: "\uD65C\uC131\uD654", en: "Enable", ja: "\u6709\u52B9\u5316", zh: "\u542F\u7528" })}
@@ -194,7 +194,7 @@ export default function MemoryGrid({
               <button
                 onClick={() => onEdit(entry)}
                 className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+                style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
               >
                 {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
               </button>

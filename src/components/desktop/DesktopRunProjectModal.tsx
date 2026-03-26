@@ -115,7 +115,7 @@ export function RunProjectModal({
         style={{
           width: "min(480px, 92vw)",
           background: "var(--th-bg-elevated)",
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           borderRadius: 12,
           boxShadow: "0 20px 60px var(--th-modal-overlay)",
           overflow: "hidden",
@@ -127,7 +127,7 @@ export function RunProjectModal({
             alignItems: "center",
             gap: 10,
             padding: "12px 16px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
           }}
         >
@@ -160,7 +160,7 @@ export function RunProjectModal({
               padding: "12px 14px",
               borderRadius: 8,
               background: "var(--th-bg-elevated)",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
             }}
           >
             <div
@@ -263,7 +263,7 @@ export function RunProjectModal({
                 padding: "7px 16px",
                 borderRadius: 6,
                 cursor: "pointer",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 background: "transparent",
                 color: "var(--th-text-secondary)",
               }}

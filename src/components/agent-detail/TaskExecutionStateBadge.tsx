@@ -18,7 +18,7 @@ const STATE_META: Record<TaskExecutionState, StateMeta> = {
   workspace_preparing:  { label: { ko: "워크스페이스 준비", en: "PREPARING" }, color: "#5ac8fa", bg: "rgba(90,200,250,0.12)", pulse: true },
   ready:                { label: { ko: "준비됨",        en: "READY"       }, color: "#30d158", bg: "rgba(48,209,88,0.12)"   },
   running:              { label: { ko: "실행 중",       en: "RUNNING"     }, color: "#30d158", bg: "rgba(48,209,88,0.14)",  pulse: true },
-  awaiting_review:      { label: { ko: "검토 대기",     en: "REVIEWING"   }, color: "var(--th-accent)", bg: "rgba(59,130,246,0.1)" },
+  awaiting_review:      { label: { ko: "검토 대기",     en: "REVIEWING"   }, color: "var(--th-accent)", bg: "var(--th-accent-bg)" },
   retry_backoff:        { label: { ko: "재시도 대기",   en: "RETRY WAIT"  }, color: "#ff9f0a", bg: "rgba(255,159,10,0.12)", pulse: true },
   blocked:              { label: { ko: "차단됨",        en: "BLOCKED"     }, color: "#ff453a", bg: "rgba(255,69,58,0.12)"  },
   stalled:              { label: { ko: "멈춤",          en: "STALLED"     }, color: "#ff453a", bg: "rgba(255,69,58,0.12)"  },

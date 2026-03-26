@@ -20,7 +20,7 @@ function FilterBtn({ active, onClick, children }: { active: boolean; onClick: ()
         fontSize: 10,
         padding: "3px 8px",
         borderRadius: 4,
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         background: active ? "var(--th-accent-glow)" : "var(--th-bg-elevated)",
         color: active ? "var(--th-accent)" : "var(--th-text-secondary)",
         cursor: "pointer",
@@ -57,14 +57,14 @@ function TaskPreview({ task, allAgents }: { task: Task; allAgents: Agent[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--th-text-primary)", lineHeight: 1.3, wordBreak: "break-word" }}>
               {task.title}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-              <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: STATUS_COLORS[task.status], display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: STATUS_COLORS[task.status], display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ fontSize: 7 }}>●</span>{STATUS_LABEL[task.status]}
               </span>
               {agent && (
@@ -115,7 +115,7 @@ export function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; st
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-      <div style={{ display: "flex", gap: 6, padding: "7px 12px", flexShrink: 0, borderBottom: "1px solid #E5E7EB", flexWrap: "wrap", rowGap: 4 }}>
+      <div style={{ display: "flex", gap: 6, padding: "7px 12px", flexShrink: 0, borderBottom: "1px solid var(--th-border)", flexWrap: "wrap", rowGap: 4 }}>
         <FilterBtn active={filter === "all"} onClick={() => setFilter("all")}>{t({ ko: "전체", en: "All", ja: "全て", zh: "全部" })} ({tasks.length})</FilterBtn>
         {activeStatuses.map((s) => (
           <FilterBtn key={s} active={filter === s} onClick={() => setFilter(s)}>
@@ -128,12 +128,12 @@ export function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; st
           placeholder={t({ ko: "검색...", en: "search...", ja: "検索...", zh: "搜索..." })}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ marginLeft: "auto", fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", outline: "none", width: 110 }}
+          style={{ marginLeft: "auto", fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", outline: "none", width: 110 }}
         />
       </div>
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <div style={{ width: 240, flexShrink: 0, overflowY: "auto", borderRight: "1px solid #E5E7EB" }}>
+        <div style={{ width: 240, flexShrink: 0, overflowY: "auto", borderRight: "1px solid var(--th-border)" }}>
           {visible.length === 0 && (
             <div style={{ padding: "32px 12px", textAlign: "center", color: "var(--th-text-muted)", fontSize: 11 }}>{t({ ko: "태스크 없음", en: "No tasks", ja: "タスクなし", zh: "无任务" })}</div>
           )}
@@ -150,7 +150,7 @@ export function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; st
                   gap: 8,
                   width: "100%",
                   padding: "9px 12px",
-                  borderBottom: "1px solid #E5E7EB",
+                  borderBottom: "1px solid var(--th-border)",
                   background: isSelected ? "var(--th-accent-glow)" : "transparent",
                   border: "none",
                   borderBottomColor: "var(--th-border)",

@@ -67,7 +67,7 @@ export function CliAgentPicker({
                   gap: 6,
                   padding: "14px 16px",
                   background: "var(--th-bg-elevated)",
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   borderRadius: 10,
                   cursor: "pointer",
                   textAlign: "left",

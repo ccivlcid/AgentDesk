@@ -85,7 +85,7 @@ function renderInline(text: string): (string | JSX.Element)[] {
     } else if (match[10]) {
       // @mention
       parts.push(
-        <span key={key++} className="px-1 py-0.5 font-medium" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "var(--th-accent)" }}>
+        <span key={key++} className="px-1 py-0.5 font-medium" style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)" }}>
           {match[10]}
         </span>,
       );
@@ -162,7 +162,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
             <pre
               key={bi}
               className="px-3 py-2 text-xs font-mono overflow-x-auto whitespace-pre-wrap"
-              style={{ borderRadius: 8, background: "var(--th-terminal-bg)", border: "1px solid #E5E7EB", color: "rgb(110,231,183)" }}
+              style={{ borderRadius: 8, background: "var(--th-terminal-bg)", border: "1px solid var(--th-border)", color: "rgb(110,231,183)" }}
             >
               {block.content}
             </pre>
@@ -173,7 +173,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
           const table = parseTable(block.content);
           if (table) {
             return (
-              <div key={bi} className="overflow-x-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB" }}>
+              <div key={bi} className="overflow-x-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)" }}>
                 <table className="w-full text-xs">
                   <thead>
                     <tr style={{ background: "var(--th-bg-elevated)" }}>
@@ -181,7 +181,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
                         <th
                           key={hi}
                           className="px-2.5 py-1.5 text-left font-semibold font-mono whitespace-nowrap"
-                          style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid #E5E7EB" }}
+                          style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid var(--th-border)" }}
                         >
                           {renderInline(h)}
                         </th>
@@ -195,7 +195,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
                           <td
                             key={ci}
                             className="px-2.5 py-1.5 whitespace-nowrap font-mono"
-                            style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid #E5E7EB" }}
+                            style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid var(--th-border)" }}
                           >
                             {renderInline(cell)}
                           </td>

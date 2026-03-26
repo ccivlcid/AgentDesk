@@ -27,7 +27,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  context: "text-[#60a5fa] bg-[var(--th-amber-glow)] border-[rgba(59,130,246,0.3)]",
+  context: "text-[#60a5fa] bg-[var(--th-amber-glow)] border-[var(--th-accent-focus)]",
   preference: "text-amber-400 bg-amber-500/15 border-amber-500/30",
   convention: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
   knowledge: "text-purple-400 bg-purple-500/15 border-purple-500/30",

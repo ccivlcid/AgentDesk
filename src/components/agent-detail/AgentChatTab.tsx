@@ -132,7 +132,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
                   </span>
                   <span
                     className="px-1 py-px"
-                    style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid #E5E7EB" }}
+                    style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
                   >
                     {typeLabel}
                   </span>
@@ -143,8 +143,8 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
                   className="max-w-[85%] px-2.5 py-1.5 text-xs font-mono leading-relaxed whitespace-pre-wrap break-words"
                   style={{
                     borderRadius: 12,
-                    background: isCeo ? "rgba(59,130,246,0.06)" : "var(--th-bg-elevated)",
-                    border: `1px solid ${isCeo ? "rgba(59,130,246,0.2)" : "var(--th-border)"}`,
+                    background: isCeo ? "var(--th-accent-bg)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${isCeo ? "var(--th-accent-border-subtle)" : "var(--th-border)"}`,
                     color: "var(--th-text-primary)",
                   }}
                 >
@@ -158,20 +158,20 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
       </div>
 
       {/* Divider */}
-      <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 4, marginBottom: 8 }} />
+      <div style={{ borderTop: "1px solid var(--th-border)", marginTop: 4, marginBottom: 8 }} />
 
       {/* Send input — terminal prompt style */}
       <div className="flex flex-col gap-1.5">
         <div
           style={{
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
             borderRadius: 8,
           }}
         >
           <div
             className="flex items-center gap-1.5 px-2 pt-1.5"
-            style={{ borderBottom: "1px solid #E5E7EB", paddingBottom: "4px" }}
+            style={{ borderBottom: "1px solid var(--th-border)", paddingBottom: "4px" }}
           >
             <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
             <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)" }}>

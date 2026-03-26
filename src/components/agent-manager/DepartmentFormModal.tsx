@@ -226,7 +226,7 @@ export default function DepartmentFormModal({
 
           {/* ── IDENTITY ── */}
           <div>
-            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
               <span style={sectionLabelStyle}>
                 {t({ ko: "전문 분야 정보", en: "IDENTITY", ja: "専門分野情報", zh: "专业领域信息" })}
               </span>
@@ -328,7 +328,7 @@ export default function DepartmentFormModal({
 
           {/* ── MISSION & INSTRUCTIONS ── */}
           <div>
-            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
               <span style={sectionLabelStyle}>
                 {t({ ko: "미션 & 지시", en: "MISSION & INSTRUCTIONS", ja: "ミッション＆指示", zh: "使命与指示" })}
               </span>
@@ -393,7 +393,7 @@ export default function DepartmentFormModal({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-shrink-0 items-center gap-2 px-6 py-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <div className="flex flex-shrink-0 items-center gap-2 px-6 py-4" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
@@ -437,7 +437,7 @@ export default function DepartmentFormModal({
           <button
             onClick={onClose}
             className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-gray-100"
-            style={{ borderRadius: 10, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 10, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>

@@ -157,7 +157,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
       {/* ── Explorer Toolbar (Windows Style) ── */}
       <div style={{ 
         display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", 
-        borderBottom: "1px solid #E5E7EB", background: "rgba(255,255,255,0.01)" 
+        borderBottom: "1px solid var(--th-border)", background: "rgba(255,255,255,0.01)" 
       }}>
         <div style={{ display: "flex", gap: 4 }}>
           <button style={{ padding: 6, background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer" }}><ArrowLeft size={16} /></button>
@@ -168,7 +168,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
         {/* Address Bar */}
         <div style={{ 
           flex: 1, display: "flex", alignItems: "center", gap: 10, 
-          background: "rgba(0,0,0,0.2)", border: "1px solid #D1D5DB", 
+          background: "rgba(0,0,0,0.2)", border: "1px solid var(--th-border-strong)", 
           borderRadius: 10, padding: "0 12px", height: 32, fontSize: 12, color: "var(--th-text-secondary)" 
         }}>
           <HardDrive size={14} className="opacity-50" />
@@ -178,7 +178,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 1, height: 20, background: "var(--th-border)" }} />
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid #E5E7EB", borderRadius: 8, padding: "0 10px", height: 32 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--th-border)", borderRadius: 8, padding: "0 10px", height: 32 }}>
             <Search size={14} className="opacity-50" />
             <input placeholder="Search" style={{ background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", fontSize: 11, width: 100 }} />
           </div>
@@ -189,7 +189,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Sidebar: Tree */}
         <div style={{ 
-          width: 260, flexShrink: 0, borderRight: "1px solid #E5E7EB", 
+          width: 260, flexShrink: 0, borderRight: "1px solid var(--th-border)", 
           display: "flex", flexDirection: "column", overflow: "hidden", background: "rgba(0,0,0,0.1)"
         }}>
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 8px" }} className="pm-shelf-scroll">
@@ -206,7 +206,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
             <>
               <div style={{ 
                 display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", 
-                borderBottom: "1px solid #E5E7EB", background: "rgba(255,255,255,0.01)" 
+                borderBottom: "1px solid var(--th-border)", background: "rgba(255,255,255,0.01)" 
               }}>
                 <FileText size={16} className="text-blue-400" />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -217,7 +217,7 @@ export function FilesTab({ projectPath, projectName }: { projectPath: string | n
                   onClick={handleOpenInOS}
                   style={{
                     height: 30, padding: "0 12px", borderRadius: 8, background: "rgba(255,255,255,0.03)", 
-                    border: "1px solid #D1D5DB", color: "var(--th-text-primary)",
+                    border: "1px solid var(--th-border-strong)", color: "var(--th-text-primary)",
                     fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6
                   }}
                 >

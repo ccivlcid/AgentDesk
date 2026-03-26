@@ -122,7 +122,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
 
   const inputStyle: React.CSSProperties = {
     ...mono, fontSize: 11, padding: "7px 10px",
-    background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB",
+    background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
     borderRadius: 4, color: "var(--th-text-primary)", outline: "none", width: "100%",
   };
 
@@ -154,7 +154,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
       )}
 
       {/* 플랫폼 선택 */}
-      <div style={{ display: "flex", gap: 0, border: "1px solid #E5E7EB", borderRadius: 6, overflow: "hidden" }}>
+      <div style={{ display: "flex", gap: 0, border: "1px solid var(--th-border)", borderRadius: 6, overflow: "hidden" }}>
         {(["github", "gitlab"] as Provider[]).map((p, i) => {
           const active = provider === p;
           return (
@@ -166,7 +166,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
                 ...mono, flex: 1, fontSize: 12, fontWeight: active ? 700 : 500,
                 padding: "8px 0",
                 border: "none",
-                borderRight: i === 0 ? "1px solid #E5E7EB" : undefined,
+                borderRight: i === 0 ? "1px solid var(--th-border)" : undefined,
                 background: active ? "var(--th-accent)" : "transparent",
                 color: active ? "#000" : "var(--th-text-muted)",
                 cursor: "pointer", transition: "all 0.12s",
@@ -230,7 +230,7 @@ export default function GitImportPanel({ onComplete, onCancel }: Props) {
 
       {/* 버튼 */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
-        <button type="button" onClick={onCancel} style={{ ...mono, fontSize: 11, padding: "6px 14px", borderRadius: 4, border: "1px solid #E5E7EB", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
+        <button type="button" onClick={onCancel} style={{ ...mono, fontSize: 11, padding: "6px 14px", borderRadius: 4, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
         <button

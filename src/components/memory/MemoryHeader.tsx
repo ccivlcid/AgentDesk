@@ -42,7 +42,7 @@ export default function MemoryHeader({
         <button
           onClick={onOpenCreateModal}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all"
-          style={{ borderRadius: 6, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)" }}
+          style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)" }}
           title={t({ ko: "새 메모리 추가", en: "Add new memory", ja: "新しいメモリを追加", zh: "添加新内存" })}
         >
           + {t({ ko: "Add Memory", en: "Add Memory", ja: "Add Memory", zh: "Add Memory" })}
@@ -62,7 +62,7 @@ export default function MemoryHeader({
               zh: "搜索内存...（标题、描述、内容）",
             })}
             className="w-full px-4 py-2 text-sm focus:outline-none"
-            style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
+            style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 6, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
           />
           {search && (
             <button
@@ -79,7 +79,7 @@ export default function MemoryHeader({
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as MemorySortBy)}
           className="px-3 py-2 text-xs focus:outline-none"
-          style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
+          style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 6, fontFamily: "var(--th-font-mono)" }}
         >
           <option value="priority">{t({ ko: "우선순위순", en: "By Priority", ja: "優先順位順", zh: "按优先级" })}</option>
           <option value="name">{t({ ko: "이름순", en: "By Name", ja: "名前順", zh: "按名称" })}</option>

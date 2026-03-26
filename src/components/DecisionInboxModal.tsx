@@ -191,13 +191,13 @@ export default function DecisionInboxModal({
               fontSize: "10px",
               fontWeight: 600,
               padding: "3px 8px",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               background: "transparent",
               color: "var(--th-text-muted)",
               cursor: "pointer",
               letterSpacing: "0.04em",
             }}
-            className="hover:!text-[#111827] hover:!border-[#D1D5DB]"
+            className="hover:!text-[var(--th-text-primary)] hover:!border-[var(--th-border-strong)]"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle" }}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>{" "}{t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
           </button>
@@ -207,7 +207,7 @@ export default function DecisionInboxModal({
               fontSize: "10px",
               fontWeight: 700,
               padding: "2px 6px",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               background: items.length > 0 ? "var(--th-accent-glow)" : "var(--th-bg-surface)",
               color: items.length > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
             }}
@@ -273,7 +273,7 @@ export default function DecisionInboxModal({
                   <div
                     key={item.id}
                     style={{
-                      borderBottom: "1px solid #E5E7EB",
+                      borderBottom: "1px solid var(--th-border)",
                       background: idx % 2 === 0 ? "transparent" : "var(--th-bg-surface)",
                     }}
                   >
@@ -290,7 +290,7 @@ export default function DecisionInboxModal({
                         ) : (
                           <span
                             className="flex items-center justify-center"
-                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", flexShrink: 0, color: "var(--th-text-muted)" }}
+                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", flexShrink: 0, color: "var(--th-text-muted)" }}
                           >
                             {AgentIconSvg}
                           </span>
@@ -329,7 +329,7 @@ export default function DecisionInboxModal({
                             style={{
                               ...mono, fontSize: "9px", fontWeight: 700,
                               padding: "2px 8px",
-                              border: "1px solid #E5E7EB",
+                              border: "1px solid var(--th-border)",
                               background: "transparent",
                               color: "var(--th-text-muted)",
                               cursor: "pointer",
@@ -346,7 +346,7 @@ export default function DecisionInboxModal({
                     <div
                       className="mx-5 mb-2 px-3 py-2.5"
                       style={{
-                        border: "1px solid #E5E7EB",
+                        border: "1px solid var(--th-border)",
                         borderLeft: `2px solid ${meta.color}60`,
                         background: "var(--th-bg-elevated)",
                         ...mono, fontSize: "11px", color: "var(--th-text-primary)",
@@ -384,7 +384,7 @@ export default function DecisionInboxModal({
                                     style={{
                                       ...mono, fontSize: "11px",
                                       padding: "6px 10px",
-                                      border: isSelected ? "1px solid #3B82F6" : "1px solid #E5E7EB",
+                                      border: isSelected ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
                                       background: isSelected ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
                                       color: isSelected ? "var(--th-accent)" : "var(--th-text-secondary)",
                                       cursor: isItemBusy ? "not-allowed" : "pointer",
@@ -408,7 +408,7 @@ export default function DecisionInboxModal({
                                 rows={2}
                                 placeholder={t({ ko: "추가 의견 (선택)", en: "Extra notes (optional)", ja: "追加意見（任意）", zh: "补充意见（可选）" })}
                                 className="w-full resize-y outline-none"
-                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                               />
                               <div className="flex items-center justify-end gap-2 pt-1">
                                 {skipOption && (
@@ -453,7 +453,7 @@ export default function DecisionInboxModal({
                                 style={{
                                   ...mono, fontSize: "11px",
                                   padding: "7px 10px",
-                                  border: isPrimary ? "1px solid #3B82F6" : "1px solid #E5E7EB",
+                                  border: isPrimary ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
                                   background: isPrimary ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
                                   color: isPrimary ? "var(--th-accent)" : "var(--th-text-secondary)",
                                   cursor: isBusy ? "not-allowed" : "pointer",
@@ -497,7 +497,7 @@ export default function DecisionInboxModal({
         {followupItem && (
           <div
             className="px-5 py-3 flex-shrink-0"
-            style={{ borderTop: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+            style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             <p style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "var(--th-accent)", marginBottom: 8, letterSpacing: "0.06em" }}>
               + {t({ ko: "추가 요청사항", en: "FOLLOW-UP REQUEST", ja: "追加要請", zh: "追加请求" })}
@@ -508,7 +508,7 @@ export default function DecisionInboxModal({
               placeholder={t({ ko: "요청사항을 입력해 주세요.", en: "Enter your request details.", ja: "要請内容を入力してください。", zh: "请输入请求详情。" })}
               rows={3}
               className="w-full resize-y outline-none"
-              style={{ ...mono, fontSize: "11px", padding: "8px 10px", border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+              style={{ ...mono, fontSize: "11px", padding: "8px 10px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
             />
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
@@ -517,7 +517,7 @@ export default function DecisionInboxModal({
                 disabled={isFollowupSubmitting}
                 style={{
                   ...mono, fontSize: "10px", padding: "4px 10px",
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   background: "transparent",
                   color: "var(--th-text-muted)",
                   cursor: isFollowupSubmitting ? "not-allowed" : "pointer",

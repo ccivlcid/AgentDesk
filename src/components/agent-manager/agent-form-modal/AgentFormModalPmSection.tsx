@@ -18,7 +18,7 @@ export function AgentFormModalPmSection({
 
   return (
     <div>
-      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <span style={agentFormSectionLabelStyle}>
           {t({ ko: "역량 설정", en: "CAPABILITIES", ja: "能力設定", zh: "能力设置" })}
         </span>
@@ -29,10 +29,10 @@ export function AgentFormModalPmSection({
         <div
           className="flex items-start gap-2 mb-4 px-3 py-2.5"
           style={{
-            background: "rgba(59,130,246,0.06)",
-            border: "1px solid rgba(59,130,246,0.2)",
+            background: "var(--th-accent-bg)",
+            border: "1px solid var(--th-accent-border-subtle)",
             borderRadius: 6,
-            borderLeft: "3px solid #3B82F6",
+            borderLeft: "3px solid var(--th-accent)",
           }}
         >
           <svg

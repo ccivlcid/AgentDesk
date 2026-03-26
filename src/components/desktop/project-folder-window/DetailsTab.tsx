@@ -35,7 +35,7 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
+          style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
         >
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
@@ -72,7 +72,7 @@ export function DetailsTab({ project, taskCount, agentCount, onDelete }: { proje
   return (
     <div style={{ overflowY: "auto", flex: 1, padding: "12px 0" }}>
       {rows.map(({ label, value, multiline }) => (
-        <div key={label} style={{ display: "flex", gap: 12, padding: "8px 16px", borderBottom: "1px solid #E5E7EB" }}>
+        <div key={label} style={{ display: "flex", gap: 12, padding: "8px 16px", borderBottom: "1px solid var(--th-border)" }}>
           <span style={{ fontSize: 11, color: "var(--th-text-muted)", width: 90, flexShrink: 0, fontWeight: 500 }}>{label}</span>
           <span style={{ fontSize: 11, color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: multiline ? undefined : "ellipsis", whiteSpace: multiline ? "normal" : "nowrap", wordBreak: multiline ? "break-word" : undefined }}>
             {value?.toString() ?? "—"}

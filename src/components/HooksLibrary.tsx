@@ -54,7 +54,7 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
           <button
             onClick={vm.loadHooks}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: 6, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.25)" }}
+            style={{ borderRadius: 6, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
           >
             {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>

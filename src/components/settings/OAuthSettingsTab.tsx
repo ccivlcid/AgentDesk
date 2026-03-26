@@ -125,7 +125,7 @@ export default function OAuthSettingsTab({
       {/* OAuth 자동 전환 토글 */}
       <div
         className="flex items-center justify-between gap-4 px-5 py-4 transition-all hover:bg-gray-50"
-        style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", borderRadius: 20 }}
+        style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 20 }}
       >
         <div className="flex items-center gap-3">
           <div style={{ padding: 8, background: "var(--th-bg-primary)", borderRadius: 12, color: "var(--th-text-secondary)" }}>

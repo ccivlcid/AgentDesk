@@ -221,7 +221,7 @@ export function DesktopOverlays({
               width: 120,
               padding: "3px 7px",
               background: "var(--th-bg-surface)",
-              border: "1.5px solid #3B82F6",
+              border: "1.5px solid var(--th-accent)",
               borderRadius: 5,
               color: "var(--th-text-primary)",
               fontFamily: "var(--th-font-mono)",

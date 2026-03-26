@@ -88,8 +88,8 @@ export default function AgentsTab({
   return (
     <>
       {/* Dept tab bar + inline stat */}
-      <div className="flex items-center gap-0 flex-wrap" style={{ borderBottom: "1px solid #E5E7EB" }}>
-        <div className="flex items-center gap-3 px-3 py-2 mr-2" style={{ borderRight: "1px solid #E5E7EB" }}>
+      <div className="flex items-center gap-0 flex-wrap" style={{ borderBottom: "1px solid var(--th-border)" }}>
+        <div className="flex items-center gap-3 px-3 py-2 mr-2" style={{ borderRight: "1px solid var(--th-border)" }}>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)" }}>
             {agents.length} total · {workingCount} running
           </span>
@@ -148,7 +148,7 @@ export default function AgentsTab({
               {/* Dept header */}
               <div
                 className="flex items-center gap-2 px-2 py-1.5 cursor-pointer"
-                style={{ borderBottom: "1px solid #E5E7EB", borderLeft: "2px solid #E5E7EB" }}
+                style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "2px solid var(--th-border)" }}
                 onDoubleClick={() => dept && onEditDepartment(dept)}
                 title={dept ? tr("더블클릭: 전문 분야 편집", "Double-click: edit specialty") : undefined}
               >
@@ -157,7 +157,7 @@ export default function AgentsTab({
                 </span>
                 <span
                   className="px-1.5 py-0.5"
-                  style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-muted)", borderRadius: 6 }}
+                  style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 6 }}
                 >
                   {groupAgents.length}
                 </span>
@@ -176,7 +176,7 @@ export default function AgentsTab({
                       key={agent.id}
                       className="flex items-center gap-2 px-3 py-2 group transition-colors"
                       style={{
-                        borderBottom: "1px solid #E5E7EB",
+                        borderBottom: "1px solid var(--th-border)",
                         borderLeft: isWorking ? "3px solid #22c55e" : "3px solid transparent",
                         background: "var(--th-bg-surface)",
                       }}
@@ -186,12 +186,12 @@ export default function AgentsTab({
                         {agentName}
                       </span>
                       {agent.role && (
-                        <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono uppercase" style={{ background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: "var(--th-text-muted)", borderRadius: 8 }}>
+                        <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono uppercase" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 8 }}>
                           {agent.role.slice(0, 3).toUpperCase()}
                         </span>
                       )}
                       {isTeamMember && (
-                        <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)", color: "var(--th-accent)", borderRadius: 8 }}>
+                        <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "var(--th-accent-bg)", border: "1px solid var(--th-accent-focus)", color: "var(--th-accent)", borderRadius: 8 }}>
                           TEAM
                         </span>
                       )}
@@ -211,7 +211,7 @@ export default function AgentsTab({
                           type="button"
                           onClick={() => onEditAgent(agent)}
                           className="px-2 py-1 text-[10px] font-mono transition"
-                          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                          style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                         >
                           {tr("편집", "edit")}
                         </button>
@@ -230,7 +230,7 @@ export default function AgentsTab({
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-2 py-1 text-[10px] font-mono"
-                              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                              style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
                             >
                               {tr("취소", "cancel")}
                             </button>
@@ -240,7 +240,7 @@ export default function AgentsTab({
                             type="button"
                             onClick={() => setConfirmDeleteId(agent.id)}
                             className="px-2 py-1 text-[10px] font-mono transition"
-                            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
                           >
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>

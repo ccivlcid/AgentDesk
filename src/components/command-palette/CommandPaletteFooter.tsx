@@ -13,7 +13,7 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
   return (
     <div
       style={{
-        borderTop: "1px solid #E5E7EB",
+        borderTop: "1px solid var(--th-border)",
         padding: "7px 16px",
         display: "flex",
         alignItems: "center",
@@ -31,7 +31,7 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
             <kbd
               style={{
                 background: "var(--th-bg-elevated)",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 borderRadius: 4,
                 padding: "1px 5px",
                 fontSize: 10,
@@ -54,7 +54,7 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
             fontSize: 11,
             color: "var(--th-text-muted)",
             background: "var(--th-bg-elevated)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
             borderRadius: 5,
             padding: "2px 9px",
             cursor: "pointer",

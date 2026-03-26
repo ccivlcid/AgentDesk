@@ -107,7 +107,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
 
   return (
     <div style={{
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--th-border)",
       background: "var(--th-bg-elevated)",
       borderRadius: 20,
       padding: "16px 20px",
@@ -331,7 +331,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
 
   return (
     <div style={{
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--th-border)",
       borderRadius: 14,
       background: "var(--th-bg-elevated)",
       marginBottom: 8,
@@ -342,7 +342,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
         display: "flex",
         gap: 4,
         padding: "8px 12px",
-        borderBottom: "1px solid #E5E7EB",
+        borderBottom: "1px solid var(--th-border)",
         background: "var(--th-bg-surface)",
       }}>
         {tabs.map((tab) => (
@@ -357,7 +357,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
               letterSpacing: "0.05em",
               color: activeSection === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
               background: activeSection === tab.key ? "var(--th-bg-elevated)" : "transparent",
-              border: activeSection === tab.key ? "1px solid #E5E7EB" : "1px solid transparent",
+              border: activeSection === tab.key ? "1px solid var(--th-border)" : "1px solid transparent",
               borderRadius: 8,
               cursor: "pointer",
               transition: "all 0.2s",
@@ -501,7 +501,7 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
             fontFamily: mono,
             fontSize: 11,
             color: "var(--th-text-secondary)",
-            borderLeft: "3px solid #3B82F6",
+            borderLeft: "3px solid var(--th-accent)",
             background: "#F0F7FF",
             borderRadius: "0 8px 8px 0",
             marginBottom: 6,

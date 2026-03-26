@@ -70,7 +70,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
         top: pos.y,
         width: 480,
         background: "var(--th-bg-elevated)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 10,
         fontFamily: "var(--th-font-mono)",
         display: "flex",
@@ -87,7 +87,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
             alignItems: "center",
             gap: 10,
             padding: "10px 14px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-bg-surface)",
             cursor: dragging ? "grabbing" : "grab",
             userSelect: "none",
@@ -119,7 +119,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 width: "100%",
                 boxSizing: "border-box",
                 background: "var(--th-bg-elevated)",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 borderRadius: 8,
                 color: "var(--th-text-primary)",
                 fontFamily: "var(--th-font-mono)",
@@ -145,7 +145,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 style={{
                   flex: 1,
                   background: "var(--th-bg-elevated)",
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   borderRadius: 8,
                   color: "var(--th-text-primary)",
                   fontFamily: "var(--th-font-mono)",
@@ -159,7 +159,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                 disabled={browsing}
                 style={{
                   background: "transparent",
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--th-border)",
                   borderRadius: 8,
                   color: "var(--th-text-muted)",
                   fontFamily: "var(--th-font-mono)",
@@ -189,7 +189,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
                     height: 18,
                     borderRadius: "50%",
                     background: c,
-                    border: color === c ? "2px solid #111827" : "2px solid transparent",
+                    border: color === c ? "2px solid var(--th-text-primary)" : "2px solid transparent",
                     cursor: "pointer",
                     padding: 0,
                   }}
@@ -204,7 +204,7 @@ export default function NewFolderModal({ initialName, onConfirm, onCancel }: New
               onClick={onCancel}
               style={{
                 background: "transparent",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 borderRadius: 8,
                 color: "var(--th-text-secondary)",
                 fontFamily: "var(--th-font-mono)",

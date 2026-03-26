@@ -78,7 +78,7 @@ export default function AgentAvatar({
       {/* 상태 인디케이터 도트 */}
       {agent?.status && (
         <div 
-          className="absolute bottom-0 right-0 w-[25%] h-[25%] rounded-full border border-[#F9FAFB]"
+          className="absolute bottom-0 right-0 w-[25%] h-[25%] rounded-full border border-[var(--th-bg-surface)]"
           style={{ 
             background: agent.status === "working" ? "var(--th-success)" : 
                         agent.status === "idle" ? "var(--th-accent)" : "var(--th-text-muted)",

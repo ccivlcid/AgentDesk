@@ -37,7 +37,7 @@ export default function OAuthConnectedProvidersSection({
 
   return (
     <div className="space-y-2">
-      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid #3B82F6", paddingLeft: "8px", marginBottom: "8px" }}>
+      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px", marginBottom: "8px" }}>
         // auth status
       </div>
       {detectedProviders.map(([provider, info]) => {
@@ -63,7 +63,7 @@ export default function OAuthConnectedProvidersSection({
                   </span>
                 )}
                 {isWebOAuth && (
-                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 8, background: "rgba(59,130,246,0.08)", color: "var(--th-accent)" }}>
+                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)" }}>
                     {t({ ko: "웹 OAuth", en: "Web OAuth", ja: "Web OAuth", zh: "网页 OAuth" })}
                   </span>
                 )}
@@ -109,7 +109,7 @@ export default function OAuthConnectedProvidersSection({
                     onClick={() => void onRefreshToken(provider as OAuthConnectProvider)}
                     disabled={refreshing === provider}
                     className="text-xs px-2.5 py-1 font-mono transition-colors disabled:opacity-50"
-                    style={{ borderRadius: 8, background: "rgba(59,130,246,0.06)", color: "var(--th-accent)", border: "1px solid rgba(59,130,246,0.2)" }}
+                    style={{ borderRadius: 8, background: "var(--th-accent-bg)", color: "var(--th-accent)", border: "1px solid var(--th-accent-border-subtle)" }}
                   >
                     {refreshing === provider
                       ? t({ ko: "갱신 중...", en: "Refreshing...", ja: "更新中...", zh: "刷新中..." })
@@ -209,7 +209,7 @@ export default function OAuthConnectedProvidersSection({
                         persistSettings(newForm);
                       }}
                       className="w-full min-w-0 px-2 py-1 text-xs focus:outline-none sm:flex-1"
-                      style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+                      style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                     >
                       {!currentModel && (
                         <option value="">
@@ -244,7 +244,7 @@ export default function OAuthConnectedProvidersSection({
             })()}
 
             {accountList.length > 0 && (
-              <div className="space-y-2 p-2.5" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+              <div className="space-y-2 p-2.5" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <div className="text-[11px] font-semibold uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {t({ ko: "계정 풀", en: "Account Pool", ja: "アカウントプール", zh: "账号池" })}
@@ -274,12 +274,12 @@ export default function OAuthConnectedProvidersSection({
                     <div
                       key={account.id}
                       className="p-2.5 space-y-2"
-                      style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-primary)" }}
+                      style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
                     >
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
                           className={`text-[10px] px-1.5 py-0.5 ${
-                            account.active ? "bg-green-500/20 text-green-300" : "bg-[#FFFFFF] text-[#9CA3AF]"
+                            account.active ? "bg-green-500/20 text-green-300" : "bg-[#FFFFFF] text-[var(--th-text-muted)]"
                           }`}
                           style={{ borderRadius: 8 }}
                         >
@@ -289,7 +289,7 @@ export default function OAuthConnectedProvidersSection({
                         </span>
                         <span
                           className={`text-[10px] px-1.5 py-0.5 ${
-                            account.executionReady ? "bg-[rgba(59,130,246,0.2)] text-[#93c5fd]" : "bg-amber-500/20 text-amber-300"
+                            account.executionReady ? "bg-[var(--th-accent-border-subtle)] text-[#93c5fd]" : "bg-amber-500/20 text-amber-300"
                           }`}
                           style={{ borderRadius: 8 }}
                         >
@@ -315,7 +315,7 @@ export default function OAuthConnectedProvidersSection({
                               zh: "账号别名",
                             })}
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           />
                         </label>
 
@@ -327,7 +327,7 @@ export default function OAuthConnectedProvidersSection({
                             value={draft.modelOverride}
                             onChange={(e) => onUpdateAccountDraft(account.id, { modelOverride: e.target.value })}
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           >
                             <option value="">
                               {t({
@@ -358,7 +358,7 @@ export default function OAuthConnectedProvidersSection({
                             onChange={(e) => onUpdateAccountDraft(account.id, { priority: e.target.value })}
                             placeholder="100"
                             className="w-full px-2 py-1 text-xs focus:outline-none"
-                            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}
                           />
                         </label>
                       </div>
@@ -372,7 +372,7 @@ export default function OAuthConnectedProvidersSection({
                           className={`text-[11px] px-2 py-1 font-mono disabled:opacity-50 ${
                             account.active
                               ? "bg-orange-600/20 hover:bg-orange-600/35 text-orange-200"
-                              : "bg-[rgba(59,130,246,0.06)] hover:bg-[rgba(59,130,246,0.12)] text-[#3B82F6]"
+                              : "bg-[var(--th-accent-bg)] hover:bg-[var(--th-accent-hover)] text-[var(--th-accent)]"
                           }`}
                           style={{ borderRadius: 8 }}
                         >

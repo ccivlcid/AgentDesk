@@ -52,7 +52,7 @@ export default function DepartmentsTab({
           style={{
             borderRadius: 8,
             background: "var(--th-bg-surface)",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--th-border)",
           }}
         >
           <span className="text-sm" style={{ color: "var(--th-text-primary)" }}>
@@ -94,7 +94,7 @@ export default function DepartmentsTab({
               onDrop={(e) => onDrop(dept.id, e)}
               onDragEnd={onDragEnd}
               className={`relative flex items-center gap-3 px-4 py-3 transition-all group ${isDragging ? "opacity-60" : ""}`}
-              style={{ borderRadius: 14, background: "var(--th-bg-surface)", border: "1px solid #E5E7EB" }}
+              style={{ borderRadius: 14, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
             >
               {showDropBefore && (
                 <div

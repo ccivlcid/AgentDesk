@@ -53,7 +53,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           background: "var(--th-bg-elevated)",
           backdropFilter: "blur(32px) saturate(180%)",
           WebkitBackdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid #D1D5DB",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 16,
           boxShadow: "0 32px 64px var(--th-glass-shadow), inset 0 1px 0 rgba(255,255,255,0.5)",
           overflow: "hidden",
@@ -66,7 +66,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             alignItems: "center",
             gap: 8,
             padding: "10px 14px",
-            borderBottom: "1px solid #E5E7EB",
+            borderBottom: "1px solid var(--th-border)",
             background: "var(--th-bg-elevated)",
           }}
         >
@@ -117,7 +117,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           </div>
 
           {/* 구분선 */}
-          <div style={{ borderTop: "1px solid #E5E7EB", marginBottom: 14 }} />
+          <div style={{ borderTop: "1px solid var(--th-border)", marginBottom: 14 }} />
 
           {/* 상세 정보 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

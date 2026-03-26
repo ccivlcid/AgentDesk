@@ -283,9 +283,9 @@ export default function MemoryHistoryPanel({
   return (
     <div
       className={`skill-history-panel flex h-full min-h-[360px] flex-col ${className}`}
-      style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+      style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
     >
-      <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -318,14 +318,14 @@ export default function MemoryHistoryPanel({
           type="button"
           onClick={() => void load()}
           className="px-2 py-1 text-[11px] font-mono transition-all"
-          style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
       </div>
 
       {/* Agent multi-select filter dropdown */}
-      <div className="px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <div className="relative" ref={filterDropdownRef}>
           <button
             type="button"
@@ -333,8 +333,8 @@ export default function MemoryHistoryPanel({
             className="flex items-center gap-2 px-2 py-1 text-[11px] font-mono transition-all"
             style={{
               borderRadius: 8,
-              border: `1px solid ${agentFilters.size > 0 ? "rgba(59,130,246,0.3)" : "var(--th-border)"}`,
-              background: agentFilters.size > 0 ? "rgba(59,130,246,0.05)" : "transparent",
+              border: `1px solid ${agentFilters.size > 0 ? "var(--th-accent-focus)" : "var(--th-border)"}`,
+              background: agentFilters.size > 0 ? "var(--th-accent-bg-subtle)" : "transparent",
               color: agentFilters.size > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
               minWidth: 140,
             }}
@@ -359,7 +359,7 @@ export default function MemoryHistoryPanel({
               style={{
                 top: "calc(100% + 4px)",
                 borderRadius: 8,
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 background: "var(--th-bg-elevated)",
                 boxShadow: "0 4px 16px var(--th-modal-overlay)",
               }}
@@ -369,7 +369,7 @@ export default function MemoryHistoryPanel({
                 onClick={() => { setAgentFilters(new Set()); setFilterDropdownOpen(false); }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                 style={{
-                  background: agentFilters.size === 0 ? "rgba(59,130,246,0.05)" : "transparent",
+                  background: agentFilters.size === 0 ? "var(--th-accent-bg-subtle)" : "transparent",
                   color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
                 }}
               >
@@ -389,7 +389,7 @@ export default function MemoryHistoryPanel({
                   onClick={() => toggleAgentFilter(agent.id)}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
                   style={{
-                    background: agentFilters.has(agent.id) ? "rgba(59,130,246,0.05)" : "transparent",
+                    background: agentFilters.has(agent.id) ? "var(--th-accent-bg-subtle)" : "transparent",
                     color: agentFilters.has(agent.id) ? "var(--th-accent)" : "var(--th-text-secondary)",
                   }}
                 >
@@ -413,7 +413,7 @@ export default function MemoryHistoryPanel({
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3 pt-2">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "메모리 기록 로딩중...", en: "Loading memory records...", ja: "メモリ記録を読み込み中...", zh: "正在加载记忆记录..." })}
           </div>
         )}
@@ -430,7 +430,7 @@ export default function MemoryHistoryPanel({
         )}
 
         {tab === "history" && filteredHistoryRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
         )}
@@ -447,7 +447,7 @@ export default function MemoryHistoryPanel({
               <div
                 key={row.id}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -499,7 +499,7 @@ export default function MemoryHistoryPanel({
               type="button"
               onClick={() => setHistoryExpanded((prev) => !prev)}
               className="px-2.5 py-1 text-[11px] font-mono transition-all"
-              style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {historyExpanded
                 ? t({ ko: "접기", en: "Show less", ja: "折りたたむ", zh: "收起" })
@@ -514,7 +514,7 @@ export default function MemoryHistoryPanel({
         )}
 
         {tab === "available" && filteredAvailableRows.length === 0 && !loading && !error && (
-          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "사용 가능한 메모리가 없습니다", en: "No available memories.", ja: "利用可能なメモリがありません", zh: "暂无可用记忆" })}
           </div>
         )}
@@ -530,7 +530,7 @@ export default function MemoryHistoryPanel({
               <div
                 key={`${row.provider}-${row.memory_id}`}
                 className="skill-history-card p-2.5"
-                style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)" }}
+                style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</div>
                 <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.memory_id}</div>
@@ -569,7 +569,7 @@ export default function MemoryHistoryPanel({
                       disabled={isUnlearning}
                       className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] transition-all"
                       style={isUnlearning
-                        ? { borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-muted)", cursor: "not-allowed" }
+                        ? { borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
                         : { borderRadius: 8, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
                     >
                       {isUnlearning

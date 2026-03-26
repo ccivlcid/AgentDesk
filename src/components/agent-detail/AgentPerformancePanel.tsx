@@ -17,8 +17,8 @@ function formatDuration(ms: number | null): string {
 function statusBadgeStyle(status: string): React.CSSProperties {
   const styles: Record<string, React.CSSProperties> = {
     done: { background: "rgba(52,211,153,0.2)", color: "rgb(110,231,183)" },
-    review: { background: "rgba(59,130,246,0.1)", color: "var(--th-accent)" },
-    in_progress: { background: "rgba(59,130,246,0.08)", color: "var(--th-accent)" },
+    review: { background: "var(--th-accent-bg)", color: "var(--th-accent)" },
+    in_progress: { background: "var(--th-accent-bg)", color: "var(--th-accent)" },
     inbox: { background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" },
     planned: { background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" },
   };
@@ -221,7 +221,7 @@ export default function AgentPerformancePanel({ agentId, t }: Props) {
               <div
                 key={task.id}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm"
-                style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid #E5E7EB" }}
+                style={{ borderRadius: 8, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
               >
                 <span
                   className="inline-block px-1.5 py-0.5 text-[10px] font-mono font-medium"

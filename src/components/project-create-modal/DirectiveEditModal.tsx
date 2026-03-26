@@ -88,7 +88,7 @@ export default function DirectiveEditModal() {
                   type="button"
                   onClick={() => setShowTemplateMenu(!showTemplateMenu)}
                   className="px-2 py-1 text-[10px] font-mono"
-                  style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer" }}
+                  style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer" }}
                 >
                   {t({ ko: "템플릿", en: "Templates", ja: "テンプレート", zh: "模板" })}
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ display: "inline", marginLeft: 4, transform: showTemplateMenu ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
@@ -98,7 +98,7 @@ export default function DirectiveEditModal() {
                 {showTemplateMenu && (
                   <div
                     className="absolute right-0 top-full mt-1 z-50 w-56"
-                    style={{ border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxHeight: 280, overflowY: "auto" }}
+                    style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxHeight: 280, overflowY: "auto" }}
                   >
                     {templates.map((tpl) => (
                       <button
@@ -111,7 +111,7 @@ export default function DirectiveEditModal() {
                         }}
                         className="w-full text-left px-3 py-2 transition-colors flex items-center gap-2"
                         style={{
-                          borderBottom: "1px solid #E5E7EB",
+                          borderBottom: "1px solid var(--th-border)",
                           background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.08)" : "transparent",
                           cursor: "pointer",
                         }}
@@ -160,7 +160,7 @@ export default function DirectiveEditModal() {
                 fontSize: "11px",
                 lineHeight: "1.7",
                 padding: "14px",
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--th-border)",
                 background: "var(--th-bg-elevated)",
                 color: "var(--th-text-primary)",
                 minHeight: "320px",
@@ -181,7 +181,7 @@ export default function DirectiveEditModal() {
 
         <div
           className="flex items-center justify-end gap-2 px-5 py-3 flex-shrink-0"
-          style={{ borderTop: "1px solid #E5E7EB", ...mono }}
+          style={{ borderTop: "1px solid var(--th-border)", ...mono }}
         >
           <Button variant="ghost" size="sm" onClick={handleClose}>
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}

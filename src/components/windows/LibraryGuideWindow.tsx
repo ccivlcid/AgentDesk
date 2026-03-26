@@ -53,8 +53,8 @@ export default function LibraryGuideWindow() {
                 gap: 12,
                 padding: "9px 14px",
                 background: "var(--th-hover-overlay-subtle)",
-                border: "1px solid #E5E7EB",
-                borderLeft: "3px solid #3B82F6",
+                border: "1px solid var(--th-border)",
+                borderLeft: "3px solid var(--th-accent)",
                 borderRadius: 7,
               }}
             >

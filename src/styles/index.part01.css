@@ -307,6 +307,12 @@ h3,
   --th-hover-bg:       rgba(255, 255, 255, 0.04);
   --th-active-bg:      rgba(255, 255, 255, 0.07);
   --th-accent-border:  rgba(245, 158, 11, 0.28);
+  --th-accent-bg:      rgba(245, 158, 11, 0.08);
+  --th-accent-bg-subtle: rgba(245, 158, 11, 0.05);
+  --th-accent-hover:   rgba(245, 158, 11, 0.12);
+  --th-accent-border-subtle: rgba(245, 158, 11, 0.2);
+  --th-accent-focus:   rgba(245, 158, 11, 0.3);
+  --th-accent-overlay: rgba(245, 158, 11, 0.4);
   --th-green:          var(--th-terminal-success);
   --th-blue:           var(--th-terminal-info);
   --th-red:            var(--th-terminal-error);
@@ -320,6 +326,12 @@ h3,
   --th-hover-bg:       #F3F4F6;
   --th-active-bg:      #EBF5FF;
   --th-accent-border:  #BFDBFE;
+  --th-accent-bg:      rgba(59, 130, 246, 0.08);
+  --th-accent-bg-subtle: rgba(59, 130, 246, 0.05);
+  --th-accent-hover:   rgba(59, 130, 246, 0.12);
+  --th-accent-border-subtle: rgba(59, 130, 246, 0.2);
+  --th-accent-focus:   rgba(59, 130, 246, 0.3);
+  --th-accent-overlay: rgba(59, 130, 246, 0.4);
   --th-green:          var(--th-terminal-success);
   --th-blue:           var(--th-terminal-info);
   --th-red:            var(--th-terminal-error);

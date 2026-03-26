@@ -15,7 +15,7 @@ function InstallLogPanel({ logs }: { logs: string[] }) {
         fontSize: "10px",
         color: "#4B5563",
         background: "var(--th-bg-surface)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         padding: "8px 12px",
         maxHeight: 120,
         overflowY: "auto",
@@ -93,7 +93,7 @@ export default function CliSettingsTab({
                 <div
                   key={provider}
                   className="p-5 space-y-4 transition-all hover:shadow-sm"
-                  style={{ borderRadius: 20, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB" }}
+                  style={{ borderRadius: 20, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-2xl w-12 h-12 flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100 flex-shrink-0">
@@ -207,7 +207,7 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-3 py-2 text-xs font-mono focus:outline-none sm:flex-1 transition-all"
-                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
                             onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
                             onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                           >
@@ -243,7 +243,7 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-3 py-2 text-xs font-mono focus:outline-none sm:flex-1 transition-all"
-                            style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
                             onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
                             onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")}
                           >

@@ -81,7 +81,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
         padding: "10px 16px",
         background: "var(--th-bg-surface)",
         borderRadius: "12px 12px 0 0",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderBottom: "none",
         fontSize: 10,
         color: "var(--th-text-muted)",
@@ -98,7 +98,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
       </div>
 
       {/* Agent rows */}
-      <div style={{ border: "1px solid #E5E7EB", borderRadius: "0 0 12px 12px", overflow: "hidden" }}>
+      <div style={{ border: "1px solid var(--th-border)", borderRadius: "0 0 12px 12px", overflow: "hidden" }}>
       {agents.map((agent) => {
         const agentTasks = tasks.filter((t) => t.assigned_agent_id === agent.id);
         const currentTask = agentTasks.find((t) => t.status === "in_progress");
@@ -121,7 +121,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
             gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
             gap: 8,
             padding: "14px 16px",
-            borderBottom: "1px solid #F3F4F6",
+            borderBottom: "1px solid var(--th-bg-primary)",
             alignItems: "start",
             fontSize: 12,
             position: "relative",
@@ -249,7 +249,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId }: Age
       </div>
 
       {agents.length === 0 && (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--th-text-muted)", fontSize: 12, background: "var(--th-bg-elevated)", borderRadius: 16, border: "1px dashed #E5E7EB" }}>
+        <div style={{ padding: 40, textAlign: "center", color: "var(--th-text-muted)", fontSize: 12, background: "var(--th-bg-elevated)", borderRadius: 16, border: "1px dashed var(--th-border)" }}>
           No agents assigned to this project.
         </div>
       )}
@@ -274,7 +274,7 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
         top: 28,
         width: 170,
         background: "var(--th-bg-elevated)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         borderRadius: 14,
         zIndex: 100,
         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
@@ -284,7 +284,7 @@ function ActionMenu({ agentName, onClose }: { agentName: string; onClose: () => 
     >
       <div style={{
         fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 800,
-        padding: "8px 14px", borderBottom: "1px solid #F3F4F6",
+        padding: "8px 14px", borderBottom: "1px solid var(--th-bg-primary)",
         letterSpacing: "0.05em", textTransform: "uppercase" as const,
       }}>
         {agentName.toUpperCase().replace(/\s+/g, "_")}
@@ -336,7 +336,7 @@ function MetricBar({ label, value, percent, color }: { label: string; value: str
     <div style={{
       flex: 1,
       background: "var(--th-bg-elevated)",
-      border: "1px solid #E5E7EB",
+      border: "1px solid var(--th-border)",
       borderRadius: 14,
       padding: "12px 16px",
     }}>

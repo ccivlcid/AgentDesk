@@ -49,7 +49,7 @@ export default function ManualAssignmentSelector({
             <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "직원 할당 방식", en: "Assignment Mode", ja: "割り当てモード", zh: "分配模式" })}
             </span>
-            <div className="flex gap-1 p-0.5" style={{ border: "1px solid #E5E7EB", borderRadius: 8, background: "var(--th-bg-elevated)" }}>
+            <div className="flex gap-1 p-0.5" style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-bg-elevated)" }}>
               <button
                 type="button"
                 onClick={() => {
@@ -84,7 +84,7 @@ export default function ManualAssignmentSelector({
           </div>
 
           {assignmentMode === "manual" && (
-            <div className="space-y-2 p-3" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}>
+            <div className="space-y-2 p-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "참여 직원 선택", en: "Select Agents", ja: "エージェント選択", zh: "选择员工" })}
@@ -98,7 +98,7 @@ export default function ManualAssignmentSelector({
                     value={agentFilterDept}
                     onChange={(e) => setAgentFilterDept(e.target.value)}
                     className="px-2 py-1 text-[11px] font-mono outline-none"
-                    style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                    style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                   >
                     <option value="all">{t({ ko: "전체 전문 분야", en: "All Specialties", ja: "全専門分野", zh: "全专业领域" })}</option>
                     {departments.map((dept) => (
@@ -110,7 +110,7 @@ export default function ManualAssignmentSelector({
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                <span className="px-2 py-0.5 font-mono" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
+                <span className="px-2 py-0.5 font-mono" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
                   {t({ ko: "총", en: "Total", ja: "合計", zh: "总计" })}: {manualSelectionStats.total}
                 </span>
                 <span className="px-2 py-0.5 font-mono text-amber-300" style={{ borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.1)" }}>
@@ -152,7 +152,7 @@ export default function ManualAssignmentSelector({
                         className="flex cursor-pointer items-center gap-2 px-2 py-1.5 transition-all"
                         style={{
                           borderRadius: 8,
-                          border: checked ? "1px solid #3B82F6" : "1px solid transparent",
+                          border: checked ? "1px solid var(--th-accent)" : "1px solid transparent",
                           background: checked ? "rgba(245,158,11,0.08)" : "transparent",
                         }}
                       >
@@ -221,7 +221,7 @@ export default function ManualAssignmentSelector({
                 <span
                   key={agent.id}
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono"
-                  style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
                 >
                   <AgentAvatar agent={agent} size={16} />
                   {language === "ko" ? agent.name_ko || agent.name : agent.name}

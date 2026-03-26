@@ -28,7 +28,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
     const text = label ? t(label as Record<"ko" | "en" | "ja" | "zh", string>) : role;
     const colorStyle =
       role === "team_leader"
-        ? { color: "var(--th-accent)", background: "rgba(59,130,246,0.08)" }
+        ? { color: "var(--th-accent)", background: "var(--th-accent-bg)" }
         : role === "senior"
           ? { color: "rgb(196,181,253)", background: "rgba(167,139,250,0.1)" }
           : role === "junior"
@@ -88,14 +88,14 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         className="flex w-96 max-h-[75vh] flex-col overflow-hidden"
         style={{
           borderRadius: 10,
-          border: "1px solid #E5E7EB",
+          border: "1px solid var(--th-border)",
           background: "var(--th-bg-elevated)",
           boxShadow: "0 20px 50px var(--th-modal-overlay)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <HeaderModalChrome macOSStyle={false} title={title} onClose={() => setApiAssignTarget(null)} />
-        <div className="border-b border-[#E5E7EB] bg-[#FFFFFF] px-4 py-2">
+        <div className="border-b border-[var(--th-border)] bg-[#FFFFFF] px-4 py-2">
           <p className="truncate text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{apiAssignTarget.model}</p>
         </div>
 
@@ -113,7 +113,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
             <>
               {grouped.map(({ dept, agents }) => (
                 <div key={dept.id}>
-                  <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                  <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
                     <span className="text-sm">{dept.icon}</span>
                     <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "var(--th-text-secondary)" }}>
                       {localName(dept.name, dept.name_ko)}
@@ -125,7 +125,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
               ))}
               {unassigned.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                  <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
                     <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "12px", color: "var(--th-text-muted)" }}>◌</span>
                     <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "미배정", en: "Unassigned", ja: "未配属", zh: "未分配" })}
@@ -138,11 +138,11 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
           )}
         </div>
 
-        <div className="px-4 py-2.5 flex justify-end" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <div className="px-4 py-2.5 flex justify-end" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={() => setApiAssignTarget(null)}
             className="text-xs px-3 py-1.5 font-mono transition-colors"
-            style={{ borderRadius: 8, border: "1px solid #E5E7EB", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 8, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>

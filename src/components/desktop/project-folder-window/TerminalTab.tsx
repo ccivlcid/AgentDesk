@@ -63,7 +63,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {/* Header bar */}
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0, background: "var(--th-bg-elevated)" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)", flexShrink: 0, background: "var(--th-bg-elevated)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
@@ -128,7 +128,7 @@ export function TerminalTab({ projectPath, projectName }: { projectPath: string 
                         display: "flex", alignItems: "center", gap: 10,
                         padding: "8px 12px", borderRadius: 6,
                         background: "var(--th-bg-elevated)",
-                        border: "1px solid #E5E7EB",
+                        border: "1px solid var(--th-border)",
                       }}
                     >
                       <code style={{ flex: 1, fontSize: 12, fontFamily: mono, color: "var(--th-text-primary)", background: "none" }}>

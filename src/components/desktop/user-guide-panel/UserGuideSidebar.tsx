@@ -22,11 +22,11 @@ export function UserGuideSidebar({
   return (
     <div style={{
       width: 168, flexShrink: 0,
-      borderRight: "1px solid #E5E7EB",
+      borderRight: "1px solid var(--th-border)",
       display: "flex", flexDirection: "column",
       background: "var(--th-bg-surface)",
     }}>
-      <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
+      <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
           <svg viewBox="0 0 16 16" fill="none" stroke="var(--th-text-muted)" strokeWidth={1.5}
             width={10} height={10}
@@ -43,7 +43,7 @@ export function UserGuideSidebar({
               fontFamily: MONO_FONT, fontSize: 10,
               padding: "5px 8px 5px 22px",
               background: "var(--th-bg-primary)",
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--th-border)",
               borderRadius: 8,
               color: "var(--th-text-primary)",
               outline: "none",
@@ -74,7 +74,7 @@ export function UserGuideSidebar({
 
       <div style={{
         padding: "6px 12px",
-        borderTop: "1px solid #E5E7EB",
+        borderTop: "1px solid var(--th-border)",
         display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
       }}>
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 4px #30d158" }} />

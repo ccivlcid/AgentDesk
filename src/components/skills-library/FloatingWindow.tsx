@@ -67,7 +67,7 @@ export default function FloatingWindow({
         width: defaultWidth,
         maxWidth: "calc(100vw - 32px)",
         maxHeight: "calc(100vh - 100px)",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--th-border)",
         background: "var(--th-bg-surface)",
         borderRadius: 8,
       }}
@@ -75,7 +75,7 @@ export default function FloatingWindow({
       {/* Title bar */}
       <div
         className="flex items-center gap-3 px-4 py-3 shrink-0 select-none cursor-move"
-        style={{ borderBottom: "1px solid #E5E7EB", background: "var(--th-bg-elevated)" }}
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
         onMouseDown={onMouseDown}
       >
         {/* Traffic lights */}
@@ -108,7 +108,7 @@ export default function FloatingWindow({
         {disableClose && (
           <div
             className="text-[11px] font-mono px-2 py-0.5"
-            style={{ border: "1px solid rgba(59,130,246,0.25)", color: "var(--th-accent)", background: "rgba(59,130,246,0.05)" }}
+            style={{ border: "1px solid var(--th-accent-border-subtle)", color: "var(--th-accent)", background: "var(--th-accent-bg-subtle)" }}
           >
             {closeBtnLabel}
           </div>

@@ -19,14 +19,14 @@ export function AgentsTab({ agents, projectTasks }: { agents: Agent[]; projectTa
         const activeTasks = agentTasks.filter((task) => task.status === "in_progress" || task.status === "collaborating");
         const doneTasks = agentTasks.filter((task) => task.status === "done");
         return (
-          <div key={agent.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderBottom: "1px solid #E5E7EB" }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+          <div key={agent.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderBottom: "1px solid var(--th-border)" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
               {agent.avatar_emoji}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)" }}>{agent.name}</span>
-                <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "var(--th-bg-elevated)", border: "1px solid #E5E7EB", color: AGENT_STATUS_COLOR[agent.status] ?? "var(--th-text-muted)" }}>
+                <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: AGENT_STATUS_COLOR[agent.status] ?? "var(--th-text-muted)" }}>
                   <span style={{ color: AGENT_STATUS_COLOR[agent.status] ?? "var(--th-text-muted)", fontSize: 7 }}>●</span>
                   {" "}{agent.status}
                 </span>

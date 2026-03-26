@@ -35,7 +35,7 @@ export function AgentDetailModalTabBar({
   ];
 
   return (
-    <div className="flex" style={{ borderBottom: "1px solid #E5E7EB" }}>
+    <div className="flex" style={{ borderBottom: "1px solid var(--th-border)" }}>
       {items.map((tabItem) => (
         <button
           key={tabItem.key}

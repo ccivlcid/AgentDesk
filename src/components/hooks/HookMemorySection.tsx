@@ -21,14 +21,14 @@ export default function HookMemorySection({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
+    <div style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
       <button
         type="button"
         onClick={() => setCollapsed((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2.5 transition-colors"
         style={{
           background: "none", border: "none",
-          borderBottom: collapsed ? "none" : "1px solid #E5E7EB",
+          borderBottom: collapsed ? "none" : "1px solid var(--th-border)",
           cursor: "pointer", textAlign: "left",
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}

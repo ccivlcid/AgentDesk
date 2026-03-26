@@ -14,7 +14,7 @@ export default function PersonaCard({ persona, selected, onSelect }: PersonaCard
         "w-full text-left p-3 rounded border transition-all",
         selected
           ? "border-l-4 bg-[#FFFFFF]"
-          : "border-[#E5E7EB] bg-[#F9FAFB] hover:border-[#BFDBFE]",
+          : "border-[var(--th-border)] bg-[var(--th-bg-surface)] hover:border-[#BFDBFE]",
       ].join(" ")}
       style={selected ? { borderLeftColor: persona.accent_color, borderColor: `${persona.accent_color}60` } : {}}
     >
@@ -24,7 +24,7 @@ export default function PersonaCard({ persona, selected, onSelect }: PersonaCard
       </div>
 
       {/* 인물명 — 보조 텍스트 */}
-      <div className="text-[10px] text-[#9CA3AF] font-mono mb-2">
+      <div className="text-[10px] text-[var(--th-text-muted)] font-mono mb-2">
         {persona.name} 방식
       </div>
 
@@ -33,7 +33,7 @@ export default function PersonaCard({ persona, selected, onSelect }: PersonaCard
         {persona.best_for.slice(0, 2).map((tag) => (
           <span
             key={tag}
-            className="text-[9px] px-1.5 py-0.5 border border-[#E5E7EB] text-[#9CA3AF] font-mono rounded"
+            className="text-[9px] px-1.5 py-0.5 border border-[var(--th-border)] text-[var(--th-text-muted)] font-mono rounded"
           >
             {tag}
           </span>
