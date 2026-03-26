@@ -60,7 +60,7 @@ interface ParsedCron {
   dayOfWeek: CronField;
 }
 
-export function parseCronExpression(expr: string): ParsedCron | null {
+function parseCronExpression(expr: string): ParsedCron | null {
   const parts = expr.trim().split(/\s+/);
   if (parts.length !== 5) return null;
   return {

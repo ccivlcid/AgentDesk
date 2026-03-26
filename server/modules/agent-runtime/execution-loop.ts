@@ -143,29 +143,6 @@ export function parseCodexJsonLine(line: string): string | null {
   return trimmed;
 }
 
-/**
- * Parse a chunk of codex CLI JSON output into human-readable text.
- * Handles multiple newline-delimited JSON lines within a single chunk.
- * Non-JSON lines are passed through as-is.
- *
- * NOTE: This is a stateless convenience wrapper. For proper handling of
- * partial lines split across Buffer boundaries, use CodexLineBuffer +
- * parseCodexJsonLine instead.
- *
- * Exported so cli-runtime.ts can reuse.
- */
-export function parseCodexJsonChunk(chunk: string): string {
-  const lines = chunk.split("\n");
-  const parts: string[] = [];
-
-  for (const line of lines) {
-    const result = parseCodexJsonLine(line);
-    if (result !== null) parts.push(result);
-  }
-
-  return parts.join("\n");
-}
-
 interface ExecutionLoopDeps {
   db: DatabaseSync;
   broadcast: (type: string, payload: unknown) => void;

@@ -166,10 +166,7 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
   },
 ];
 
-/** slug → template lookup */
-export function getDirectiveTemplate(slug: string): DirectiveTemplate | undefined {
-  return DIRECTIVE_TEMPLATES.find((t) => t.slug === slug);
-}
+
 
 /* ------------------------------------------------------------------ */
 /*  Directive-driven execution parameters                              */
