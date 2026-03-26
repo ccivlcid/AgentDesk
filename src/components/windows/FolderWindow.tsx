@@ -47,34 +47,34 @@ function ProjectPickerDropdown({
       <div style={{ position: "fixed", inset: 0, zIndex: 9999 }} onClick={onClose} />
       <div style={{
         position: "absolute", bottom: "100%", left: 0, right: 0, zIndex: 10000,
-        background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)",
+        background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10,
         maxHeight: 240, overflowY: "auto", marginBottom: 4, fontFamily: "var(--th-font-mono)",
       }}>
-        <div style={{ padding: 8, borderBottom: "1px solid var(--th-border)" }}>
+        <div style={{ padding: 8, borderBottom: "1px solid #E5E7EB" }}>
           <input
             autoFocus type="text" value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder={t({ ko: "프로젝트 검색...", en: "Search projects...", ja: "プロジェクト検索...", zh: "搜索项目..." })}
             style={{
-              width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)",
-              border: "1px solid var(--th-border)", color: "var(--th-text-primary)",
+              width: "100%", boxSizing: "border-box", background: "#FFFFFF",
+              border: "1px solid #E5E7EB", color: "#111827", borderRadius: 6,
               fontFamily: "var(--th-font-mono)", fontSize: 10, padding: "5px 8px", outline: "none",
             }}
           />
         </div>
         {available.length === 0
-          ? <div style={{ padding: "10px 12px", fontSize: 10, color: "var(--th-text-muted)" }}>
+          ? <div style={{ padding: "10px 12px", fontSize: 10, color: "#9CA3AF" }}>
               {t({ ko: "추가 가능한 프로젝트 없음", en: "No projects available", ja: "追加可能なプロジェクトなし", zh: "没有可添加的项目" })}
             </div>
           : available.map((p) => (
             <button key={p.id} onClick={() => { onAdd(p.id); onClose(); }}
               style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 12px",
-                background: "transparent", border: "none", borderBottom: "1px solid var(--th-border)",
-                cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
+                background: "transparent", border: "none", borderBottom: "1px solid #E5E7EB",
+                cursor: "pointer", fontFamily: "var(--th-font-mono)", borderRadius: 6 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#F9FAFB")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <div style={{ fontSize: 11, color: "var(--th-text-primary)", display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
-              <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>{p.project_path}</div>
+              <div style={{ fontSize: 11, color: "#111827", display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
+              <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>{p.project_path}</div>
             </button>
           ))
         }
@@ -120,16 +120,16 @@ function FsTreeNode({ entry, depth, folderProjects }: {
           display: "flex", alignItems: "center", gap: 4,
           padding: "3px 6px 3px", paddingLeft: 6 + indent,
           cursor: entry.type === "dir" ? "pointer" : "default",
-          borderRadius: 0,
-          background: isProject ? "rgba(245,158,11,0.08)" : "transparent",
-          borderLeft: isProject ? "2px solid var(--th-accent)" : "2px solid transparent",
+          borderRadius: 6,
+          background: isProject ? "rgba(59,130,246,0.08)" : "transparent",
+          borderLeft: isProject ? "2px solid #3B82F6" : "2px solid transparent",
         }}
         onClick={toggle}
         onDoubleClick={() => { if (matchedProject) setCurrentProjectId(matchedProject.id); }}
-        onMouseEnter={(e) => { if (!isProject) e.currentTarget.style.background = "var(--th-bg-surface)"; }}
+        onMouseEnter={(e) => { if (!isProject) e.currentTarget.style.background = "#F9FAFB"; }}
         onMouseLeave={(e) => { if (!isProject) e.currentTarget.style.background = "transparent"; }}
       >
-        <span style={{ fontSize: 10, color: "var(--th-text-muted)", width: 12, textAlign: "center", flexShrink: 0 }}>
+        <span style={{ fontSize: 10, color: "#9CA3AF", width: 12, textAlign: "center", flexShrink: 0 }}>
           {entry.type === "dir" ? (open ? "▾" : "▸") : "·"}
         </span>
         <span style={{ fontSize: 12, display: "inline-flex", alignItems: "center" }}>
@@ -141,7 +141,7 @@ function FsTreeNode({ entry, depth, folderProjects }: {
         </span>
         <span style={{
           fontSize: 10, fontFamily: "var(--th-font-mono)",
-          color: isProject ? "var(--th-accent)" : "var(--th-text-primary)",
+          color: isProject ? "#3B82F6" : "#111827",
           fontWeight: isProject ? 600 : 400,
           flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
@@ -149,19 +149,19 @@ function FsTreeNode({ entry, depth, folderProjects }: {
         </span>
         {isProject && (
           <span style={{
-            fontSize: 8, background: "rgba(245,158,11,0.15)", color: "var(--th-accent)",
-            padding: "1px 4px", borderRadius: 0, border: "1px solid rgba(245,158,11,0.3)",
+            fontSize: 8, background: "rgba(59,130,246,0.15)", color: "#3B82F6",
+            padding: "1px 4px", borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)",
             flexShrink: 0,
           }}>
             PROJECT
           </span>
         )}
         {entry.type === "file" && entry.size > 0 && (
-          <span style={{ fontSize: 8, color: "var(--th-text-muted)", flexShrink: 0 }}>
+          <span style={{ fontSize: 8, color: "#9CA3AF", flexShrink: 0 }}>
             {formatSize(entry.size)}
           </span>
         )}
-        {loading && <span style={{ fontSize: 8, color: "var(--th-text-muted)" }}>…</span>}
+        {loading && <span style={{ fontSize: 8, color: "#9CA3AF" }}>…</span>}
       </div>
       {open && children.map((child) => (
         <FsTreeNode key={child.path} entry={child} depth={depth + 1} folderProjects={folderProjects} />
@@ -212,13 +212,13 @@ function FileTreeTab({ folder }: { folder: ProjectFolder }) {
   }, [folder.base_path, t]);
 
   if (loading) return (
-    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "#9CA3AF", fontFamily: "var(--th-font-mono)" }}>
       {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
     </div>
   );
 
   if (error) return (
-    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)" }}>
+    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "#DC2626", fontFamily: "var(--th-font-mono)" }}>
       {error}
     </div>
   );
@@ -228,18 +228,18 @@ function FileTreeTab({ folder }: { folder: ProjectFolder }) {
       {/* root label */}
       <div style={{
         display: "flex", alignItems: "center", gap: 6, padding: "4px 10px 6px",
-        borderBottom: "1px solid var(--th-border)", marginBottom: 4,
+        borderBottom: "1px solid #E5E7EB", marginBottom: 4,
       }}>
         <span style={{ fontSize: 14 }}>{folder.icon ?? "📁"}</span>
-        <span style={{ fontSize: 10, color: "var(--th-accent)", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}>
+        <span style={{ fontSize: 10, color: "#3B82F6", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}>
           {folder.base_path}
         </span>
       </div>
-      <div style={{ fontSize: 9, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", padding: "0 10px 6px" }}>
+      <div style={{ fontSize: 9, color: "#9CA3AF", fontFamily: "var(--th-font-mono)", padding: "0 10px 6px" }}>
         {t({ ko: "프로젝트 아이콘 더블클릭 → 현재 프로젝트로 선택", en: "Double-click project → set as current project", ja: "プロジェクトをダブルクリック → 現在のプロジェクトに設定", zh: "双击项目图标 → 设为当前项目" })}
       </div>
       {entries.length === 0
-        ? <div style={{ padding: "16px 10px", fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+        ? <div style={{ padding: "16px 10px", fontSize: 10, color: "#9CA3AF", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "폴더가 비어 있습니다.", en: "Folder is empty.", ja: "フォルダが空です。", zh: "文件夹为空。" })}
           </div>
         : entries.map((e) => (
@@ -303,16 +303,16 @@ function MergeTab({ folder, onProjectCreated }: {
 
   if (result?.ok) return (
     <div style={{ padding: 24, textAlign: "center" }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-      <div style={{ fontSize: 13, color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", fontWeight: 600, marginBottom: 6 }}>
+      <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+      <div style={{ fontSize: 13, color: "#111827", fontFamily: "var(--th-font-mono)", fontWeight: 600, marginBottom: 6 }}>
         {t({ ko: "통합 프로젝트 생성 완료", en: "Integrated project created", ja: "統合プロジェクト作成完了", zh: "集成项目已创建" })}
       </div>
-      <div style={{ fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", marginBottom: 16 }}>
+      <div style={{ fontSize: 11, color: "#9CA3AF", fontFamily: "var(--th-font-mono)", marginBottom: 16 }}>
         «{result.projectName}»
       </div>
       <div style={{
-        fontSize: 10, color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)",
-        background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)",
+        fontSize: 10, color: "#6B7280", fontFamily: "var(--th-font-mono)",
+        background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10,
         padding: "10px 14px", textAlign: "left",
       }}>
         {t({
@@ -328,58 +328,59 @@ function MergeTab({ folder, onProjectCreated }: {
   return (
     <div style={{ padding: 16, overflowY: "auto", fontFamily: "var(--th-font-mono)" }}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
           <span>{t({ ko: "합칠 프로젝트 선택", en: "Select projects to merge", ja: "統合するプロジェクトを選択", zh: "选择要合并的项目" })}</span>
-          <span style={{ color: overLimit ? "var(--th-danger-text)" : "var(--th-text-muted)" }}>{selectedIds.size} / {MAX_SOURCES}{overLimit && <> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></>}</span>
+          <span style={{ color: overLimit ? "#DC2626" : "#9CA3AF" }}>{selectedIds.size} / {MAX_SOURCES}{overLimit && <> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></>}</span>
         </div>
         {folder.projects.length === 0
-          ? <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{t({ ko: "폴더에 프로젝트가 없습니다.", en: "No projects in folder.", ja: "フォルダにプロジェクトがありません。", zh: "文件夹中没有项目。" })}</div>
+          ? <div style={{ fontSize: 10, color: "#9CA3AF" }}>{t({ ko: "폴더에 프로젝트가 없습니다.", en: "No projects in folder.", ja: "フォルダにプロジェクトがありません。", zh: "文件夹中没有项目。" })}</div>
           : <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {folder.projects.map((p) => {
                 const checked = selectedIds.has(p.id);
                 return (
                   <label key={p.id} style={{
                     display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", cursor: "pointer",
-                    border: `1px solid ${checked ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
-                    background: checked ? "rgba(245,158,11,0.07)" : "var(--th-bg-surface)",
+                    border: `1px solid ${checked ? "rgba(59,130,246,0.4)" : "#E5E7EB"}`,
+                    background: checked ? "rgba(59,130,246,0.07)" : "#F9FAFB",
+                    borderRadius: 10,
                   }}>
                     <input type="checkbox" checked={checked} onChange={() => toggleProject(p.id)}
-                      style={{ accentColor: "var(--th-accent)", width: 14, height: 14, cursor: "pointer" }} />
+                      style={{ accentColor: "#3B82F6", width: 14, height: 14, cursor: "pointer" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: "var(--th-text-primary)", fontWeight: checked ? 600 : 400, display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
-                      <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.project_path}</div>
+                      <div style={{ fontSize: 11, color: "#111827", fontWeight: checked ? 600 : 400, display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
+                      <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.project_path}</div>
                     </div>
                   </label>
                 );
               })}
             </div>
         }
-        {overLimit && <div style={{ fontSize: 9, color: "var(--th-danger-text)", marginTop: 6 }}>{t({ ko: "최대 5개까지 연결 가능합니다.", en: "Up to 5 source projects can be linked.", ja: "最大5件まで連結できます。", zh: "最多可关联5个项目。" })}</div>}
+        {overLimit && <div style={{ fontSize: 9, color: "#DC2626", marginTop: 6 }}>{t({ ko: "최대 5개까지 연결 가능합니다.", en: "Up to 5 source projects can be linked.", ja: "最大5件まで連結できます。", zh: "最多可关联5个项目。" })}</div>}
       </div>
 
-      <div style={{ borderTop: "1px solid var(--th-border)", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 2 }}>{t({ ko: "통합 프로젝트 정보", en: "Integrated project info", ja: "統合プロジェクト情報", zh: "集成项目信息" })}</div>
+      <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 2 }}>{t({ ko: "통합 프로젝트 정보", en: "Integrated project info", ja: "統合プロジェクト情報", zh: "集成项目信息" })}</div>
         {[
           { label: { ko: "프로젝트 이름", en: "Project name", ja: "プロジェクト名", zh: "项目名称" }, value: name, set: setName, multiline: false },
           { label: { ko: "프로젝트 경로", en: "Project path", ja: "プロジェクトパス", zh: "项目路径" }, value: projectPath, set: setProjectPath, multiline: false },
         ].map(({ label, value, set }) => {
           return (
             <div key={t(label)}>
-              <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{t(label)} *</label>
+              <label style={{ fontSize: 9, color: "#9CA3AF", display: "block", marginBottom: 4 }}>{t(label)} *</label>
               <input type="text" value={value} onChange={(e) => set(e.target.value)}
-                style={{ width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", outline: "none" }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")} />
+                style={{ width: "100%", boxSizing: "border-box", background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#111827", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", borderRadius: 6, outline: "none" }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")} />
             </div>
           );
         })}
         <div>
-          <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{t({ ko: "핵심 목표", en: "Core goal", ja: "コアゴール", zh: "核心目标" })} *</label>
+          <label style={{ fontSize: 9, color: "#9CA3AF", display: "block", marginBottom: 4 }}>{t({ ko: "핵심 목표", en: "Core goal", ja: "コアゴール", zh: "核心目标" })} *</label>
           <textarea value={coreGoal} onChange={(e) => setCoreGoal(e.target.value)} rows={3}
             placeholder={t({ ko: "예: 디자인·리서치·개발 산출물을 통합하여 제품 출시 준비", en: "e.g. Integrate design, research, and development outputs for product launch", ja: "例: デザイン・開発成果物を統合して製品リリースを準備", zh: "例如：整合各项目成果，准备产品发布" })}
-            style={{ width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", outline: "none", resize: "vertical" }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--th-border)")} />
+            style={{ width: "100%", boxSizing: "border-box", background: "#FFFFFF", border: "1px solid #E5E7EB", color: "#111827", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", borderRadius: 6, outline: "none", resize: "vertical" }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")} />
         </div>
         {error && <div style={{ fontSize: 10, color: "var(--th-danger-text)", padding: "6px 10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
         <button onClick={() => { void handleCreate(); }} disabled={submitting || overLimit || folder.projects.length === 0}
