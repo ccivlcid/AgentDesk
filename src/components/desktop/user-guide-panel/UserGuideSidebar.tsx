@@ -22,13 +22,13 @@ export function UserGuideSidebar({
   return (
     <div style={{
       width: 168, flexShrink: 0,
-      borderRight: "1px solid var(--th-border)",
+      borderRight: "1px solid #E5E7EB",
       display: "flex", flexDirection: "column",
-      background: "var(--th-bg-sidebar)",
+      background: "#F9FAFB",
     }}>
       <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
         <div style={{ position: "relative" }}>
-          <svg viewBox="0 0 16 16" fill="none" stroke="var(--th-text-muted)" strokeWidth={1.5}
+          <svg viewBox="0 0 16 16" fill="none" stroke="#9CA3AF" strokeWidth={1.5}
             width={10} height={10}
             style={{ position: "absolute", left: 7, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
           >
@@ -42,21 +42,21 @@ export function UserGuideSidebar({
               width: "100%", boxSizing: "border-box",
               fontFamily: MONO_FONT, fontSize: 10,
               padding: "5px 8px 5px 22px",
-              background: "var(--th-hover-overlay-subtle)",
-              border: "1px solid var(--th-border)",
-              borderRadius: 5,
-              color: "var(--th-text-primary)",
+              background: "#F3F4F6",
+              border: "1px solid #E5E7EB",
+              borderRadius: 8,
+              color: "#111827",
               outline: "none",
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(10,132,255,0.5)"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#3B82F6"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; }}
           />
         </div>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
         {filteredChapters.length === 0 && (
-          <div style={{ padding: "12px 14px", fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>
+          <div style={{ padding: "12px 14px", fontSize: 10, color: "#9CA3AF", textAlign: "center" }}>
             {t({ ko: "결과 없음", en: "No results", ja: "結果なし", zh: "无结果" })}
           </div>
         )}
@@ -74,11 +74,11 @@ export function UserGuideSidebar({
 
       <div style={{
         padding: "6px 12px",
-        borderTop: "1px solid var(--th-border)",
+        borderTop: "1px solid #E5E7EB",
         display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
       }}>
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 4px #30d158" }} />
-        <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: MONO_FONT }}>AgentDesk v0.9</span>
+        <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: MONO_FONT }}>AgentDesk v0.9</span>
       </div>
     </div>
   );

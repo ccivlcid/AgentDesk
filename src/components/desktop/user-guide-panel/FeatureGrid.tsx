@@ -12,14 +12,14 @@ export function FeatureGrid({ features }: FeatureGridProps) {
         <div key={f.label} style={{
           display: "flex", alignItems: "flex-start", gap: 10,
           padding: "7px 10px",
-          background: "var(--th-hover-overlay-subtle)",
-          border: "1px solid var(--th-border)",
+          background: "#F3F4F6",
+          border: "1px solid #E5E7EB",
           borderRadius: 6,
         }}>
           <span style={{ fontSize: 15, flexShrink: 0, width: 20, textAlign: "center", marginTop: 1 }}>{f.icon}</span>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 11, fontWeight: 600, color: "var(--th-text-primary)", marginBottom: 2 }}>{f.label}</div>
-            <div style={{ fontFamily: MONO_FONT, fontSize: 10, color: "var(--th-text-muted)", lineHeight: 1.4 }}>{f.desc}</div>
+            <div style={{ fontFamily: MONO_FONT, fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 2 }}>{f.label}</div>
+            <div style={{ fontFamily: MONO_FONT, fontSize: 10, color: "#9CA3AF", lineHeight: 1.4 }}>{f.desc}</div>
           </div>
         </div>
       ))}

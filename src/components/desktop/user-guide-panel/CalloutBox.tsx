@@ -82,7 +82,7 @@ export function CalloutBox({ type, text }: Callout) {
         padding: "8px 12px",
         background: colors.bg,
         border: `1px solid ${colors.border}`,
-        borderRadius: 7,
+        borderRadius: 8,
         display: "flex",
         gap: 8,
         alignItems: "flex-start",
@@ -116,7 +116,7 @@ export function CalloutBox({ type, text }: Callout) {
           style={{
             fontFamily: MONO_FONT,
             fontSize: 11,
-            color: "var(--th-text-secondary)",
+            color: "#6B7280",
             lineHeight: 1.5,
           }}
         >
