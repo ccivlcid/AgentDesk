@@ -1,9 +1,15 @@
 # Execution Path Consistency — P1 분석 및 수정 계획
 
 > **목적:** 태스크 실행 경로와 PM 리뷰 경로 간 불일치 분석, 오케스트레이션 화면 연동을 위한 수정 계획
-> **우선순위:** P1 (Critical)
+> **우선순위:** P1 (Critical) — 단, PM 프로바이더 라우팅(§2-1)은 이미 해소됨
 > **관련 화면:** Orchestration Window (모든 탭)
-> **Updated:** 2026-03-25
+> **Updated:** 2026-03-26
+>
+> **변경 이력:**
+> - 2026-03-25: 초안 작성
+> - 2026-03-26: 코덱스 코드 검증 기반 보정 — PM 본선 경로가 이미 `runAgentOneShot(pm)`으로
+>   에이전트 고유 프로바이더를 정확히 사용함을 확인. Phase 2를 "bug fix"→"시스템 원샷 경로
+>   정합화"로 재정의. Phase 1-B/5를 기존 인프라 재사용으로 축소. 우선순위 재배치.
 
 ---
 
@@ -38,7 +44,7 @@ api_providers (
 )
 ```
 
-### 0-3. 프로바이더 해석 흐름 (2가지)
+### 0-3. 프로바이더 해석 흐름 (3가지)
 
 **A. 태스크 실행** — 에이전트 고유 설정 직접 사용:
 ```
@@ -49,15 +55,28 @@ agent.cli_provider 읽기
   └── "ollama" → Ollama API 호출
 ```
 
-**B. PM/시스템 원샷** — `callLlmOneShotAuto()` → `resolveCliProviderFromAgents()`:
+**B. PM 원샷** — `runAgentOneShot(pm, ...)` → PM 에이전트 고유 설정 직접 사용:
 ```
+pm-orchestrator.ts → runAgentOneShot(pm, prompt, { ... })
+  → one-shot-runner.ts:113 에서 agent.cli_provider 읽기
+    ├── "api" → agent.api_provider_id + agent.api_model → HTTP 호출
+    ├── "claude"/"codex"/... → agent.cli_model, agent.cli_reasoning_level → CLI spawn
+    └── 폴백 → "claude"
+```
+> PM 오케스트레이터는 `callLlmOneShotAuto()`를 사용하지 않음 (import조차 안 됨).
+> PM의 4개 호출 지점(L210, L437, L548, L664) 모두 `runAgentOneShot(pm, ...)`으로
+> PM 에이전트 자신의 프로바이더 설정을 정확히 사용한다.
+
+**C. 시스템 원샷** — `callLlmOneShotAuto()` → `resolveCliProviderFromAgents()`:
+```
+kickoff.ts, projects.ts 등 시스템성 호출에서 사용
 1. 아무 에이전트에서 api_provider_id 있으면 → API 모드 (해당 provider로 HTTP)
 2. 아무 에이전트에서 CLI provider 있으면 → CLI 모드
 3. settings.defaultProvider → CLI 모드
 4. 폴백 → "claude"
 ```
 
-**문제:** 경로 A는 **해당 에이전트**의 설정, 경로 B는 **아무 에이전트**의 설정을 사용.
+**현재 상태:** 경로 A와 B는 모두 **해당 에이전트**의 설정을 정확히 사용. 경로 C만 **아무 에이전트**의 설정을 사용하며, 이는 킥오프/자동 배정 등 특정 에이전트가 없는 시스템 호출에 한정된다.
 
 ### 0-4. 설정 화면에서의 등록 흐름
 
@@ -102,21 +121,29 @@ const DEFAULT_MODELS: Record<string, string> = {
 
 ## 1. 문제 정의
 
-AgentDesk에는 두 개의 독립적인 LLM 실행 경로가 존재한다:
+AgentDesk에는 세 개의 LLM 실행 경로가 존재한다:
 
 | 경로 | 용도 | 진입점 | 프로바이더 선택 |
 |------|------|--------|---------------|
 | **태스크 실행** | 에이전트가 태스크를 수행 | `execution-start-task.ts` → `execution-loop.ts` | 해당 에이전트의 `cli_provider` + `api_provider_id` |
-| **PM 원샷** | PM이 리뷰/배정/실패 처리 | `pm-orchestrator.ts` → `callLlmOneShotAuto()` | **아무 에이전트**에서 자동 감지 |
+| **PM 원샷** | PM이 리뷰/배정/실패 처리 | `pm-orchestrator.ts` → `runAgentOneShot(pm, ...)` | **PM 에이전트 고유 설정** (§0-3 경로 B) |
+| **시스템 원샷** | 킥오프/자동 배정 등 | `kickoff.ts` → `callLlmOneShotAuto()` | **아무 에이전트**에서 자동 감지 (§0-3 경로 C) |
 
-이 두 경로는 **서로 다른 시기에, 다른 설계 목표로** 만들어졌다:
+> **2026-03-26 검증 결과:** PM 프로바이더 라우팅은 이미 정확함.
+> `pm-orchestrator.ts`의 4개 호출 지점(L210, L437, L548, L664) 모두
+> `runAgentOneShot(pm, ...)`을 사용하며, `one-shot-runner.ts:113`에서
+> PM 에이전트의 `cli_provider`, `api_provider_id`, `api_model` 등을 직접 읽는다.
+> `callLlmOneShotAuto()`는 pm-orchestrator에서 import조차 되지 않는다.
+
+태스크 실행과 PM 원샷은 **서로 다른 시기에, 다른 설계 목표로** 만들어졌다:
 - 태스크 실행: "자율 에이전트 작업" → 풍부한 컨텍스트, 도구 접근, 멀티턴
 - PM 원샷: "경량 오케스트레이션 판단" → 최소 컨텍스트, 도구 없음, 싱글턴
 
-이 불일치로 인해:
-1. PM이 자신의 프로바이더가 아닌 다른 에이전트의 프로바이더를 사용 (라우팅 버그)
+**프로바이더 라우팅은 해소되었으나**, 다음 불일치가 여전히 존재한다:
+1. ~~PM이 자신의 프로바이더가 아닌 다른 에이전트의 프로바이더를 사용 (라우팅 버그)~~ → 해소됨
 2. 오케스트레이션 화면에 표시할 PM 데이터가 빈약함
-3. 프로바이더/언어/타임아웃 등 기본 설정이 경로마다 다름
+3. 시스템 원샷(킥오프/자동 배정)의 프로바이더 선택이 비결정적임 (경로 C)
+4. 프로바이더/언어/타임아웃 등 기본 설정이 경로마다 다름
 
 ### 원칙: 모델 선택은 유저의 판단
 
@@ -133,43 +160,46 @@ AgentDesk에는 두 개의 독립적인 LLM 실행 경로가 존재한다:
 
 ## 2. 불일치 상세 분석
 
-### 2-1. 프로바이더 선택 (CRITICAL)
+### 2-1. 프로바이더 선택 (~~CRITICAL~~ → RESOLVED / 잔여: LOW)
+
+> **2026-03-26 코드 검증 결과: PM 본선 경로는 이미 정확함.**
 
 ```
-태스크 실행:  agent.cli_provider + agent.api_provider_id  →  해당 에이전트 고유 설정
-PM 원샷:     callLlmOneShotAuto() → resolveCliProviderFromAgents() → 아무 에이전트
+태스크 실행:   agent.cli_provider + agent.api_provider_id  →  해당 에이전트 고유 설정
+PM 원샷:      runAgentOneShot(pm, ...) → one-shot-runner.ts:113 → PM 에이전트 고유 설정  ✅ 정확
+시스템 원샷:   callLlmOneShotAuto() → resolveCliProviderFromAgents() → 아무 에이전트  ⚠️ 잔여 이슈
 ```
 
-**태스크 실행** (`execution-start-task.ts:186`):
+**PM 원샷** (`pm-orchestrator.ts` → `one-shot-runner.ts:113`):
 ```typescript
-const provider = execAgent.cli_provider || "claude";
-// cli_provider="api"이면 → resolveProvider(db, agent.api_provider_id) → HTTP 호출
-// cli_provider="claude"이면 → CLI spawn
+// PM 에이전트의 설정을 직접 사용 — 이미 정확함
+const provider = agent.cli_provider || "claude";
+// agent.api_provider_id, agent.api_model, agent.cli_model, agent.cli_reasoning_level 직접 참조
 ```
 
-**PM 원샷** (`llm-client.ts:244-272`):
+**시스템 원샷** (`llm-client.ts:244-272` — 킥오프/자동 배정에서만 사용):
 ```typescript
 // 4단계 폴백: 아무 에이전트의 설정을 가져옴
-1. ANY agent with api_provider_id → 해당 provider로 HTTP (PM 에이전트가 아닐 수 있음)
+1. ANY agent with api_provider_id → 해당 provider로 HTTP
 2. ANY agent with CLI provider → 해당 CLI spawn
 3. settings.defaultProvider
 4. "claude"
 ```
 
-**시나리오별 불일치 예시:**
+**잔여 이슈 (시스템 원샷만 해당):**
 
-| PM 에이전트 설정 | 태스크 에이전트 설정 | PM 실제 사용 (현재) | 문제 |
-|----------------|-------------------|-------------------|------|
-| cli_provider="claude" | cli_provider="api", api_provider_id="openai-1" | openai-1 (아무 에이전트에서 가져옴) | PM이 의도치 않은 프로바이더 사용 |
-| cli_provider="api", api_provider_id="anthropic-1" | cli_provider="codex" | anthropic-1 (맞을 수도, 틀릴 수도) | PM 자신의 설정이 아닌 경로로 해석 |
-| cli_provider="claude" | cli_provider="claude" | claude (우연히 맞음) | 우연히 일치할 뿐, 보장 안 됨 |
+| 호출 위치 | 용도 | 문제 |
+|-----------|------|------|
+| `kickoff.ts:496` | 킥오프 태스크 생성 | 아무 에이전트의 프로바이더 사용 (비결정적) |
+| `kickoff.ts:827` | 추가 태스크 생성 | 동일 |
+| `kickoff.ts:1131` | 내부 파이프라인 태스크 생성 | 동일 |
+| `projects.ts:104` | 자동 배정 | 동일 |
 
-**영향:**
-- PM이 자신의 프로바이더가 아닌 다른 에이전트의 프로바이더를 사용
-- LLM마다 판단 기준이 달라 승인/수정 결정의 일관성이 깨짐
-- API 모드 PM의 경우 모델 선택도 불일치 (pm.api_model 무시)
+**영향 (잔여):**
+- 시스템 원샷에서 어떤 에이전트의 프로바이더가 선택될지 비결정적
+- PM 본선 경로(리뷰/실패 처리/프로젝트 리뷰)에는 영향 없음
 
-**수정:** §4-2 참조 — PM 에이전트의 전체 프로바이더 설정(cli_provider + api_provider_id + api_model)을 명시적으로 전달
+**수정:** §4-2 참조 — 시스템 원샷 경로 정합화 (버그 수정이 아닌 아키텍처 정리)
 
 ---
 
@@ -400,12 +430,19 @@ function getTaskProgress(task: Task): number {
 // 현재 (가짜):
 DEV: ${Math.min(99, 70 + agent.stats_tasks_done * 3)}%
 
-// 개선: GET /api/agents/performance API 호출
-// → agent_task_fitness 테이블의 success_count / (success_count + failure_count)
+// 개선: 기존 API 재사용
+// GET /api/agents/performance (agent-performance.ts:41) — 팀 전체 집계
+// GET /api/agents/:id/performance (register-agent-routes-metrics.ts:16) — 개별 에이전트
+// → success_rate, avg_duration_ms, pack breakdown 등 이미 제공
 ```
 
+> **참고:** 새 API를 만들 필요 없음. 기존 `/api/agents/performance` 엔드포인트가
+> 에이전트별 `success_rate`, `total`, `done`, `failed_exec`, `avg_duration_ms`를 이미 반환한다.
+> 현재 구현은 `agent_task_fitness` 테이블 중심이 아니라 `tasks` 테이블 직접 집계 기반이므로,
+> UI에서 해당 API를 호출하여 연동하면 된다.
+
 **수정 파일:**
-- `src/components/orchestration/tabs/AgentsTab.tsx:128` — 가짜 계산 → API 데이터
+- `src/components/orchestration/tabs/AgentsTab.tsx:128` — 가짜 계산 → 기존 API 데이터
 
 #### [1-C] TOKENS/BUDGET API 연동
 
@@ -429,12 +466,16 @@ DEV: ${Math.min(99, 70 + agent.stats_tasks_done * 3)}%
 
 ---
 
-### 4-2. Phase 2: PM 프로바이더 일관성 (백엔드, 중규모)
+### 4-2. Phase 2: 시스템 원샷 경로 정합화 (백엔드, 소~중규모)
 
-**현재 문제:** `callLlmOneShotAuto()`가 `resolveCliProviderFromAgents()`로 아무 에이전트의
-프로바이더를 가져옴. PM 에이전트 자신의 `cli_provider`, `api_provider_id`, `api_model` 설정이 무시됨.
+> **2026-03-26 재정의:** PM 본선 경로는 이미 `runAgentOneShot(pm, ...)`으로 PM 고유 프로바이더를 정확히 사용.
+> 이 Phase는 "PM provider bug fix"가 아니라, **시스템 원샷(`callLlmOneShotAuto`) 경로의 아키텍처 정합화**다.
+> 킥오프/자동 배정 등에서 아무 에이전트의 프로바이더를 비결정적으로 선택하는 문제를 정리한다.
 
-#### 수정 방향: PM 에이전트 전용 프로바이더 해석 함수
+**잔여 문제:** `callLlmOneShotAuto()`가 `resolveCliProviderFromAgents()`로 아무 에이전트의
+프로바이더를 가져옴. 킥오프 태스크 생성, 자동 배정 등 시스템 호출에서 프로바이더 선택이 비결정적.
+
+#### 수정 방향: 시스템 원샷용 프로바이더 해석 개선
 
 ```typescript
 // llm-client.ts — 새 함수 추가
@@ -470,92 +511,65 @@ function resolveProviderForAgent(
 }
 ```
 
-#### pm-orchestrator.ts 수정
+#### PM 경로 — 변경 불필요
 
 ```typescript
-// 현재:
+// pm-orchestrator.ts — 현재 코드가 이미 정확함
 const response = await runAgentOneShot(pm, prompt, {
   projectPath,
   timeoutMs: 30_000,
   noTools: true,
 });
-// → 내부에서 callLlmOneShotAuto() → resolveCliProviderFromAgents() → 아무 에이전트
-
-// 개선: PM 에이전트의 프로바이더를 명시적으로 전달
-const pmProviderConfig = resolveProviderForAgent(db, pm);
-
-if (pmProviderConfig.mode === "api") {
-  // API 모드: HTTP 호출 (PM의 api_provider_id + api_model 사용)
-  const provider = resolveProvider(db, pmProviderConfig.apiProviderId);
-  const response = await callLlmOneShot(
-    provider,
-    pmProviderConfig.model,
-    systemPrompt,
-    userPrompt,
-    maxTokens,
-  );
-} else {
-  // CLI 모드: PM의 cli_provider로 spawn
-  const response = await callViaCliProvider(
-    pmProviderConfig.cliProvider,
-    systemPrompt,
-    userPrompt,
-    { projectPath, timeoutMs: 30_000, maxTurns: 3 },
-  );
-}
+// → one-shot-runner.ts:113에서 pm.cli_provider, pm.api_provider_id 등을 직접 사용
+// → callLlmOneShotAuto()를 거치지 않음
 ```
 
-#### 호환성 유지: callLlmOneShotAuto 개선 (대안)
+#### 시스템 원샷 경로 — 개선 대상
 
-기존 `callLlmOneShotAuto()`를 수정하지 않고, 새로운 오버로드를 추가하는 방식도 가능:
+`callLlmOneShotAuto()`의 프로바이더 선택을 더 결정적으로 만드는 방법:
 
 ```typescript
-// llm-client.ts — 오버로드 추가
-export async function callLlmOneShotForAgent(
-  db: Database,
-  agent: Agent,        // ← PM 에이전트 객체 직접 전달
-  systemPrompt: string,
-  userPrompt: string,
-  maxTokens?: number,
-  timeoutMs?: number,
-): Promise<string> {
-  const config = resolveProviderForAgent(db, agent);
+// 방법 1: settings.defaultProvider를 우선순위로 올림
+// 현재: api_provider_id 있는 아무 에이전트 → CLI 있는 아무 에이전트 → defaultProvider → claude
+// 개선: defaultProvider → api_provider_id 에이전트 → CLI 에이전트 → claude
 
-  if (config.mode === "api") {
-    const provider = resolveProvider(db, config.apiProviderId);
-    return callLlmOneShot(provider, config.model, systemPrompt, userPrompt, maxTokens);
-  }
-
-  return callViaCliProviderInternal(
-    config.cliProvider, systemPrompt, userPrompt, timeoutMs,
-  );
-}
+// 방법 2: callLlmOneShotAuto에 preferredProvider 옵션 추가
+export async function callLlmOneShotAuto(opts: {
+  db: Database;
+  systemPrompt: string;
+  userPrompt: string;
+  preferredProvider?: string;  // ← 호출자가 힌트 제공
+  maxTokens?: number;
+  timeoutMs?: number;
+}): Promise<string>
 ```
-
-이렇게 하면 기존 `callLlmOneShotAuto()`는 시스템 호출용으로 유지하고,
-PM 리뷰처럼 **특정 에이전트의 프로바이더를 사용해야 하는 경우**에는
-`callLlmOneShotForAgent(db, pmAgent, ...)` 를 사용한다.
 
 #### 수정 범위
 
 | 파일 | 변경 |
 |------|------|
-| `server/modules/agent-runtime/llm-client.ts` | `resolveProviderForAgent()` + `callLlmOneShotForAgent()` 추가 |
-| `server/modules/workflow/orchestration/pm-orchestrator.ts` | `callLlmOneShotAuto()` → `callLlmOneShotForAgent(db, pm, ...)` 호출로 교체 |
-| `server/modules/workflow/core/one-shot-runner.ts` | `runAgentOneShot()` 내부에서 agent 기반 해석 옵션 추가 |
+| `server/modules/agent-runtime/llm-client.ts` | `callLlmOneShotAuto()` 프로바이더 선택 로직 개선 (preferredProvider 옵션 또는 우선순위 변경) |
+| `server/modules/routes/core/projects/kickoff.ts` | 킥오프/추가 태스크 호출 시 프로바이더 힌트 전달 |
 
-#### 영향받는 PM 호출 목록
+#### PM 경로 — 변경 불필요
 
-`pm-orchestrator.ts`에서 `callLlmOneShotAuto()` 또는 `runAgentOneShot()`을 호출하는 모든 지점:
+PM 오케스트레이터의 모든 호출은 이미 `runAgentOneShot(pm, ...)`으로 PM 에이전트 고유 설정을 정확히 사용:
 
-| 호출 | 용도 | 수정 |
+| 호출 (pm-orchestrator.ts) | 용도 | 현재 상태 |
 |------|------|------|
-| `pmReviewTask()` | 개별 태스크 리뷰 | `callLlmOneShotForAgent(db, pm, ...)` |
-| `pmHandleFailure()` | 실패 처리 | `callLlmOneShotForAgent(db, pm, ...)` |
-| `pmProjectLevelReview()` | 프로젝트 전체 평가 | `callLlmOneShotForAgent(db, pm, ...)` |
-| `pmStartNextTask()` | 다음 태스크 선택 | `callLlmOneShotForAgent(db, pm, ...)` |
-| `runAutoLearning()` | 자동 학습 추출 | `callLlmOneShotForAgent(db, pm, ...)` |
-| `writeProgressMd()` | progress.md 작성 | `callLlmOneShotForAgent(db, pm, ...)` |
+| `pmReviewTask()` (L210) | 개별 태스크 리뷰 | `runAgentOneShot(pm, ...)` — 정확 |
+| `pmHandleFailure()` (L437) | 실패 처리 | `runAgentOneShot(pm, ...)` — 정확 |
+| `writeProgressMd()` (L548) | progress.md 작성 | `runAgentOneShot(pm, ...)` — 정확 |
+| `pmProjectLevelReview()` (L664) | 프로젝트 전체 평가 | `runAgentOneShot(pm, ...)` — 정확 |
+
+#### 시스템 원샷 호출 목록 (정합화 대상)
+
+| 호출 위치 | 용도 | 현재 |
+|-----------|------|------|
+| `kickoff.ts:496` | 킥오프 태스크 생성 | `callLlmOneShotAuto()` — 비결정적 |
+| `kickoff.ts:827` | 추가 태스크 생성 | `callLlmOneShotAuto()` — 비결정적 |
+| `kickoff.ts:1131` | 내부 파이프라인 태스크 생성 | `callLlmOneShotAuto()` — 비결정적 |
+| `projects.ts:104` | 자동 배정 | `callLlmOneShotAuto()` — 비결정적 |
 
 ---
 
@@ -723,25 +737,28 @@ const RESULT_TAIL_LENGTH = 4000; // 2000 → 4000
 
 ---
 
-### 4-5. Phase 5: 태스크 완료 시 diff 저장 (백엔드, 중규모)
+### 4-5. Phase 5: 태스크 완료 데이터 UI 연결 (프론트엔드 중심, 소~중규모)
+
+> **2026-03-26 보정:** `auto-completions.ts:97-162`에서 `task_report_archives`에 자동 저장 +
+> worktree diff summary 수용 경로가 이미 구현되어 있다. 새 저장소를 만들 필요 없이,
+> 기존 `task_report_archives` + `task_execution_events.metadata_json` 데이터를
+> Timeline Inspector / Logs / Room 탭에 연결하면 된다.
 
 Timeline Task Inspector 데이터 소스.
 
 ```typescript
-// run-complete-handler에서:
-// 1. git diff --stat 저장
-const diffStat = execSync('git diff --stat HEAD~1', { cwd: worktreePath }).toString();
-
-// 2. task_report_archives에 저장
-db.prepare(`
-  INSERT OR REPLACE INTO task_report_archives
-  (task_id, deliverables, execution_summary, created_at)
-  VALUES (?, ?, ?, ?)
-`).run(taskId, diffStat, executionSummary, Date.now());
+// 이미 존재하는 코드 (auto-completions.ts:97-162):
+// autoSaveTaskReport() — task_report_archives에 summary_markdown 저장
+//   포함 항목: title, description, result, changes (worktree diff), duration
+//
+// 추가 필요한 작업: 프론트엔드에서 이 데이터를 조회·표시
+// GET /api/tasks/:id/report → task_report_archives.summary_markdown 반환
+// → Timeline Inspector에서 변경 파일 목록 + 실행 요약 표시
 ```
 
 **수정 파일:**
-- `server/modules/workflow/orchestration/run-complete-handler/` — diff 수집 로직
+- `server/modules/routes/core/tasks/` — task report 조회 API 추가 (기존 데이터 노출)
+- `src/components/orchestration/tabs/TimelineTab.tsx` — Task Inspector에 report 표시
 
 ---
 
@@ -1008,18 +1025,18 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 ## 5. 수정 우선순위
 
-| 순서 | Phase | 작업량 | 백엔드 | 영향 탭 | 의존성 |
-|------|-------|--------|--------|---------|--------|
-| 1 | 1-D. 코드 정리 (규칙 위반 수정) | 소 | 없음 | All | 없음 |
-| 2 | 1-A. 프로그레스 바 매핑 | 소 | 없음 | Timeline, Agents, Room | 없음 |
-| 3 | 1-B. Fitness 실데이터 | 소 | 없음 | Agents | 없음 |
-| 4 | 1-C. TOKENS/BUDGET 연동 | 소 | 없음 | Header | 없음 |
-| 5 | 2. PM 프로바이더 일관성 (resolveProviderForAgent + 호출 교체) | 중 | O | (간접) | 없음 |
-| 6 | 6. 언어/max-turns(CLI)/maxTokens(API) 일관성 | 소 | O | (간접) | Phase 2 |
-| 7 | 3. PM 리뷰 로그 구조화 | 중 | O | Logs, Room | 없음 |
-| 8 | 4. PM 리뷰 컨텍스트 보강 | 중 | O | (간접) | Phase 3 |
-| 9 | 5. diff 저장 | 중 | O | Timeline Inspector | 없음 |
-| 10 | 7. 공유 .md 기반 팀 소통 | 대 | O | Room, Logs, Timeline Inspector | Phase 3 |
+| 순서 | Phase | 작업량 | 백엔드 | 영향 탭 | 의존성 | 비고 |
+|------|-------|--------|--------|---------|--------|------|
+| 1 | 1-D. 코드 정리 (규칙 위반 수정) | 소 | 없음 | All | 없음 | |
+| 2 | 1-A. 프로그레스 바 매핑 | 소 | 없음 | Timeline, Agents, Room | 없음 | |
+| 3 | 1-B. Fitness 실데이터 | 소 | 없음 | Agents | 없음 | 기존 API 재사용 |
+| 4 | 1-C. TOKENS/BUDGET 연동 | 소 | 없음 | Header | 없음 | |
+| 5 | 3. PM 리뷰 로그 구조화 | 중 | O | Logs, Room | 없음 | 체감 효과 큼 |
+| 6 | 4. PM 리뷰 컨텍스트 보강 | 중 | O | (간접) | Phase 3 | |
+| 7 | 5. 태스크 완료 데이터 UI 연결 | 소 | 소 | Timeline Inspector | 없음 | 기존 데이터 노출 |
+| 8 | 6. 언어/max-turns(CLI)/maxTokens(API) 일관성 | 소 | O | (간접) | 없음 | |
+| 9 | 2. 시스템 원샷 경로 정합화 | 소~중 | O | (간접) | 없음 | PM 본선은 이미 정확 |
+| 10 | 7. 공유 .md 기반 팀 소통 | 대 | O | Room, Logs, Timeline Inspector | Phase 3 | |
 
 ---
 
@@ -1085,38 +1102,39 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 3단계로 나눠서 점진적으로 전환한다. 각 단계는 독립적으로 배포 가능.
 
-#### Stage A: 즉시 개선 (Phase 1 + 2 + 6) — 기존 데이터 활용
+#### Stage A: 즉시 개선 (Phase 1 + 6) — 기존 데이터 활용, UI 체감 최대화
 
-**목표:** 백엔드 로직 변경 없이 (Phase 1) 또는 최소 변경으로 (Phase 2, 6) 오케스트레이션 화면을 동작시킴.
+**목표:** 백엔드 로직 변경 없이 (Phase 1) 또는 최소 변경으로 (Phase 6) 오케스트레이션 화면을 동작시킴.
 
 ```
 Phase 1-D: 코드 정리 (유니코드→SVG, 미사용 props 제거)
 Phase 1-A: 프로그레스 바 → execution_state 매핑
-Phase 1-B: Fitness → agent_task_fitness API 연동
+Phase 1-B: Fitness → 기존 /api/agents/performance API 연동
 Phase 1-C: TOKENS/BUDGET → cost-summary API 연동
-Phase 2:   PM 프로바이더 라우팅 수정 (resolveProviderForAgent)
 Phase 6:   언어/max-turns 일관성
 ```
 
+> **Phase 2(시스템 원샷 정합화)는 Stage A에서 제외.**
+> PM 본선 경로는 이미 정확하므로 긴급성이 낮다. Stage B 이후에 진행.
+
 **완료 기준:**
 - 오케스트레이션 화면 4탭이 모두 실데이터 표시 (하드코딩/플레이스홀더 0개)
-- PM 리뷰가 PM 에이전트의 설정된 프로바이더를 정확히 사용
 - `tsc -b --noEmit` 에러 0
 
 **검증:**
-- PM에 Claude 외 프로바이더(GPT, Gemini 등) 설정 → 리뷰 시 해당 프로바이더 호출 확인
 - 오케스트레이션 화면에서 진행률, Fitness, 토큰이 실시간 갱신 확인
 
 ---
 
-#### Stage B: PM 데이터 보강 (Phase 3 + 4 + 5) — 구조화 + 컨텍스트
+#### Stage B: PM 데이터 보강 (Phase 3 + 4 + 5 + 2) — 구조화 + 컨텍스트 + 경로 정합
 
-**목표:** PM 리뷰 데이터를 구조화하고, PM이 더 풍부한 컨텍스트로 판단하게 함.
+**목표:** PM 리뷰 데이터를 구조화하고, PM이 더 풍부한 컨텍스트로 판단하게 함. 기존 데이터를 UI에 연결.
 
 ```
 Phase 3:   task_logs JSON 구조화 + parseReviewDecision() 강건화
 Phase 4:   PM 리뷰 프롬프트에 로그 요약/이전 피드백 추가
-Phase 5:   태스크 완료 시 git diff 저장
+Phase 5:   기존 task_report_archives 데이터를 Timeline Inspector에 연결
+Phase 2:   시스템 원샷(kickoff/auto-assign) 경로 정합화
 ```
 
 **완료 기준:**
@@ -1124,7 +1142,7 @@ Phase 5:   태스크 완료 시 git diff 저장
 - PM 리뷰 프롬프트에 실행 로그 요약 + 이전 리뷰 피드백 포함
 - PARSE_FAILED 시 유저에게 알림 (오케스트레이션 화면 표시)
 - Logs 탭에서 PM 이벤트 구조화 표시
-- Timeline Inspector에서 변경 파일 목록 표시
+- Timeline Inspector에서 기존 task_report_archives의 변경 파일 목록 표시
 
 **검증:**
 - 다양한 LLM(Claude, GPT, Llama)으로 PM 리뷰 → APPROVE/REVISE/UNKNOWN 정확 파싱
@@ -1236,10 +1254,11 @@ Stage C 안정화 후:
 
 | 파일 | 역할 | 수정 Phase |
 |------|------|-----------|
-| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM 리뷰/오케스트레이션 — `callLlmOneShotAuto` → `callLlmOneShotForAgent` 교체, `writeTaskReport()`, `appendTeamBoard()` | 2, 3, 4, 6, 7 |
-| `server/modules/agent-runtime/llm-client.ts` | `resolveProviderForAgent()` + `callLlmOneShotForAgent()` 추가, CLI args 수정 | 2, 6 |
-| `server/modules/workflow/core/one-shot-runner.ts` | `runAgentOneShot()` 에이전트 기반 해석 옵션 | 2 |
-| `server/modules/workflow/orchestration/run-complete-handler/` | 태스크 완료 처리 | 5 |
+| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM 리뷰/오케스트레이션 — PM 경로는 변경 불필요 (이미 정확), `writeTaskReport()`, `appendTeamBoard()` | 3, 4, 6, 7 |
+| `server/modules/agent-runtime/llm-client.ts` | `callLlmOneShotAuto()` 프로바이더 선택 개선, CLI args 수정 | 2, 6 |
+| `server/modules/routes/core/projects/kickoff.ts` | 시스템 원샷 호출 시 프로바이더 힌트 전달 | 2 |
+| `server/modules/workflow/orchestration/run-complete-handler/auto-completions.ts` | 태스크 완료 처리 — 이미 task_report_archives 저장 구현됨 | 5 (UI 연결만) |
+| `server/modules/routes/core/tasks/` | task report 조회 API 추가 (기존 데이터 노출) | 5 |
 | `prompts/pm/review-task.md` | PM 리뷰 프롬프트 | 4, 7 |
 | `prompts/system/agent-runtime.md` | 에이전트 런타임 프롬프트 (팀 보드 규칙 추가) | 7 |
 | `server/modules/routes/core/projects/` | 팀 보드/태스크 리포트 읽기 API | 7 |
