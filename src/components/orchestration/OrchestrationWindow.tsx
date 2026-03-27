@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import AppWindow from "../windows/AppWindow";
 import { useI18n } from "../../i18n";
 import { useTaskStore } from "../../store/taskStore";
@@ -20,10 +20,11 @@ export type OrchestraTab = "timeline" | "logs" | "agents" | "room";
 export default function OrchestrationWindow() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<OrchestraTab>("timeline");
+  const prevStageRef = useRef<string | null>(null);
 
   const { tasks } = useTaskStore();
   const { agents, departments } = useAgentStore();
-  const { currentProjectId, projects } = useProjectStore();
+  const { currentProjectId, projects, projectAgentIds } = useProjectStore();
   const { kickoffStage } = useUiStore();
 
   const currentProject = useMemo(
@@ -38,8 +39,31 @@ export default function OrchestrationWindow() {
 
   const projectAgents = useMemo(() => {
     const assignedIds = new Set(projectTasks.map((t) => t.assigned_agent_id).filter(Boolean));
-    return agents.filter((a) => assignedIds.has(a.id));
-  }, [agents, projectTasks]);
+    if (assignedIds.size > 0) return agents.filter((a) => assignedIds.has(a.id));
+    // Before tasks are assigned (e.g. during kickoff meeting), fall back to project_agents table
+    if (projectAgentIds.size > 0) return agents.filter((a) => projectAgentIds.has(a.id));
+    return [];
+  }, [agents, projectTasks, projectAgentIds]);
+
+  // Auto-switch tabs based on kickoff stage
+  useEffect(() => {
+    const prev = prevStageRef.current;
+    prevStageRef.current = kickoffStage;
+
+    if (!kickoffStage || kickoffStage === "idle") return;
+
+    // When meeting starts, jump to room tab so user sees the live meeting
+    if (kickoffStage === "meeting" && prev !== "meeting") {
+      setActiveTab("room");
+      return;
+    }
+
+    // When planning/assigning starts (tasks being created), switch to timeline
+    if ((kickoffStage === "planning" || kickoffStage === "assigning") && prev === "meeting") {
+      setActiveTab("timeline");
+      return;
+    }
+  }, [kickoffStage]);
 
   const titleIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

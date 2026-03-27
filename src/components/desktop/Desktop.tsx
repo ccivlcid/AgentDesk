@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useToast } from "../ui/Toast";
 import type { Project, Category, CompanySettings, ProjectFolder } from "../../types";
@@ -23,153 +22,6 @@ import AppSwitcher, { useAppSwitcherKeyboard } from "./AppSwitcher";
 import { deleteProject, createProject, deleteTrashedProjectDirectories } from "../../api/organization-projects";
 import { createProjectFolder, addProjectToFolder, deleteProjectFolder, updateProjectFolder } from "../../api/project-folders";
 import NotificationCenter from "../NotificationCenter";
-// ── Kickoff Stage Overlay ────────────────────────────────────────────────────
-type KickoffStage = "idle" | "planning" | "meeting" | "assigning" | "executing" | "done";
-
-const KICKOFF_STEPS: { key: KickoffStage; label: { ko: string; en: string; ja: string; zh: string } }[] = [
-  { key: "meeting", label: { ko: "킥오프 회의", en: "Meeting", ja: "会議", zh: "会议" } },
-  { key: "planning", label: { ko: "태스크 생성", en: "Planning", ja: "タスク生成", zh: "任务创建" } },
-  { key: "assigning", label: { ko: "에이전트 배정", en: "Assigning", ja: "配属", zh: "分配" } },
-  { key: "executing", label: { ko: "업무 실행", en: "Executing", ja: "実行", zh: "执行" } },
-];
-
-const STAGE_ORDER: KickoffStage[] = ["meeting", "planning", "assigning", "executing"];
-
-function getStepState(stepKey: KickoffStage, currentStage: KickoffStage): "done" | "active" | "pending" {
-  const currentIdx = STAGE_ORDER.indexOf(currentStage);
-  const stepIdx = STAGE_ORDER.indexOf(stepKey);
-  if (currentStage === "done") return "done";
-  if (stepIdx < currentIdx) return "done";
-  if (stepIdx === currentIdx) return "active";
-  return "pending";
-}
-
-function KickoffStageOverlay() {
-  const kickoffStage = useUiStore((s) => s.kickoffStage);
-  const { t } = useI18n();
-  const visible = kickoffStage !== "idle";
-
-  return (
-    <AnimatePresence>
-      {visible && (<>
-        <style>{`
-          @keyframes kickoff-pulse { 0%,100%{box-shadow:0 0 4px var(--th-accent,#f59e0b)} 50%{box-shadow:0 0 12px var(--th-accent,#f59e0b)} }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}</style>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 900,
-            pointerEvents: "none",
-          }}
-        >
-        <div
-          style={{
-            background: "var(--th-panel-bg, rgba(18,18,18,0.92))",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 12,
-            padding: "12px 24px",
-            boxShadow: "0 12px 40px var(--th-modal-overlay)",
-            display: "flex",
-            alignItems: "center",
-            gap: 0,
-          }}
-        >
-          {KICKOFF_STEPS.map((step, i) => {
-            const state = getStepState(step.key, kickoffStage);
-            return (
-              <div key={step.key} style={{ display: "flex", alignItems: "center" }}>
-                {/* Connector line (before each step except first) */}
-                {i > 0 && (
-                  <div style={{
-                    width: 32,
-                    height: 2,
-                    borderRadius: 1,
-                    background: state === "pending"
-                      ? "var(--th-text-muted)"
-                      : "var(--th-success, #22c55e)",
-                    transition: "background 0.3s ease",
-                    margin: "0 4px",
-                    marginBottom: 18,
-                  }} />
-                )}
-                {/* Step circle + label */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 56 }}>
-                  {state === "done" ? (
-                    /* Green checkmark circle */
-                    <div style={{
-                      width: 22, height: 22, borderRadius: "50%",
-                      background: "var(--th-success, #22c55e)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      color: "#fff",
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                  ) : state === "active" ? (
-                    /* Active: accent circle with spinner */
-                    <div style={{
-                      width: 22, height: 22, borderRadius: "50%",
-                      background: "var(--th-accent)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      boxShadow: "0 0 8px var(--th-accent)",
-                      animation: "kickoff-pulse 1.5s ease-in-out infinite",
-                      color: "#fff",
-                    }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                      </svg>
-                    </div>
-                  ) : (
-                    /* Pending: gray outline */
-                    <div style={{
-                      width: 22, height: 22, borderRadius: "50%",
-                      border: "2px solid var(--th-text-muted)",
-                      background: "transparent",
-                      flexShrink: 0,
-                    }} />
-                  )}
-                  {/* Label */}
-                  <span style={{
-                    fontFamily: "var(--th-font-mono)",
-                    fontSize: 11,
-                    fontWeight: state === "active" ? 700 : 500,
-                    color: state === "done"
-                      ? "var(--th-success, #22c55e)"
-                      : state === "active"
-                        ? "var(--th-accent)"
-                        : "var(--th-text-muted)",
-                    whiteSpace: "nowrap",
-                    transition: "color 0.3s ease",
-                  }}>
-                    {t(step.label)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        </motion.div>
-      </>)}
-    </AnimatePresence>
-  );
-}
 
 export default function Desktop({
   connected,
@@ -443,7 +295,6 @@ export default function Desktop({
         onImportRepo: () => openWindow("repo-store"),
       }}
     >
-      <KickoffStageOverlay />
       <DesktopOverlayBlock {...overlayBlockProps}>{children}</DesktopOverlayBlock>
     </DesktopChrome>
   );

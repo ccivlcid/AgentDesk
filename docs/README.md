@@ -23,6 +23,8 @@
 |----------|---------|
 | [AGENT-CONFIGURATION-AND-EXECUTION.md](architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution branching — CLI/API/OAuth/runtime |
 | [llm-call-patterns.md](architecture/llm-call-patterns.md) | LLM call patterns — all prompts must be .md files |
+| [cli-detection.md](architecture/cli-detection.md) | CLI 도구 감지 — Settings CLI 탭 설치/인증 감지 흐름, 도구별 판정 방법 |
+| [cli-execution.md](architecture/cli-execution.md) | CLI 실행 흐름 — 오케스트레이션 → 프로세스 스폰 → 출력 스트리밍 전체 경로 |
 | [PM-WORKFLOW-SPEC.md](strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, project-level review, fitness |
 | [websocket-protocol.md](specs/websocket-protocol.md) | WebSocket event types and payloads |
 | [kova-comparison.md](architecture/kova-comparison.md) | Kova vs AgentDesk — strengths, weaknesses, integration points |

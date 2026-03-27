@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { DatabaseSync } from "node:sqlite";
 import { createProjectRouteHelpers } from "./projects/helpers.ts";
 import type { ProjectRoutesDeps } from "./projects/types.ts";
+import { readLang } from "./projects/kickoff-shared.ts";
 import { registerPathRoutes } from "./projects/register-path-routes.ts";
 import { registerFileRoutes } from "./projects/register-file-routes.ts";
 import { registerCrudRoutes } from "./projects/register-crud-routes.ts";
@@ -11,9 +12,7 @@ import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 
 import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
 import { registerTeamBoardRoutes } from "./projects/register-team-board-routes.ts";
-import { callLlmOneShotAuto } from "../../agent-runtime/llm-client.ts";
 import logger from "../../../lib/logger.ts";
-import { loadPrompt } from "../../../lib/prompt-loader.ts";
 
 type FirstQueryValue = (value: unknown) => string | undefined;
 type NormalizeTextField = (value: unknown) => string | null;
@@ -68,69 +67,69 @@ export function registerProjectRoutes({
   registerChangelogRoutes(deps);
   registerTeamBoardRoutes(deps);
 
-  // ── AI auto-assign agents ─────────────────────────────────────────────────
-  app.post("/api/projects/auto-assign-agents", async (req, res) => {
-    const { project_name, core_goal, category_name, directive } = (req.body ?? {}) as {
-      project_name?: string;
-      core_goal?: string;
-      category_name?: string;
-      directive?: string;
-    };
-
+  // ── Auto-assign agents (rule-based, no LLM) ──────────────────────────────
+  app.post("/api/projects/auto-assign-agents", (req, res) => {
+    void req; // params (project_name, core_goal, etc.) reserved for future use
     const CLI_PROVIDERS = new Set(["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "ollama"]);
-    const cliAgents = (db.prepare(
-      "SELECT id, name, name_ko, role, cli_provider, department_id FROM agents WHERE status != 'offline'",
-    ).all() as { id: string; name: string; name_ko: string; role: string; cli_provider: string; department_id: string | null }[])
+    const agents = (db.prepare(
+      "SELECT id, name, role, cli_provider, department_id FROM agents WHERE status != 'offline'",
+    ).all() as { id: string; name: string; role: string; cli_provider: string; department_id: string | null }[])
       .filter((a) => CLI_PROVIDERS.has(a.cli_provider));
 
-    if (cliAgents.length === 0) {
+    if (agents.length === 0) {
       return res.json({ ok: true, assignments: [] });
     }
 
-    const agentList = cliAgents.map((a) => {
-      const dept = a.department_id
-        ? (db.prepare("SELECT name FROM departments WHERE id = ?").get(a.department_id) as { name: string } | undefined)?.name ?? ""
-        : "";
-      return `- id: "${a.id}", name: "${a.name}", role: "${a.role}", cli: "${a.cli_provider}"${dept ? `, dept: "${dept}"` : ""}`;
-    }).join("\n");
+    // Localized role labels for the default 4-person team (PM, Planner, Designer, Developer)
+    const lang = readLang(db);
+    const ROLE_LABELS = {
+      ko: { pm: "PM", pl: "기획자", design: "디자이너", dev: "개발자" },
+      en: { pm: "PM", pl: "PL", design: "Design", dev: "Dev" },
+      ja: { pm: "PM", pl: "企画者", design: "デザイナー", dev: "開発者" },
+      zh: { pm: "PM", pl: "策划者", design: "设计师", dev: "开发者" },
+    }[lang] ?? { pm: "PM", pl: "PL", design: "Design", dev: "Dev" };
 
-    const parts: string[] = [];
-    if (project_name) parts.push(`Project Name: ${project_name}`);
-    if (core_goal) parts.push(`Goal: ${core_goal}`);
-    if (category_name) parts.push(`Category: ${category_name}`);
-    if (directive) parts.push(`Directive:\n${directive.slice(0, 500)}`);
+    const roleOrder: Record<string, number> = { team_leader: 0, senior: 1, junior: 2, intern: 3 };
+    const byRole = (a: { role: string }) => roleOrder[a.role] ?? 4;
 
-    const systemPrompt = loadPrompt("system/project-auto-assign", { agentList });
+    // Pick best agent for a role, excluding already-picked ids
+    const pick = (prefDepts: string[], exclude: Set<string>) => {
+      const pool = agents.filter((a) => !exclude.has(a.id));
+      const preferred = pool.filter((a) => a.department_id && prefDepts.includes(a.department_id));
+      const sorted = (preferred.length > 0 ? preferred : pool).sort((a, b) => byRole(a) - byRole(b));
+      return sorted[0] ?? null;
+    };
 
-    try {
-      const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: parts.join("\n\n"), timeoutMs: 30_000 });
+    // department ids by slug pattern — match on department id containing keyword
+    const deptIds = (keyword: string) =>
+      [...new Set(agents.map((a) => a.department_id).filter((d): d is string => !!d && d.toLowerCase().includes(keyword)))];
 
-      const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        logger.warn({ rawText: rawText.slice(0, 300) }, "[auto-assign] invalid LLM response");
-        return res.status(500).json({ error: "invalid_llm_response" });
+    const used = new Set<string>();
+    const assignments: { role: string; agent_id: string }[] = [];
+
+    const assign = (role: string, prefDepts: string[]) => {
+      const agent = pick(prefDepts, used);
+      if (agent) { assignments.push({ role, agent_id: agent.id }); used.add(agent.id); }
+    };
+
+    assign(ROLE_LABELS.pm,     deptIds("planning").concat(agents.filter((a) => a.role === "team_leader").map((a) => a.id)));
+    assign(ROLE_LABELS.pl,     deptIds("dev").concat(deptIds("planning")));
+    assign(ROLE_LABELS.design, deptIds("design"));
+    assign(ROLE_LABELS.dev,    deptIds("dev"));
+
+    // If fewer than 2 assigned, fall back to all agents sorted by role
+    if (assignments.length < 2) {
+      used.clear();
+      assignments.length = 0;
+      const sorted = [...agents].sort((a, b) => byRole(a) - byRole(b));
+      const fallbackRoles = [ROLE_LABELS.pm, ROLE_LABELS.pl, ROLE_LABELS.design, ROLE_LABELS.dev];
+      for (let i = 0; i < fallbackRoles.length; i++) {
+        const agent = sorted[Math.min(i, sorted.length - 1)];
+        if (agent) assignments.push({ role: fallbackRoles[i], agent_id: agent.id });
       }
-
-      const parsed = JSON.parse(jsonMatch[0]) as { role: string; agent_id: string }[];
-      const validIds = new Set(cliAgents.map((a) => a.id));
-      const assignments = parsed
-        .filter((a) => a.role && a.agent_id && validIds.has(a.agent_id))
-        .map((a) => ({ role: a.role.trim(), agent_id: a.agent_id }));
-
-      return res.json({ ok: true, assignments });
-    } catch (err) {
-      logger.error({ err }, "[auto-assign] failed");
-      // fallback: simple role-based heuristic
-      const sorted = [...cliAgents].sort((a, b) => {
-        const order: Record<string, number> = { team_leader: 0, senior: 1, junior: 2, intern: 3 };
-        return (order[a.role] ?? 4) - (order[b.role] ?? 4);
-      });
-      const assignments = [
-        { role: "PM", agent_id: sorted[0]?.id },
-        { role: "PL", agent_id: sorted[Math.min(1, sorted.length - 1)]?.id },
-        { role: "Dev", agent_id: sorted[Math.min(2, sorted.length - 1)]?.id },
-      ].filter((a) => a.agent_id);
-      return res.json({ ok: true, assignments });
     }
+
+    logger.info({ count: assignments.length }, "[auto-assign] rule-based assignments");
+    return res.json({ ok: true, assignments });
   });
 }

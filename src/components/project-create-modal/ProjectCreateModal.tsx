@@ -12,7 +12,6 @@ import { useI18n } from "../../i18n";
 const getFigmaInfo = (): Promise<{ connected: boolean }> => Promise.resolve({ connected: false });
 import { fetchDirectiveTemplates, type DirectiveTemplateItem } from "../../api/organization-projects";
 import { autoAssignAgents } from "../../api/project-kickoff";
-import { fetchProjectTypeTemplates, type ProjectTypeTemplate } from "../../api/project-type-templates";
 import { useUiStore } from "../../store/uiStore";
 
 export type ProjectRoleAssignment = { role: string; agentId: string };
@@ -77,8 +76,9 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const [coreGoal, setCoreGoal] = useState("");
   const [roleSlots, setRoleSlots] = useState<RoleSlot[]>([
     { role: "PM", agentId: null },
-    { role: "PL", agentId: null },
-    { role: "Dev", agentId: null },
+    { role: "기획자", agentId: null },
+    { role: "디자이너", agentId: null },
+    { role: "개발자", agentId: null },
   ]);
   const [openSlotIdx, setOpenSlotIdx] = useState<number | null>(null);
   const [figmaUrl, setFigmaUrl] = useState("");
@@ -90,37 +90,16 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const [directive, setDirective] = useState("");
   const [directiveTypeSlug, setDirectiveTypeSlug] = useState<string | null>(null);
   const [directiveTemplates, setDirectiveTemplates] = useState<DirectiveTemplateItem[]>([]);
-  const [customTypes, setCustomTypes] = useState<ProjectTypeTemplate[]>([]);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchDirectiveTemplates().then(setDirectiveTemplates).catch(() => {});
-    fetchProjectTypeTemplates().then(setCustomTypes).catch(() => {});
   }, []);
 
   const { t, language } = useI18n();
   const { openWindow } = useUiStore();
 
-  /* ── 기존 categories + 커스텀 유형 합치기 ── */
-  const customAsCategories: Category[] = customTypes.map((ct) => ({
-    id: `custom_${ct.id}`,
-    name: ct.name,
-    name_ko: ct.name_ko,
-    slug: `custom-${ct.id}`,
-    description: ct.description,
-    icon: "custom",
-    color: "#6366f1",
-    kpi_schema: "{}",
-    risk_schema: "{}",
-    gate_schema: "{}",
-    deliverable_schema: "{}",
-    is_template: 0,
-    version: 1,
-    owner_scope: "org" as const,
-    created_at: ct.created_at,
-    updated_at: ct.updated_at,
-  }));
-  const allCategories = [...customAsCategories, ...categories];
+  const allCategories = categories;
 
   const pathTools = useProjectManagerPathTools({
     t,
@@ -137,20 +116,6 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const handleCategorySelect = (id: string) => {
     setSelectedCategoryId(id);
 
-    /* 커스텀 유형 선택 */
-    if (id.startsWith("custom_")) {
-      const ctId = id.replace("custom_", "");
-      const ct = customTypes.find((c) => c.id === ctId);
-      if (ct?.default_directive) {
-        setDirective(ct.default_directive);
-        setDirectiveTypeSlug(null);
-      }
-      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
-      autoAdvanceTimer.current = setTimeout(() => setStep("directive"), 300);
-      return;
-    }
-
-    /* 기존 카테고리 선택 */
     const cat = categories.find((c) => c.id === id);
     if (cat?.slug === "design") {
       setFigmaConnected(null);

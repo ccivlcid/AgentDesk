@@ -62,7 +62,7 @@ All inline SVG icons must follow this standard:
 ### 0-4. No New Files Without Clear Justification
 
 - Prefer editing existing files over creating new ones.
-- New component files require: > 80 lines OR reused in 2+ places OR clearly separate concern.
+- New component files require: >300 lines OR reused in 2+ places OR clearly separate concern.
 - Do NOT create `utils.ts`, `helpers.ts`, or `constants.ts` barrel files for one-off functions.
 
 ### 0-5. DB Migrations — Append Only

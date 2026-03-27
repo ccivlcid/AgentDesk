@@ -6,6 +6,7 @@ import { getTaskReportDetail } from "../../../api/providers-reports-github";
 import type { TaskReportDetail } from "../../../api/providers-reports-github";
 import { getTaskDiff } from "../../../api/workflow-skills-subtasks";
 import type { TaskDiffResult } from "../../../api/workflow-skills-subtasks";
+import { useUiStore } from "../../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
 
@@ -15,6 +16,7 @@ interface TimelineTabProps {
 }
 
 export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
+  const kickoffStage = useUiStore((s) => s.kickoffStage);
   const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned", "done"].includes(t.status));
 
   // Group tasks by assigned agent
@@ -43,9 +45,37 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   if (agentLanes.size === 0) {
+    const isKickoffActive = kickoffStage && kickoffStage !== "idle";
+    const stageLabel = kickoffStage === "meeting" ? "Kickoff meeting in progress..."
+      : kickoffStage === "planning" ? "Planning tasks..."
+      : kickoffStage === "assigning" ? "Assigning tasks to agents..."
+      : kickoffStage === "executing" ? "Execution starting..."
+      : null;
+
     return (
-      <div style={{ padding: 32, color: "var(--th-text-muted)", fontFamily: mono, fontSize: 13, textAlign: "center" }}>
-        No active agent lanes. Start a project kickoff to begin orchestration.
+      <div style={{ padding: 48, fontFamily: mono, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        {isKickoffActive ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: "var(--th-accent)",
+                boxShadow: "0 0 0 0 var(--th-accent)",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.05em" }}>
+                {stageLabel ?? "Orchestration in progress..."}
+              </span>
+            </div>
+            <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
+              Tasks will appear here once the meeting concludes and planning begins.
+            </span>
+          </>
+        ) : (
+          <span style={{ fontSize: 13, color: "var(--th-text-muted)" }}>
+            No active agent lanes. Start a project kickoff to begin orchestration.
+          </span>
+        )}
       </div>
     );
   }

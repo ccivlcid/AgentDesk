@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { Task, Agent, Project } from "../../../types";
 import { getTaskProgress } from "../task-progress";
 import { getProjectTeamBoard, type TeamBoardEntry } from "../../../api/organization-projects";
+import { useUiStore } from "../../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
 
@@ -16,6 +17,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned"].includes(t.status));
   const doneTasks = tasks.filter((t) => t.status === "done");
 
+  const meetingMinutesSeq = useUiStore((s) => s.meetingMinutesSeq);
   const [boardEntries, setBoardEntries] = useState<TeamBoardEntry[]>([]);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
     getProjectTeamBoard(projectId)
       .then((res) => setBoardEntries(res.entries ?? []))
       .catch(() => setBoardEntries([]));
-  }, [projectId]);
+  }, [projectId, meetingMinutesSeq]);
 
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden", gap: 16 }}>

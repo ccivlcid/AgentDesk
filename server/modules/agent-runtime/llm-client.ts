@@ -1,6 +1,8 @@
 import { decryptSecret } from "../../oauth/helpers.ts";
 import type { DatabaseSync } from "node:sqlite";
 import { spawn } from "child_process";
+import os from "node:os";
+import path from "node:path";
 import type { LlmMessage, ToolDefinition, ToolCall, LlmContent } from "./types.ts";
 
 export interface LlmStreamCallbacks {
@@ -186,7 +188,25 @@ export function resolveCliProviderFromAgents(
   db: DatabaseSync,
   preferredAgentId?: string,
 ): { mode: "api"; apiProviderId: string } | { mode: "cli"; cliProvider: string } {
-  // 1. settings.defaultProvider (most deterministic)
+  // 1. Preferred agent api_provider_id — most specific hint from caller
+  if (preferredAgentId) {
+    const preferred = db.prepare(
+      "SELECT cli_provider, api_provider_id FROM agents WHERE id = ?",
+    ).get(preferredAgentId) as { cli_provider: string | null; api_provider_id: string | null } | undefined;
+    if (preferred?.cli_provider === "api" && preferred.api_provider_id) {
+      return { mode: "api", apiProviderId: preferred.api_provider_id };
+    }
+  }
+
+  // 2. Any enabled API provider in the DB (API key takes priority over CLI)
+  const apiProvider = db.prepare(
+    "SELECT id FROM api_providers WHERE enabled = 1 ORDER BY created_at ASC LIMIT 1",
+  ).get() as { id: string } | undefined;
+  if (apiProvider) {
+    return { mode: "api", apiProviderId: apiProvider.id };
+  }
+
+  // 3. settings.defaultProvider — CLI fallback
   const settingsRow = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
   if (settingsRow) {
     try {
@@ -197,40 +217,23 @@ export function resolveCliProviderFromAgents(
     } catch { /* ignore */ }
   }
 
-  // 2. Preferred agent (e.g. PM agent)
-  if (preferredAgentId) {
-    const preferred = db.prepare(
-      "SELECT cli_provider, api_provider_id FROM agents WHERE id = ?",
-    ).get(preferredAgentId) as { cli_provider: string | null; api_provider_id: string | null } | undefined;
-    if (preferred) {
-      if (preferred.cli_provider === "api" && preferred.api_provider_id) {
-        return { mode: "api", apiProviderId: preferred.api_provider_id };
-      }
-      if (preferred.cli_provider && VALID_CLI_PROVIDERS.has(preferred.cli_provider)) {
-        return { mode: "cli", cliProvider: preferred.cli_provider };
-      }
-    }
-  }
-
-  // 3. First agent with usable provider
+  // 4. First online CLI agent
   const agents = db.prepare(
     "SELECT cli_provider, api_provider_id FROM agents WHERE status != 'offline' ORDER BY created_at ASC",
   ).all() as { cli_provider: string | null; api_provider_id: string | null }[];
 
-  // Prefer API agent
   for (const a of agents) {
     if (a.cli_provider === "api" && a.api_provider_id) {
       return { mode: "api", apiProviderId: a.api_provider_id };
     }
   }
-  // Then CLI agent
   for (const a of agents) {
     if (a.cli_provider && VALID_CLI_PROVIDERS.has(a.cli_provider)) {
       return { mode: "cli", cliProvider: a.cli_provider };
     }
   }
 
-  // 4. Ultimate fallback
+  // 5. Ultimate fallback
   return { mode: "cli", cliProvider: "claude" };
 }
 
@@ -301,30 +304,138 @@ export async function callLlmOneShot(params: {
 
 // ─── CLI Provider One-Shot (stdin → stdout, --print mode) ───────────────────
 
+/**
+ * Augment PATH with known npm global bin directories so CLI tools are found
+ * even when the server's PATH doesn't include them (common on Windows).
+ * Mirrors the logic in server/modules/workflow/core/cli-tools.ts.
+ */
+function buildCliEnv(): NodeJS.ProcessEnv {
+  const fallbackDirs =
+    process.platform === "win32"
+      ? [
+          path.join(process.env["ProgramFiles"] ?? "C:\\Program Files", "nodejs"),
+          path.join(process.env["LOCALAPPDATA"] ?? "", "Programs", "nodejs"),
+          path.join(process.env["APPDATA"] ?? "", "npm"),
+          path.join(os.homedir(), "AppData", "Roaming", "npm"),
+        ].filter(Boolean)
+      : [
+          "/opt/homebrew/bin",
+          "/usr/local/bin",
+          "/usr/bin",
+          "/bin",
+          path.join(os.homedir(), ".local", "bin"),
+          path.join(os.homedir(), "bin"),
+        ];
+
+  const existingPath = process.env["PATH"] ?? "";
+  const parts = existingPath.split(path.delimiter).filter(Boolean);
+  const seen = new Set(parts);
+  for (const dir of fallbackDirs) {
+    if (dir && !seen.has(dir)) { parts.push(dir); seen.add(dir); }
+  }
+  return { ...process.env, PATH: parts.join(path.delimiter), NO_COLOR: "1", FORCE_COLOR: "0", CI: "1" };
+}
+
 function buildCliArgs(cliProvider: string): string[] {
   switch (cliProvider) {
-    case "codex": return ["codex", "exec", "--json"];
-    case "gemini": return ["gemini", "--yolo"];
-    case "cursor": return ["agent", "--print"];
+    case "codex": return ["codex", "--enable", "multi_agent", "--yolo", "exec", "--json"];
+    case "gemini": return ["gemini", "--yolo", "--output-format=stream-json"];
+    case "cursor": return ["agent", "--print", "--output-format=stream-json"];
     case "opencode": return ["opencode", "run", "--format", "json"];
-    default: return ["claude", "--dangerously-skip-permissions", "--print", "--max-turns", "1"];
+    default:
+      // claude: same flags as full agent spawn (known to work), one-turn limit for speed
+      return ["claude", "--dangerously-skip-permissions", "--print", "--verbose",
+              "--output-format=stream-json", "--include-partial-messages", "--max-turns", "1"];
   }
+}
+
+/**
+ * Extract plain text from stream-json output (claude/gemini/cursor).
+ * Falls back to raw output if it contains no JSON lines.
+ */
+function extractTextFromStreamJson(raw: string): string {
+  const lines = raw.split(/\r?\n/);
+  const parts: string[] = [];
+  let resultText = ""; // final result event text (highest priority)
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith("{")) continue;
+    try {
+      const obj = JSON.parse(trimmed) as Record<string, unknown>;
+      const type = obj["type"] as string | undefined;
+
+      // claude --print --output-format=stream-json: final result event (highest priority)
+      if (type === "result" && obj["subtype"] === "success" && typeof obj["result"] === "string") {
+        resultText = obj["result"] as string;
+        continue;
+      }
+
+      // claude streaming: content_block_delta with text_delta
+      if (type === "content_block_delta") {
+        const delta = obj["delta"] as Record<string, unknown> | undefined;
+        if (delta?.["type"] === "text_delta" && typeof delta?.["text"] === "string") {
+          parts.push(delta["text"] as string);
+          continue;
+        }
+      }
+
+      // claude assistant turn: message.content array (nested)
+      if (type === "assistant") {
+        const msg = obj["message"] as Record<string, unknown> | undefined;
+        const content = (msg?.["content"] ?? obj["content"]) as Array<{ type: string; text?: string }> | undefined;
+        if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block.type === "text" && block.text) parts.push(block.text);
+          }
+          continue;
+        }
+      }
+
+      // direct content array at top level
+      const content = obj["content"] as Array<{ type: string; text?: string }> | undefined;
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          if (block.type === "text" && block.text) parts.push(block.text);
+        }
+        continue;
+      }
+
+      // simple type=text with direct text property
+      if (type === "text" && typeof obj["text"] === "string") { parts.push(obj["text"] as string); continue; }
+
+      // codex / opencode: output or response key
+      if (typeof obj["output"] === "string") { parts.push(obj["output"] as string); continue; }
+      if (typeof obj["response"] === "string") { parts.push(obj["response"] as string); continue; }
+    } catch { /* non-JSON line — skip */ }
+  }
+
+  // Final result event takes priority (it's the complete assembled text from claude)
+  if (resultText) return resultText;
+  // Streaming deltas assembled
+  if (parts.length > 0) return parts.join("");
+  // Raw fallback (e.g. non-streaming providers or error output)
+  return raw;
 }
 
 function callViaCliProviderInternal(cliProvider: string, fullPrompt: string, timeoutMs = 120_000): Promise<string> {
   const args = buildCliArgs(cliProvider);
+  const env = buildCliEnv();
   return new Promise<string>((resolve, reject) => {
     const child = spawn(args[0], args.slice(1), {
       shell: process.platform === "win32",
       stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", CI: "1" },
+      env,
     });
-    const timeoutId = setTimeout(() => { try { child.kill(); } catch { /* */ } reject(new Error(`CLI '${cliProvider}' timed out (${timeoutMs / 1000}s)`)); }, timeoutMs);
+    const timeoutId = setTimeout(() => {
+      try { child.kill("SIGKILL"); } catch { /* */ }
+      reject(new Error(`CLI '${cliProvider}' timed out (${timeoutMs / 1000}s)`));
+    }, timeoutMs);
     let output = "";
     child.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
     child.stderr?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
     child.on("error", (err) => { clearTimeout(timeoutId); reject(err); });
-    child.on("close", () => { clearTimeout(timeoutId); resolve(output); });
+    child.on("close", () => { clearTimeout(timeoutId); resolve(extractTextFromStreamJson(output)); });
     child.stdin?.write(fullPrompt);
     child.stdin?.end();
   });
@@ -350,26 +461,30 @@ export async function callLlmOneShotAuto(params: {
   preferredAgentId?: string;
 }): Promise<string> {
   const { db, systemPrompt, userPrompt, maxTokens = 2048, timeoutMs = 120_000, preferredAgentId } = params;
-  const resolved = resolveCliProviderFromAgents(db, preferredAgentId);
 
-  if (resolved.mode === "api") {
-    try {
-      const provider = resolveProvider(db, resolved.apiProviderId);
-      const model = getDefaultModel(provider.providerType);
-      return await callLlmOneShot({
-        provider, model, systemPrompt, userPrompt, maxTokens,
-        signal: AbortSignal.timeout(timeoutMs),
-      });
-    } catch {
-      // API failed — fall through to CLI
-      const fallback = resolveCliProviderFromAgents(db, preferredAgentId);
-      const cli = fallback.mode === "cli" ? fallback.cliProvider : "claude";
-      return callViaCliProviderInternal(cli, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
+  // 1. Preferred agent's api_provider_id
+  if (preferredAgentId) {
+    const row = db.prepare("SELECT api_provider_id FROM agents WHERE id = ? AND cli_provider = 'api'").get(preferredAgentId) as { api_provider_id: string | null } | undefined;
+    if (row?.api_provider_id) {
+      try {
+        const provider = resolveProvider(db, row.api_provider_id);
+        const model = getDefaultModel(provider.providerType);
+        return await callLlmOneShot({ provider, model, systemPrompt, userPrompt, maxTokens, signal: AbortSignal.timeout(timeoutMs) });
+      } catch { /* fall through */ }
     }
   }
 
-  // CLI mode
-  return callViaCliProviderInternal(resolved.cliProvider, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
+  // 2. resolveProvider: api_providers table → ANTHROPIC_API_KEY / OPENAI_API_KEY env
+  try {
+    const provider = resolveProvider(db);
+    const model = getDefaultModel(provider.providerType);
+    return await callLlmOneShot({ provider, model, systemPrompt, userPrompt, maxTokens, signal: AbortSignal.timeout(timeoutMs) });
+  } catch { /* no API key configured — fall through to CLI */ }
+
+  // 3. CLI fallback (last resort)
+  const cliResolved = resolveCliProviderFromAgents(db, preferredAgentId);
+  const cliProvider = cliResolved.mode === "cli" ? cliResolved.cliProvider : "claude";
+  return callViaCliProviderInternal(cliProvider, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
 }
 
 /** Resolve Anthropic API key — from api_providers table by provider id, or ANTHROPIC_API_KEY env. */

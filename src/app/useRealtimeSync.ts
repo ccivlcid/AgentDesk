@@ -412,6 +412,7 @@ export function useRealtimeSync({
       on("meeting_minutes_update", (_payload: unknown) => {
         // Trigger a live sync so any open meeting minutes panel refreshes immediately
         scheduleLiveSync(100);
+        useUiStore.getState().bumpMeetingMinutesSeq();
       }),
       on("runtime_status", (payload: unknown) => {
         const p = payload as { taskId?: string; agentId?: string; status?: string; runId?: string; inputTokens?: number; outputTokens?: number; toolCalls?: number };

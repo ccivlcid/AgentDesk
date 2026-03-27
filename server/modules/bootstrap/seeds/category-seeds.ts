@@ -83,45 +83,6 @@ const SCHEMAS: Record<string, Pick<CategorySeed, "kpi_schema" | "risk_schema" | 
       { key: "design_spec", label: "디자인 명세서", type: "document" },
     ]),
   },
-  "api-backend": {
-    kpi_schema: JSON.stringify([
-      { key: "uptime", label: "가용성 (%)", type: "percent" },
-      { key: "latency_p99", label: "P99 지연시간 (ms)", type: "number" },
-      { key: "error_rate", label: "에러율 (%)", type: "percent" },
-    ]),
-    risk_schema: JSON.stringify([
-      { key: "security_breach", label: "보안 침해", severity: "high" },
-      { key: "breaking_change", label: "하위 호환성 깨짐", severity: "high" },
-    ]),
-    gate_schema: JSON.stringify([
-      { key: "schema_review", label: "스키마 리뷰", sort_order: 1 },
-      { key: "security_review", label: "보안 리뷰", sort_order: 2 },
-      { key: "load_test", label: "부하 테스트", sort_order: 3 },
-    ]),
-    deliverable_schema: JSON.stringify([
-      { key: "api_spec", label: "API 명세서 (OpenAPI)", type: "spec" },
-      { key: "source_code", label: "소스 코드", type: "spec" },
-    ]),
-  },
-  frontend: {
-    kpi_schema: JSON.stringify([
-      { key: "lighthouse_score", label: "Lighthouse 점수", type: "number" },
-      { key: "a11y_score", label: "접근성 점수", type: "number" },
-      { key: "bundle_size", label: "번들 크기 (KB)", type: "number" },
-    ]),
-    risk_schema: JSON.stringify([
-      { key: "browser_compat", label: "브라우저 호환성", severity: "medium" },
-      { key: "design_drift", label: "디자인 괴리", severity: "medium" },
-    ]),
-    gate_schema: JSON.stringify([
-      { key: "design_review", label: "디자인 리뷰", sort_order: 1 },
-      { key: "a11y_audit", label: "접근성 감사", sort_order: 2 },
-    ]),
-    deliverable_schema: JSON.stringify([
-      { key: "component_library", label: "컴포넌트 라이브러리", type: "spec" },
-      { key: "style_guide", label: "스타일 가이드", type: "document" },
-    ]),
-  },
   "ai-ml": {
     kpi_schema: JSON.stringify([
       { key: "model_accuracy", label: "모델 정확도 (%)", type: "percent" },
@@ -142,43 +103,18 @@ const SCHEMAS: Record<string, Pick<CategorySeed, "kpi_schema" | "risk_schema" | 
       { key: "model_artifact", label: "모델 아티팩트", type: "other" },
     ]),
   },
-  "open-source": {
+  custom: {
     kpi_schema: JSON.stringify([
-      { key: "test_coverage", label: "테스트 커버리지 (%)", type: "percent" },
-      { key: "doc_coverage", label: "문서 커버리지 (%)", type: "percent" },
-      { key: "npm_downloads", label: "다운로드 수", type: "number" },
+      { key: "goal_completion", label: "목표 달성률 (%)", type: "percent" },
     ]),
     risk_schema: JSON.stringify([
-      { key: "breaking_api", label: "API 깨짐", severity: "high" },
-      { key: "security_vuln", label: "보안 취약점", severity: "high" },
+      { key: "scope_creep", label: "범위 확장", severity: "medium" },
     ]),
     gate_schema: JSON.stringify([
-      { key: "api_review", label: "API 리뷰", sort_order: 1 },
-      { key: "doc_review", label: "문서 리뷰", sort_order: 2 },
-      { key: "release_checklist", label: "릴리즈 체크리스트", sort_order: 3 },
+      { key: "final_review", label: "최종 검토", sort_order: 1 },
     ]),
     deliverable_schema: JSON.stringify([
-      { key: "package", label: "패키지", type: "spec" },
-      { key: "readme", label: "README", type: "document" },
-      { key: "changelog", label: "CHANGELOG", type: "document" },
-    ]),
-  },
-  devops: {
-    kpi_schema: JSON.stringify([
-      { key: "pipeline_success_rate", label: "파이프라인 성공률 (%)", type: "percent" },
-      { key: "mttr", label: "평균 복구 시간 (min)", type: "number" },
-    ]),
-    risk_schema: JSON.stringify([
-      { key: "infra_outage", label: "인프라 장애", severity: "high" },
-      { key: "secret_leak", label: "시크릿 노출", severity: "high" },
-    ]),
-    gate_schema: JSON.stringify([
-      { key: "dry_run", label: "Dry-run 테스트", sort_order: 1 },
-      { key: "staging_verify", label: "스테이징 검증", sort_order: 2 },
-    ]),
-    deliverable_schema: JSON.stringify([
-      { key: "runbook", label: "운영 매뉴얼", type: "document" },
-      { key: "pipeline_config", label: "파이프라인 설정", type: "spec" },
+      { key: "output", label: "결과물", type: "other" },
     ]),
   },
   enterprise: {

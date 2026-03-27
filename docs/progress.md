@@ -5,13 +5,37 @@
 ---
 
 ## Current State
-- **Last applied migration**: `2026-03-29-001-drop-removed-features`
-- **Latest completed phase**: Phase 26
+- **Last applied migration**: `2026-03-29-002-replace-devops-with-custom-category`
+- **Latest completed phase**: Phase 26 + Project Type Cleanup
 - **Next work**: See Pending Work below
 
 ---
 
 ## Active Work
+
+### Kickoff UX + Provider Fix (2026-03-27)
+
+**완료:**
+- `App.tsx`: 프로젝트 생성 완료 시 `openWindow("tasks")` — 오케스트레이션 창 자동 오픈
+- `Desktop.tsx`: `KickoffStageOverlay` (킥오프 4단계 진행 오버레이) 완전 제거
+- `llm-client.ts` `resolveCliProviderFromAgents`: provider 우선순위 수정 — API 키 → CLI 순서로 (기존: defaultProvider CLI → API). 타임아웃 방지.
+- `projects.ts` auto-assign: LLM 호출 제거 → 룰 기반 즉시 배정 (PM/PL/Design/Dev 부서별)
+- `ProjectCreateModal.tsx`: `project_type_templates` 커스텀 유형 표시 제거 — `categories` 테이블 6개만 표시
+
+---
+
+### Project Type Cleanup (2026-03-27)
+
+**목표:** 새 프로젝트 화면의 유형을 6개(mvp, fullstack, mobile, ai-ml, research, custom)로 정리.
+
+**완료:**
+- `directive-templates.ts`: `devops` 제거 → `custom` 추가. `DIRECTIVE_REVIEW_ROUNDS` / `DIRECTIVE_DECOMPOSITION_HINTS` 동기화.
+- `category-seeds.ts`: `devops` 스키마 제거 → `custom` 스키마 추가.
+- `migrations-e-recent.ts`: `2026-03-29-002-replace-devops-with-custom-category` 마이그레이션 추가 (기존 DB의 `cat_devops` 삭제).
+- `prompts/directives/custom.md` 신규 생성 (자유 형식 템플릿).
+- 기존 5개 디렉티브(mvp, fullstack, mobile, ai-ml, research) 최적화 — 중복·자명한 설명 제거, 핵심만 유지.
+
+---
 
 ### Phase 26 — Developer OS 전환 (2026-03-25)
 

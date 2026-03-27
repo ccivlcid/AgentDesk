@@ -935,7 +935,9 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         await runInternalAddTasksPipeline({
           projectId,
           additionalDirective: gapText,
-          db, broadcast, appendTaskLog, nowMs, resolveProjectPath,
+          db, broadcast,
+          appendTaskLog: (taskId: string | null, kind: string, msg: string) => appendTaskLog(taskId ?? "", kind, msg),
+          nowMs, resolveProjectPath,
           startTaskExecutionForAgent: (taskId: string, agentId: string) => startTaskExecutionForAgent(taskId, agentId),
           insertNotification,
         });

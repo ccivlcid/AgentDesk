@@ -267,7 +267,9 @@ export default function FileTreeWindow() {
               onKeyDown={(e) => { if (e.key === "Enter") loadPath(currentPath); }}
               style={{ background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", flex: 1, fontSize: 13 }}
             />
-            <IconRotateCw size={14} style={{ opacity: 0.5, cursor: "pointer" }} onClick={() => loadPath(currentPath)} />
+            <button type="button" onClick={() => loadPath(currentPath)} style={{ background: "none", border: "none", padding: 0, display: "flex", cursor: "pointer" }}>
+              <IconRotateCw size={14} style={{ opacity: 0.5 }} />
+            </button>
           </div>
 
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 8, background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 12, padding: "0 12px", height: 36 }}>

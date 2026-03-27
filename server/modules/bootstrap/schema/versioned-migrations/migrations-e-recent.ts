@@ -993,4 +993,10 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       try { db.exec("ALTER TABLE tasks DROP COLUMN kb_context_sources"); } catch { /* ok */ }
     },
   },
+  {
+    id: "2026-03-29-002-replace-devops-with-custom-category",
+    up: (db) => {
+      try { db.exec("DELETE FROM categories WHERE id = 'cat_devops'"); } catch { /* ok */ }
+    },
+  },
 ];

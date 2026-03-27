@@ -187,6 +187,8 @@ interface UiStore {
   setKickoffBusy: (v: boolean) => void;
   kickoffStage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done";
   setKickoffStage: (stage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done") => void;
+  meetingMinutesSeq: number;
+  bumpMeetingMinutesSeq: () => void;
 
   mobileNavOpen: boolean;
   mobileHeaderMenuOpen: boolean;
@@ -420,6 +422,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setKickoffBusy: (v) => set({ kickoffBusy: v }),
   kickoffStage: "idle",
   setKickoffStage: (stage) => set({ kickoffStage: stage, kickoffBusy: stage !== "idle" && stage !== "done" }),
+  meetingMinutesSeq: 0,
+  bumpMeetingMinutesSeq: () => set((s) => ({ meetingMinutesSeq: s.meetingMinutesSeq + 1 })),
 
   mobileNavOpen: false,
   mobileHeaderMenuOpen: false,

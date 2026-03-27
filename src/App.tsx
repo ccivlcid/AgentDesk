@@ -308,14 +308,9 @@ export default function App() {
                 setProjects((prev) => [...prev, newProject]);
                 setCurrentProjectId(newProject.id);
                 setShowProjectCreate(false);
-                // 프로젝트 생성 후 에이전트가 자동으로 태스크 계획 수립
+                openWindow("tasks"); // 오케스트레이션 창 즉시 열기
                 setKickoffBusy(true);
                 kickoffProject(newProject.id)
-                  .then((result) => {
-                    if (result.status !== "clarification_needed") {
-                      addToast({ type: "success", title: t({ ko: "에이전트가 태스크를 계획했습니다", en: "Agent planned tasks", ja: "エージェントがタスクを計画しました", zh: "代理已规划任务" }) });
-                    }
-                  })
                   .catch((err) => {
                     const detail = isApiRequestError(err)
                       ? ((err.details as { detail?: string } | null)?.detail ?? null)
