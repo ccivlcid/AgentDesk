@@ -7,8 +7,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { appendTaskExecutionMetaUpdate } from "../../core/task-execution-meta.ts";
-import { handleVideoArtifactSync } from "./video-artifact.ts";
-import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
+import { runAfterExitGates } from "./gates.ts";
 import { runExtractLearnings } from "./learnings.ts";
 import { runExtractSkills } from "./skills.ts";
 import { applySuccessStateUpdate, applyFailureStateUpdate, buildStateUpdatesDeps } from "./state-updates.ts";
@@ -125,29 +124,13 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
     }
 
     const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
-    const isVideoPreprodTask = effectivePackKey === "video_preprod";
-    const isVideoFinalRenderTask = isVideoPreprodTask && /\[VIDEO_FINAL_RENDER\]/i.test(task.title);
-    // Collaboration child tasks (source_task_id set, not VIDEO_FINAL_RENDER) skip artifact sync.
-    const isVideoPreprodCollabChild = isVideoPreprodTask && !!task.source_task_id && !isVideoFinalRenderTask;
-
-    const artifactSync = (!isVideoPreprodTask || isVideoPreprodCollabChild)
-      ? {
-          videoArtifactReady: false,
-          videoArtifactSpec: { fileName: "", relativePath: "", legacyRelativePath: "" },
-          projectCandidates: [],
-        }
-      : handleVideoArtifactSync(taskId, task, {
-          db: db as unknown as DatabaseSync,
-          taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
-          appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
-        });
 
     const gatesResult = runAfterExitGates(
       taskId,
       { title: task.title, workflow_pack_key: effectivePackKey },
       result,
       finalExitCode,
-      artifactSync,
+      { videoArtifactReady: false, videoArtifactSpec: { fileName: "", relativePath: "", legacyRelativePath: "" }, projectCandidates: [] },
       { db, logsDir, appendTaskLog, nowMs } as import("./gates.ts").RunAfterExitGatesDeps,
     );
     finalExitCode = gatesResult.finalExitCode;
@@ -269,26 +252,6 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
     }
 
     if (finalExitCode === 0 && task) {
-      if (isVideoPreprodTask) {
-        const gateResult = applyVideoArtifactGateAfterSuccess(
-          taskId,
-          { title: task.title, description: task.description, source_task_id: task.source_task_id },
-          isVideoFinalRenderTask,
-          artifactSync,
-          {
-            db,
-            logsDir,
-            appendTaskLog,
-            nowMs,
-            notifyClient,
-            pickL,
-            l,
-            resolveLang,
-          } as import("./gates.ts").VideoArtifactGateDeps,
-        );
-        finalExitCode = gateResult.finalExitCode;
-      }
-
       if ((isReportDesignCheckpointTask as (t: TaskRow) => boolean)(task)) {
         const parentTaskId = (extractReportDesignParentTaskId as (t: TaskRow) => string | null)(task);
         (completeTaskWithoutReview as (t: object, note: string) => void)(

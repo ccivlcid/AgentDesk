@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { spawn } from "child_process";
 import os from "node:os";
 import path from "node:path";
+import logger from "../../lib/logger.ts";
 import type { LlmMessage, ToolDefinition, ToolCall, LlmContent } from "./types.ts";
 
 export interface LlmStreamCallbacks {
@@ -237,9 +238,21 @@ export function resolveCliProviderFromAgents(
   return { mode: "cli", cliProvider: "claude" };
 }
 
+/** Check if an HTTP status code is transient and worth retrying. */
+function isRetriableStatus(status: number): boolean {
+  return status === 429 || status === 502 || status === 503 || status === 504 || status >= 520;
+}
+
+/** Exponential backoff delay in ms: 1s, 2s, 4s... capped at 8s. */
+function retryDelayMs(attempt: number): number {
+  return Math.min(1000 * 2 ** attempt, 8000);
+}
+
+const LLM_MAX_RETRIES = 2;
+
 /**
  * One-shot (non-streaming) LLM call. Works with both Anthropic and OpenAI-compatible providers.
- * Properly separates system and user prompts for both provider types.
+ * Retries on transient errors (429, 5xx) with exponential backoff.
  */
 export async function callLlmOneShot(params: {
   provider: ResolvedProvider;
@@ -251,6 +264,31 @@ export async function callLlmOneShot(params: {
 }): Promise<string> {
   const { provider, model, systemPrompt, userPrompt, maxTokens = 2048, signal } = params;
 
+  for (let attempt = 0; attempt <= LLM_MAX_RETRIES; attempt++) {
+    try {
+      return await callLlmOneShotInternal(provider, model, systemPrompt, userPrompt, maxTokens, signal);
+    } catch (err) {
+      const status = extractHttpStatus(err);
+      if (attempt < LLM_MAX_RETRIES && status !== null && isRetriableStatus(status)) {
+        await new Promise((r) => setTimeout(r, retryDelayMs(attempt)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("unreachable");
+}
+
+function extractHttpStatus(err: unknown): number | null {
+  const msg = err instanceof Error ? err.message : "";
+  const match = msg.match(/\b(4\d{2}|5\d{2})\b/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+async function callLlmOneShotInternal(
+  provider: ResolvedProvider, model: string, systemPrompt: string,
+  userPrompt: string, maxTokens: number, signal?: AbortSignal,
+): Promise<string> {
   if (provider.type === "anthropic") {
     const url = provider.baseUrl.replace(/\/+$/, "") + "/messages";
     const resp = await fetch(url, {
@@ -470,7 +508,9 @@ export async function callLlmOneShotAuto(params: {
         const provider = resolveProvider(db, row.api_provider_id);
         const model = getDefaultModel(provider.providerType);
         return await callLlmOneShot({ provider, model, systemPrompt, userPrompt, maxTokens, signal: AbortSignal.timeout(timeoutMs) });
-      } catch { /* fall through */ }
+      } catch (err) {
+        logger.debug({ err: err instanceof Error ? err.message : String(err) }, "[llm-auto] preferred agent API failed, falling through");
+      }
     }
   }
 
@@ -478,12 +518,16 @@ export async function callLlmOneShotAuto(params: {
   try {
     const provider = resolveProvider(db);
     const model = getDefaultModel(provider.providerType);
+    logger.info({ providerType: provider.providerType, model }, "[llm-auto] using API provider");
     return await callLlmOneShot({ provider, model, systemPrompt, userPrompt, maxTokens, signal: AbortSignal.timeout(timeoutMs) });
-  } catch { /* no API key configured — fall through to CLI */ }
+  } catch (apiErr) {
+    logger.debug({ err: apiErr instanceof Error ? apiErr.message : String(apiErr) }, "[llm-auto] API provider unavailable, falling through to CLI");
+  }
 
   // 3. CLI fallback (last resort)
   const cliResolved = resolveCliProviderFromAgents(db, preferredAgentId);
   const cliProvider = cliResolved.mode === "cli" ? cliResolved.cliProvider : "claude";
+  logger.info({ cliProvider }, "[llm-auto] using CLI fallback");
   return callViaCliProviderInternal(cliProvider, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
 }
 

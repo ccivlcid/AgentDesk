@@ -59,6 +59,17 @@ export async function runInternalAddTasksPipeline(deps: InternalAddTasksDeps): P
   if (doneTasks.length > 0) {
     promptParts.push(`Already completed tasks (do NOT recreate these):\n${doneTasks.map((t_) => `- ${t_.title}`).join("\n")}`);
   }
+  // Include available agents so LLM can generate properly scoped tasks
+  const execAgentsForPrompt = assignedAgents.filter((a) => a.project_role !== "pm");
+  if (execAgentsForPrompt.length > 0) {
+    const agentList = execAgentsForPrompt.map((a) => {
+      const dept = a.dept_name ? `, dept: ${a.dept_name}` : "";
+      const role = a.role ? `, seniority: ${a.role}` : "";
+      return `- ${a.name}${dept}${role}`;
+    }).join("\n");
+    promptParts.push(`Available agents:\n${agentList}`);
+  }
+
   promptParts.push(`Additional tasks requested:\n${additionalDirective}`);
 
   const systemPrompt = loadPrompt("system/project-kickoff");

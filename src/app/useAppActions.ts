@@ -6,7 +6,6 @@ import * as api from "../api";
 import { isApiRequestError } from "../api/core";
 import { handleApiError } from "../api/handleApiError";
 import { useToast } from "../components/ui/Toast";
-import { buildDecisionInboxItems } from "../components/chat/decision-inbox";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import { LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, pickLang } from "../i18n";
 import type {
@@ -21,7 +20,6 @@ import { mapWorkflowDecisionItemsLocalized } from "./decision-inbox";
 import { mergeSettingsWithDefaults, syncClientLanguage } from "./utils";
 
 interface UseAppActionsParams {
-  agents: Agent[];
   settings: CompanySettings;
   scheduleLiveSync: (delayMs?: number) => void;
   setSettings: Dispatch<SetStateAction<CompanySettings>>;
@@ -37,7 +35,6 @@ interface UseAppActionsParams {
 }
 
 export function useAppActions({
-  agents,
   settings,
   scheduleLiveSync,
   setSettings,
@@ -279,22 +276,15 @@ export function useAppActions({
   const loadDecisionInbox = useCallback(async () => {
     setDecisionInboxLoading(true);
     try {
-      const [allMessages, workflowDecisionItems] = await Promise.all([
-        api.getMessages({ limit: 500 }),
-        api.getDecisionInbox(),
-      ]);
-      const agentDecisionItems = buildDecisionInboxItems(allMessages, agents);
+      const workflowDecisionItems = await api.getDecisionInbox();
       const workflowItems = mapWorkflowDecisionItemsLocalized(workflowDecisionItems, settings.language);
-      const merged = [...workflowItems, ...agentDecisionItems];
-      const deduped = new Map<string, DecisionInboxItem>();
-      for (const item of merged) deduped.set(item.id, item);
-      setDecisionInboxItems(Array.from(deduped.values()).sort((a, b) => b.createdAt - a.createdAt));
+      setDecisionInboxItems(workflowItems.sort((a, b) => b.createdAt - a.createdAt));
     } catch (error) {
       handleApiError(error, showToast, { context: "Load decision inbox failed" });
     } finally {
       setDecisionInboxLoading(false);
     }
-  }, [agents, settings.language, setDecisionInboxLoading, setDecisionInboxItems, showToast]);
+  }, [settings.language, setDecisionInboxLoading, setDecisionInboxItems, showToast]);
 
   const handleOpenDecisionInbox = useCallback(() => {
     openWindow("decision-inbox");

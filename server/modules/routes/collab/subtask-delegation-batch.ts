@@ -6,7 +6,6 @@ import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
 import type { TaskCreationAuditInput } from "../../../types/runtime-context.ts";
 import { resolveWorkflowPackKeyForTask } from "../../workflow/packs/task-pack-resolver.ts";
-import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../workflow/core/video-skill-bootstrap.ts";
 import { resolveConstrainedAgentScopeForTask } from "../core/tasks/execution-run-auto-assign.ts";
 import type { AgentRow } from "./direct-chat.ts";
 import type { L10n } from "./language-policy.ts";
@@ -472,14 +471,6 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
             );
           }
           const logFilePath = path.join(logsDir, `${delegatedTaskId}.log`);
-          ensureVideoPreprodRemotionBestPracticesSkill({
-            db,
-            nowMs,
-            workflowPackKey: (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null,
-            provider: execProvider,
-            taskId: delegatedTaskId,
-            appendTaskLog,
-          });
           const spawnPrompt = buildSubtaskDelegationPrompt(
             parentTask,
             subtasks,

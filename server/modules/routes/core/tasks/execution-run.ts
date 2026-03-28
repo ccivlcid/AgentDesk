@@ -6,8 +6,6 @@ import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask }
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
 import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { buildWorkflowPackExecutionGuidance, loadPackConfig } from "../../../workflow/packs/execution-guidance.ts";
-import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
-import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
 import { buildDocumentGenerationGuidance } from "../../../workflow/core/document-generation-guidance.ts";
 import {
@@ -291,14 +289,6 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api"].includes(provider)) {
       return res.status(400).json({ error: "unsupported_provider", provider });
     }
-    ensureVideoPreprodRemotionBestPracticesSkill({
-      db,
-      nowMs,
-      workflowPackKey: effectivePackKey,
-      provider,
-      taskId: id,
-      appendTaskLog,
-    });
     const projectPath = resolveProjectPath(task) || (req.body?.project_path as string | undefined) || process.cwd();
     const logPath = path.join(logsDir, `${id}.log`);
 
@@ -454,15 +444,6 @@ Whenever you complete a subtask, report it in this format:
       ),
       taskLang,
     );
-    const videoArtifactSpec =
-      effectivePackKey === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db, {
-            project_id: task.project_id,
-            project_path: task.project_path,
-            department_id: task.department_id,
-            workflow_pack_key: effectivePackKey,
-          })
-        : null;
     // Load QA rules from DB for the pack
     let qaRulesJson: string | null = null;
     if (effectivePackKey) {
@@ -472,7 +453,6 @@ Whenever you complete a subtask, report it in this format:
       if (packRow) qaRulesJson = packRow.qa_rules_json;
     }
     const workflowPackGuidance = buildWorkflowPackExecutionGuidance(effectivePackKey, taskLang, {
-      videoArtifactRelativePath: videoArtifactSpec?.relativePath,
       qaRulesJson,
     });
 

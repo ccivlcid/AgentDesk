@@ -1,7 +1,10 @@
-# AgentDesk — UI Screens & Interaction Specification
+# AgentDesk GUI — UI Screens & Interaction Specification
 
-> **Last updated:** 2026-03-23 (Terminal Window: fully replaced with real PTY terminal + agent selector + auto CLI execution)
-> Menu Bar + Desktop Icons + Dock + App Windows structure
+> **Audience:** Non-developers (PM, designers, managers, stakeholders)
+> **Interface:** Browser-based macOS desktop metaphor (localhost:8800)
+> **Counterpart:** Developers use the TUI (terminal). See `TUI-DESIGN.md`.
+>
+> **Last updated:** 2026-03-28
 > **Design reference:** `DESIGN.md` (CSS variables)
 
 ---

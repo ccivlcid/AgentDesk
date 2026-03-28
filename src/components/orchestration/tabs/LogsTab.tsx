@@ -20,6 +20,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
   const [errorFirstMode, setErrorFirstMode] = useState(true);
   const [levelFilter, setLevelFilter] = useState<LogLevel>("ALL");
   const [autoScroll, setAutoScroll] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   // Find the agent's current task
@@ -60,22 +61,24 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
   const classifiedLogs = classifyLogs(events, taskLogs);
   const filteredLogs = filterByLevel(classifiedLogs, levelFilter);
 
+  // Apply text search filter
+  const searchedLogs = searchQuery.trim()
+    ? filteredLogs.filter((l) => l.message.toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredLogs;
+
   // Error-first: pin errors to top
   const displayLogs = errorFirstMode
     ? [
-      ...filteredLogs.filter((l) => l.level === "ERROR"),
-      ...filteredLogs.filter((l) => l.level !== "ERROR"),
+      ...searchedLogs.filter((l) => l.level === "ERROR"),
+      ...searchedLogs.filter((l) => l.level !== "ERROR"),
     ]
-    : filteredLogs;
+    : searchedLogs;
 
-  // Metrics
-  const totalTokens = tasks.reduce((sum, t) => {
-    const logs = t.result ? String(t.result).length : 0;
-    return sum + logs;
-  }, 0);
-  const errorCount = classifiedLogs.filter((l) => l.level === "ERROR").length;
-  const totalCount = classifiedLogs.length;
-  const errRate = totalCount > 0 ? ((errorCount / totalCount) * 100).toFixed(1) : "0.0";
+  // Metrics — derived from task states, not result field length
+  const doneTaskCount = tasks.filter((t) => t.status === "done").length;
+  const failedTaskCount = tasks.filter((t) => t.status === "failed" || t.execution_state === "failed").length;
+  const totalTaskCount = tasks.length;
+  const taskErrRate = totalTaskCount > 0 ? ((failedTaskCount / totalTaskCount) * 100).toFixed(1) : "0.0";
 
   const handleToggleErrorFirst = useCallback(() => setErrorFirstMode((v) => !v), []);
   const handleToggleAutoScroll = useCallback(() => setAutoScroll((v) => !v), []);
@@ -83,7 +86,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
       {/* Agent sidebar */}
-      <div style={{
+      <div className="custom-scrollbar" style={{
         width: 170,
         borderRight: "1px solid var(--th-border)",
         padding: "16px 10px",
@@ -96,7 +99,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
         borderRadius: "12px 0 0 12px",
       }}>
         <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 6, textTransform: "uppercase" as const }}>
-          Active Agents
+          에이전트
         </span>
         {agents.map((agent) => {
           const errCnt = agentErrorCounts.get(agent.id) ?? 0;
@@ -124,7 +127,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               <span style={{
                 width: 7, height: 7, borderRadius: "50%",
                 background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
-                boxShadow: isWorking ? "0 0 6px rgba(5,150,105,0.3)" : "none",
+                boxShadow: isWorking ? "0 0 6px var(--th-green-glow)" : "none",
                 flexShrink: 0,
               }} />
               <span style={{ flex: 1 }}>
@@ -137,7 +140,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
                   fontWeight: 800,
                   color: "var(--th-danger-text)",
                   background: "var(--th-danger-bg)",
-                  border: "1px solid #FECACA",
+                  border: "1px solid var(--th-danger-border)",
                   padding: "1px 5px",
                   borderRadius: 6,
                   flexShrink: 0,
@@ -163,9 +166,9 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           fontFamily: mono,
           fontSize: 10,
         }}>
-          <LogMetricBadge label="TOKEN_THROUGHPUT" value={formatTokenCount(totalTokens)} color="var(--th-text-primary)" />
-          <LogMetricBadge label="ERR_RATE" value={`${errRate}%`} color={parseFloat(errRate) > 5 ? "var(--th-danger-text)" : "var(--th-success)"} />
-          <LogMetricBadge label="ACTIVE_THREADS" value={`${agents.filter((a) => a.status === "working").length} Active`} color="var(--th-accent)" />
+          <LogMetricBadge label="완료" value={`${doneTaskCount}/${totalTaskCount}`} color="var(--th-text-primary)" />
+          <LogMetricBadge label="오류율" value={`${taskErrRate}%`} color={parseFloat(taskErrRate) > 5 ? "var(--th-danger-text)" : "var(--th-success)"} />
+          <LogMetricBadge label="활성" value={`${agents.filter((a) => a.status === "working").length}명`} color="var(--th-accent)" />
         </div>
 
         {/* Toolbar */}
@@ -185,7 +188,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             style={{
               fontFamily: mono, fontSize: 10, cursor: "pointer",
               background: errorFirstMode ? "var(--th-danger-bg)" : "transparent",
-              border: errorFirstMode ? "1px solid #FECACA" : "1px solid transparent",
+              border: errorFirstMode ? "1px solid var(--th-danger-border)" : "1px solid transparent",
               borderRadius: 8,
               padding: "3px 10px",
               color: errorFirstMode ? "var(--th-danger-text)" : "var(--th-text-muted)",
@@ -198,7 +201,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
 
           <span style={{ color: "var(--th-border)" }}>|</span>
 
-          <span style={{ color: "var(--th-text-muted)", fontWeight: 600 }}>LEVEL:</span>
+          <span style={{ color: "var(--th-text-muted)", fontWeight: 600 }}>레벨:</span>
           {(["ALL", "ERROR", "WARN", "INFO", "DEBUG"] as LogLevel[]).map((lvl) => (
             <button
               key={lvl}
@@ -207,7 +210,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               style={{
                 fontFamily: mono, fontSize: 9, cursor: "pointer",
                 background: levelFilter === lvl ? "var(--th-accent-glow)" : "transparent",
-                border: levelFilter === lvl ? "1px solid #BFDBFE" : "1px solid transparent",
+                border: levelFilter === lvl ? "1px solid var(--th-accent-border)" : "1px solid transparent",
                 color: levelFilter === lvl ? "var(--th-accent)" : "var(--th-text-muted)",
                 padding: "2px 8px",
                 fontWeight: levelFilter === lvl ? 800 : 500,
@@ -223,7 +226,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
 
           {agentTask && (
             <span style={{ color: "var(--th-accent)", fontWeight: 600, fontSize: 10 }}>
-              TASK: {agentTask.title.slice(0, 30)}
+              태스크: {agentTask.title.slice(0, 30)}
             </span>
           )}
 
@@ -232,8 +235,8 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             onClick={handleToggleAutoScroll}
             style={{
               fontFamily: mono, fontSize: 10, cursor: "pointer",
-              background: autoScroll ? "#ECFDF5" : "transparent",
-              border: autoScroll ? "1px solid #A7F3D0" : "1px solid var(--th-border)",
+              background: autoScroll ? "var(--th-success-bg)" : "transparent",
+              border: autoScroll ? "1px solid var(--th-success-border)" : "1px solid var(--th-border)",
               color: autoScroll ? "var(--th-success)" : "var(--th-text-muted)",
               fontWeight: autoScroll ? 700 : 500,
               padding: "2px 10px",
@@ -248,6 +251,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
         {/* Log content */}
         <div
           ref={logContainerRef}
+          className="custom-scrollbar"
           style={{
             flex: 1,
             padding: 16,
@@ -259,20 +263,20 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
         >
           {!selectedAgentId && (
             <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
-              Select an agent to view execution logs...
+              에이전트를 선택하면 실행 로그를 볼 수 있습니다.
             </div>
           )}
 
           {selectedAgentId && displayLogs.length === 0 && !reportContent && (
             <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
-              Awaiting log data...
+              로그 데이터 대기 중...
             </div>
           )}
 
           {/* Pinned errors block */}
           {errorFirstMode && displayLogs.some((l) => l.level === "ERROR") && (
             <div style={{
-              border: "1px solid #FECACA",
+              border: "1px solid var(--th-danger-border)",
               background: "var(--th-danger-bg)",
               borderRadius: 14,
               padding: "12px 16px",
@@ -280,7 +284,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             }}>
               <div style={{ fontWeight: 800, color: "var(--th-danger-text)", fontSize: 10, letterSpacing: "0.05em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-danger-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                CRITICAL ERRORS
+                주요 오류
               </div>
               {displayLogs.filter((l) => l.level === "ERROR").map((entry) => (
                 <LogEntryRow key={entry.key} entry={entry} />
@@ -292,7 +296,7 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           {reportContent && (
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 800, color: "var(--th-accent)", fontSize: 10, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-                PM Review Report
+                PM 리뷰 보고서
               </div>
               <div style={{
                 background: "var(--th-bg-surface)",
@@ -319,19 +323,23 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             ))}
         </div>
 
-        {/* Command bar */}
+        {/* Search bar */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
-          padding: "10px 16px",
+          padding: "8px 16px",
           borderTop: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
         }}>
-          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)" }}>/</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <input
             type="text"
-            placeholder="Global search or command..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="로그 검색..."
             style={{
               flex: 1,
               background: "transparent",
@@ -342,22 +350,19 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
               color: "var(--th-text-primary)",
             }}
           />
-          <button type="button" style={{
-            fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--th-bg-elevated)",
-            background: "var(--th-accent)", border: "none",
-            padding: "5px 14px", cursor: "pointer",
-            borderRadius: 8,
-          }}>
-            EXECUTE
-          </button>
-          <button type="button" style={{
-            fontFamily: mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-secondary)",
-            background: "transparent", border: "1px solid var(--th-border)",
-            padding: "4px 14px", cursor: "pointer",
-            borderRadius: 8,
-          }}>
-            CLEAR
-          </button>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              style={{
+                fontFamily: mono, fontSize: 9, fontWeight: 600, color: "var(--th-text-muted)",
+                background: "transparent", border: "1px solid var(--th-border)",
+                padding: "2px 8px", cursor: "pointer", borderRadius: 6,
+              }}
+            >
+              CLEAR
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -373,12 +378,6 @@ function LogMetricBadge({ label, value, color }: { label: string; value: string;
       <span style={{ color, fontWeight: 700 }}>{value}</span>
     </span>
   );
-}
-
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M/hr`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K/hr`;
-  return `${n}/hr`;
 }
 
 /* -- Unified log entry classification -- */
@@ -450,7 +449,7 @@ function filterByLevel(entries: ClassifiedLogEntry[], level: LogLevel): Classifi
 
 const LEVEL_COLORS: Record<string, { text: string; bg: string }> = {
   ERROR: { text: "var(--th-danger-text)", bg: "var(--th-danger-bg)" },
-  WARN: { text: "#D97706", bg: "#FFFBEB" },
+  WARN: { text: "var(--th-warning)", bg: "var(--th-warning-bg)" },
   INFO: { text: "var(--th-accent)", bg: "var(--th-accent-glow)" },
   DEBUG: { text: "var(--th-text-muted)", bg: "var(--th-bg-surface)" },
 };

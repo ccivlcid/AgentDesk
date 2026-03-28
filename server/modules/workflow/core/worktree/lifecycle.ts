@@ -268,6 +268,11 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
       let selectedWorktreePath = worktreePath;
       let lastError: unknown = null;
 
+      // Prune stale worktree registrations (missing directories) before creating new ones
+      try {
+        execFileSync("git", ["worktree", "prune"], { cwd: projectPath, stdio: "pipe", timeout: 5000 });
+      } catch { /* best effort */ }
+
       for (let idx = 0; idx < branchCandidates.length; idx += 1) {
         const candidateBranch = branchCandidates[idx]!;
         const candidatePath = idx === 0 ? worktreePath : path.join(worktreeBase, `${shortId}-${idx}`);
@@ -308,10 +313,30 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
           break;
         } catch (err: unknown) {
           const stderr = getStderrString(err);
-          logger.error(
-            `[AgentDesk] git worktree add failed for branch ${candidateBranch}: ${err instanceof Error ? err.message : String(err)}${stderr ? ` | stderr: ${stderr}` : ""}`,
-          );
-          lastError = err;
+          // If "already registered worktree" → retry with --force
+          if (stderr && /already registered worktree/i.test(stderr)) {
+            try {
+              const forceArgs = branchExists
+                ? ["worktree", "add", "-f", candidatePath, candidateBranch]
+                : ["worktree", "add", "-f", candidatePath, "-b", candidateBranch, base];
+              execFileSync("git", forceArgs, { cwd: projectPath, stdio: "pipe", timeout: 15000 });
+              selectedBranch = candidateBranch;
+              selectedWorktreePath = candidatePath;
+              created = true;
+              logger.info(`[AgentDesk] git worktree add --force succeeded for branch ${candidateBranch}`);
+              break;
+            } catch (forceErr: unknown) {
+              logger.error(
+                `[AgentDesk] git worktree add --force also failed for branch ${candidateBranch}: ${forceErr instanceof Error ? forceErr.message : String(forceErr)}`,
+              );
+              lastError = forceErr;
+            }
+          } else {
+            logger.error(
+              `[AgentDesk] git worktree add failed for branch ${candidateBranch}: ${err instanceof Error ? err.message : String(err)}${stderr ? ` | stderr: ${stderr}` : ""}`,
+            );
+            lastError = err;
+          }
         }
       }
 

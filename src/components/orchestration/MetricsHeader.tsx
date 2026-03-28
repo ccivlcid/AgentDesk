@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type { Task, Agent, Project } from "../../types";
 import { getProjectCostSummary, type ProjectCostSummary } from "../../api/cost-summary";
+import { useUiStore } from "../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
+const COST_REFRESH_DEBOUNCE_MS = 5_000;
 
 interface MetricsHeaderProps {
   tasks: Task[];
@@ -12,19 +14,52 @@ interface MetricsHeaderProps {
 
 export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderProps) {
   const [cost, setCost] = useState<ProjectCostSummary | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runtimeStatuses = useUiStore((s) => s.runtimeStatuses);
+
+  // Derive a lightweight signature from tasks to detect status changes
+  const taskSignature = tasks.map((t) => `${t.id}:${t.status}`).join(",");
 
   useEffect(() => {
     if (!project?.id) { setCost(null); return; }
     getProjectCostSummary(project.id).then(setCost).catch(() => setCost(null));
   }, [project?.id]);
 
+  // Debounced re-fetch when task statuses change
+  useEffect(() => {
+    if (!project?.id) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      getProjectCostSummary(project.id).then(setCost).catch(() => {});
+    }, COST_REFRESH_DEBOUNCE_MS);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [project?.id, taskSignature]);
+
+  // Aggregate real-time CLI token usage from runtime statuses
+  const liveTokens = useMemo(() => {
+    const taskIds = new Set(tasks.map((t) => t.id));
+    let input = 0;
+    let output = 0;
+    for (const [taskId, info] of runtimeStatuses) {
+      if (!taskIds.has(taskId)) continue;
+      input += info.inputTokens ?? 0;
+      output += info.outputTokens ?? 0;
+    }
+    return { input, output, total: input + output };
+  }, [tasks, runtimeStatuses]);
+
   const fmtTokens = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
   const fmtUsd = (n: number) => `$${n.toFixed(2)}`;
+
+  // Combine API cost data + live CLI tokens
+  const totalTokens = (cost?.totalTokens ?? 0) + liveTokens.total;
+  const totalUsd = cost?.totalUsd ?? 0;
 
   const workingCount = agents.filter((a) => a.status === "working").length;
   const idleCount = agents.filter((a) => a.status !== "working").length;
   const inProgressCount = tasks.filter((t) => t.status === "in_progress").length;
   const failedCount = tasks.filter((t) => t.execution_state === "failed").length;
+  const doneCount = tasks.filter((t) => t.status === "done").length;
 
   return (
     <div style={{
@@ -32,7 +67,7 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
       alignItems: "center",
       gap: 16,
       padding: "10px 20px",
-      borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+      borderBottom: "1px solid var(--th-border)",
       background: "var(--th-bg-elevated)",
       fontSize: 11,
       fontFamily: mono,
@@ -50,12 +85,17 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
         </span>
       </div>
 
-      <MetricBadge label="TOKENS" value={cost ? fmtTokens(cost.totalTokens) : "--"} color={cost ? "var(--th-text-primary)" : "var(--th-text-muted)"} />
-      <MetricBadge label="BUDGET" value={cost ? fmtUsd(cost.totalUsd) : "--"} color={cost ? "var(--th-accent)" : "var(--th-text-muted)"} />
+      <MetricBadge label="토큰" value={totalTokens > 0 ? fmtTokens(totalTokens) : "--"} color={totalTokens > 0 ? "var(--th-text-primary)" : "var(--th-text-muted)"} />
+      <MetricBadge label="비용" value={totalUsd > 0 ? fmtUsd(totalUsd) : "--"} color={totalUsd > 0 ? "var(--th-accent)" : "var(--th-text-muted)"} />
       <MetricBadge
-        label="AGENTS"
-        value={`${workingCount} Active / ${idleCount} Idle`}
+        label="에이전트"
+        value={`활성 ${workingCount} / 대기 ${idleCount}`}
         color={workingCount > 0 ? "var(--th-success)" : "var(--th-text-muted)"}
+      />
+      <MetricBadge
+        label="태스크"
+        value={`${doneCount}/${tasks.length}`}
+        color={doneCount > 0 ? "var(--th-success)" : "var(--th-text-muted)"}
       />
 
       <div style={{ flex: 1 }} />
@@ -66,7 +106,7 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
           fontWeight: 800,
           color: "var(--th-danger-text)",
           background: "var(--th-danger-bg)",
-          border: "1px solid #FECACA",
+          border: "1px solid var(--th-danger-border)",
           borderRadius: 8,
           padding: "3px 10px",
           letterSpacing: "0.05em",
@@ -79,8 +119,8 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
           fontSize: 10,
           fontWeight: 800,
           color: "var(--th-success)",
-          background: "#ECFDF5",
-          border: "1px solid #A7F3D0",
+          background: "var(--th-success-bg)",
+          border: "1px solid var(--th-success-border)",
           borderRadius: 8,
           padding: "3px 10px",
           letterSpacing: "0.05em",

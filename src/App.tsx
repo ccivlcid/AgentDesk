@@ -72,9 +72,9 @@ export default function App() {
   // ── Task store ───────────────────────────────────────────────────────────
   const {
     tasks, cliStatus, subtasks, taskPanel,
-    crossDeptDeliveries, clientOfficeCalls, meetingPresence, decisionInboxItems,
+    meetingPresence, decisionInboxItems,
     setTasks, setCliStatus, setSubtasks, setTaskPanel,
-    setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence, setDecisionInboxItems,
+    setMeetingPresence, setDecisionInboxItems,
   } = useTaskStore();
 
   // ── Project store ────────────────────────────────────────────────────────
@@ -204,14 +204,14 @@ export default function App() {
     agentsRef, tasksRef, subAgentsRef, viewRef,
     codexThreadToSubAgentIdRef, codexThreadBindingTsRef, subAgentStreamTailRef,
     setTasks, setAgents,
-    setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence,
+    setMeetingPresence,
     setSubtasks, setSubAgents,
     onTaskDone, onTaskFailed,
   });
 
   // 사용자 액션 핸들러 모음 (태스크 생성/실행/삭제, 채팅 전송, 설정 저장 등)
   const actions = useAppActions({
-    agents, settings, scheduleLiveSync,
+    settings, scheduleLiveSync,
     setSettings, setAgents, setLibraryAgents, setDepartments, setTasks, setStats,
     setDecisionInboxLoading, setDecisionInboxItems,
     setDecisionReplyBusyKey, setCliStatus,
@@ -225,22 +225,7 @@ export default function App() {
     view, settings, theme, runtimeOs, forceUpdateBanner, updateStatus, dismissedUpdateVersion,
   });
 
-  const [clarificationRequest, setClarificationRequest] = useState<{
-    projectId: string;
-    clarificationId: string;
-    question: string;
-  } | null>(null);
-  const [clarificationAnswer, setClarificationAnswer] = useState("");
-  const [clarificationBusy, setClarificationBusy] = useState(false);
   const { kickoffBusy, setKickoffBusy } = useUiStore();
-
-  // clarification_request WS 이벤트 처리
-  useEffect(() => {
-    return on("clarification_request", (payload) => {
-      const p = payload as { projectId: string; clarificationId: string; question: string };
-      setClarificationRequest(p);
-    });
-  }, [on]);
 
   // OAuth 콜백 시 settings 창 자동 열기
   useEffect(() => {
@@ -340,83 +325,6 @@ export default function App() {
           }}
           onClose={() => setShowProjectCreate(false)}
         />
-      )}
-      {/* 에이전트 clarification 요청 — 일반 AppWindow */}
-      {clarificationRequest && (
-        <AppWindow
-          windowType="decision-inbox"
-          title={t({ ko: "에이전트 확인 요청", en: "Agent Clarification", ja: "エージェントの確認", zh: "代理确认" })}
-          emoji={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
-          defaultWidth={480}
-          defaultHeight={320}
-          onClose={() => { setClarificationRequest(null); setClarificationAnswer(""); }}
-        >
-          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 14, fontWeight: 600, color: "var(--th-text-heading)", lineHeight: 1.5 }}>
-              {clarificationRequest.question}
-            </div>
-            <textarea
-              autoFocus
-              value={clarificationAnswer}
-              onChange={(e) => setClarificationAnswer(e.target.value)}
-              placeholder={t({ ko: "답변을 입력하세요...", en: "Enter your answer...", ja: "回答を入力...", zh: "输入您的回答..." })}
-              rows={3}
-              style={{
-                width: "100%", boxSizing: "border-box", flex: 1,
-                fontFamily: "var(--th-font-mono)", fontSize: 12,
-                padding: "10px 12px", borderRadius: 8,
-                border: "1px solid var(--th-border)",
-                background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
-                outline: "none", resize: "none",
-              }}
-            />
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexShrink: 0 }}>
-              <button
-                type="button"
-                onClick={() => { setClarificationRequest(null); setClarificationAnswer(""); }}
-                style={{ fontFamily: "var(--th-font-mono)", fontSize: 12, padding: "7px 16px", borderRadius: 7, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
-              >
-                {t({ ko: "나중에", en: "Later", ja: "後で", zh: "稍后" })}
-              </button>
-              <button
-                type="button"
-                disabled={!clarificationAnswer.trim() || clarificationBusy}
-                onClick={() => {
-                  if (!clarificationAnswer.trim()) return;
-                  const answer = clarificationAnswer.trim();
-                  const req = clarificationRequest;
-                  // Close window immediately — kickoff runs in background
-                  setClarificationRequest(null);
-                  setClarificationAnswer("");
-                  setClarificationBusy(true);
-                  setKickoffBusy(true);
-                  kickoffProject(req.projectId, answer, undefined, req.clarificationId)
-                    .then((result) => {
-                      if (result.status === "ok") {
-                        addToast({ type: "success", title: t({ ko: "태스크가 생성되었습니다", en: "Tasks created", ja: "タスクが作成されました", zh: "任务已创建" }) });
-                      }
-                    })
-                    .catch((err) => {
-                      const detail = isApiRequestError(err)
-                        ? ((err.details as { detail?: string } | null)?.detail ?? null)
-                        : null;
-                      addToast({ type: "error", title: detail ?? t({ ko: "태스크 계획 실패", en: "Planning failed", ja: "計画失敗", zh: "计划失败" }) });
-                    })
-                    .finally(() => { setClarificationBusy(false); setKickoffBusy(false); });
-                }}
-                style={{
-                  fontFamily: "var(--th-font-mono)", fontSize: 12, fontWeight: 700,
-                  padding: "7px 22px", borderRadius: 7, border: "none",
-                  background: clarificationAnswer.trim() ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                  color: clarificationAnswer.trim() ? "var(--th-bg-primary)" : "var(--th-text-muted)",
-                  cursor: clarificationAnswer.trim() ? "pointer" : "not-allowed",
-                }}
-              >
-                {t({ ko: "답변하기", en: "Reply", ja: "回答する", zh: "回复" })}
-              </button>
-            </div>
-          </div>
-        </AppWindow>
       )}
     </Desktop>
     </AppErrorBoundary>

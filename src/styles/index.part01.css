@@ -108,7 +108,15 @@
   --th-danger-border: #f85149;
   --th-danger-text: #f85149;
   --th-success: #22c55e;
+  --th-success-bg: rgba(34, 197, 94, 0.1);
+  --th-success-border: rgba(34, 197, 94, 0.3);
+  --th-warning: #d97706;
+  --th-warning-bg: rgba(217, 119, 6, 0.1);
+  --th-warning-border: rgba(217, 119, 6, 0.3);
   --th-info: #60a5fa;
+  --th-info-bg: rgba(96, 165, 250, 0.1);
+  --th-review: #a78bfa;
+  --th-review-bg: rgba(167, 139, 250, 0.1);
 
   /* ── FM 어트리뷰트 색상 ── */
   --th-attr-elite: #22c55e;
@@ -196,7 +204,15 @@
   --th-danger-border: #FECACA;
   --th-danger-text: #DC2626;
   --th-success: #059669;
+  --th-success-bg: #ECFDF5;
+  --th-success-border: #A7F3D0;
+  --th-warning: #D97706;
+  --th-warning-bg: #FFFBEB;
+  --th-warning-border: #FDE68A;
   --th-info: #3B82F6;
+  --th-info-bg: #F0F7FF;
+  --th-review: #7C3AED;
+  --th-review-bg: #F5F3FF;
   --th-attr-elite: #8B5CF6;
   --th-attr-good:  #059669;
   --th-attr-avg:   #D97706;

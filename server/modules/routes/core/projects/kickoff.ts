@@ -228,10 +228,12 @@ export function registerProjectKickoffRoutes({
       }));
 
       const postMeetingCreateAndRun = async () => {
+        logger.info({ projectId }, "[kickoff] post-meeting pipeline starting — calling LLM for task creation");
         try {
           broadcast("kickoff_stage", { projectId, stage: "planning" });
 
           const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: parts.join("\n\n"), maxTokens: 4096, timeoutMs: 120_000 });
+          logger.info({ projectId, rawLen: rawText.length, rawPreview: rawText.slice(0, 500) }, "[kickoff] LLM response received");
 
           const jsonMatch = rawText.match(/\{[\s\S]*\}/);
           if (!jsonMatch) {
@@ -297,7 +299,19 @@ export function registerProjectKickoffRoutes({
         }
       };
 
-      if (assignedAgents.length > 0) {
+      // Clarification answer → short meeting about the answer, then create tasks
+      if (clarification_answer?.trim() && assignedAgents.length > 0) {
+        const clarificationDirective = `[Clarification] ${clarification_answer.trim()}`;
+        void runAddTasksMeeting(
+          project.name, clarificationDirective, projectId, meetingAgents,
+          db, broadcast, nowMs, () => { void postMeetingCreateAndRun(); },
+        ).catch((err) => {
+          logger.warn({ err, projectId }, "[kickoff] clarification meeting failed — running pipeline directly");
+          void postMeetingCreateAndRun();
+        });
+      } else if (clarification_answer?.trim()) {
+        void postMeetingCreateAndRun();
+      } else if (assignedAgents.length > 0) {
         void runKickoffMeeting(
           project.name, project.core_goal, null, projectId, meetingAgents,
           db, broadcast, nowMs, () => { void postMeetingCreateAndRun(); }, insertNotification,

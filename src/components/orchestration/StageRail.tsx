@@ -5,11 +5,11 @@ interface StageRailProps {
 }
 
 const STAGES = [
-  { id: "meeting", label: "MEETING", icon: meetingIcon },
-  { id: "planning", label: "PLANNING", icon: planningIcon },
-  { id: "assigning", label: "ASSIGN", icon: assigningIcon },
-  { id: "executing", label: "EXECUTE", icon: executingIcon },
-  { id: "review", label: "REVIEW", icon: reviewIcon },
+  { id: "meeting", label: "회의", icon: meetingIcon },
+  { id: "planning", label: "계획", icon: planningIcon },
+  { id: "assigning", label: "배정", icon: assigningIcon },
+  { id: "executing", label: "실행", icon: executingIcon },
+  { id: "review", label: "검토", icon: reviewIcon },
 ] as const;
 
 const STAGE_ORDER = STAGES.map((s) => s.id);
@@ -23,7 +23,7 @@ export default function StageRail({ stage }: StageRailProps) {
       flexDirection: "column",
       width: 72,
       background: "var(--th-bg-elevated)",
-      borderRight: "1px solid rgba(0, 0, 0, 0.05)",
+      borderRight: "1px solid var(--th-border)",
       padding: "16px 0",
       gap: 4,
       flexShrink: 0,
@@ -43,7 +43,7 @@ export default function StageRail({ stage }: StageRailProps) {
           textColor = "var(--th-accent)";
           borderLeftColor = "var(--th-accent)";
         } else if (isDone) {
-          iconBg = "#ECFDF5";
+          iconBg = "var(--th-success-bg)";
           iconColor = "var(--th-success)";
           textColor = "var(--th-success)";
         }

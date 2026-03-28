@@ -1,56 +1,16 @@
+/**
+ * Project path utilities — extracted from former cross-dept coordination module.
+ * Cross-dept cooperation, cross-dept subtasks, and report routing have been removed.
+ * No-op stubs preserved for RuntimeContext compatibility.
+ */
 import type { ResolveProjectPathInput, RuntimeContext } from "../../../types/runtime-context.ts";
-import type { Lang } from "../../../types/lang.ts";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createCrossDeptSubtaskTools } from "./coordination/cross-dept-subtasks.ts";
-import { createCrossDeptCooperationTools } from "./coordination/cross-dept-cooperation.ts";
-import { createReportRoutingTools } from "./coordination/report-routing.ts";
-import type { AgentRow, DelegationOptions } from "../shared/types.ts";
+import type { DelegationOptions } from "../shared/types.ts";
 
- 
 export function initializeCollabCoordination(ctx: RuntimeContext) {
-  const __ctx: RuntimeContext = ctx;
-  const db = __ctx.db;
-  const appendTaskLog = __ctx.appendTaskLog;
-  const broadcast = __ctx.broadcast;
-  const buildTaskExecutionPrompt = __ctx.buildTaskExecutionPrompt;
-  const buildAvailableSkillsPromptBlock =
-    __ctx.buildAvailableSkillsPromptBlock ||
-    ((provider: string) => `[Available Skills][provider=${provider || "unknown"}][unavailable]`);
-  const crossDeptNextCallbacks = __ctx.crossDeptNextCallbacks;
-  const delegatedTaskToSubtask = __ctx.delegatedTaskToSubtask;
-  const ensureTaskExecutionSession = __ctx.ensureTaskExecutionSession;
-  const findBestSubordinate = __ctx.findBestSubordinate;
-  const findTeamLeader = __ctx.findTeamLeader;
-  const getAgentDisplayName = __ctx.getAgentDisplayName;
-  const getDeptName = __ctx.getDeptName;
-  const getDeptRoleConstraint = __ctx.getDeptRoleConstraint;
-  const getProviderModelConfig = __ctx.getProviderModelConfig;
-  const getRecentConversationContext = __ctx.getRecentConversationContext;
-  const handleSubtaskDelegationComplete = __ctx.handleSubtaskDelegationComplete;
-  const handleTaskRunComplete = __ctx.handleTaskRunComplete;
-  const hasExplicitWarningFixRequest = __ctx.hasExplicitWarningFixRequest;
-  const isTaskWorkflowInterrupted = __ctx.isTaskWorkflowInterrupted;
-  const l = __ctx.l;
-  const logsDir = __ctx.logsDir;
-  const notifyClient = __ctx.notifyClient;
-  const nowMs = __ctx.nowMs;
-  const pickL = __ctx.pickL;
-  const randomDelay = __ctx.randomDelay;
-  const recordTaskCreationAudit = __ctx.recordTaskCreationAudit;
-  const resolveLang = __ctx.resolveLang;
-  const sendAgentMessage = __ctx.sendAgentMessage;
-  const spawnCliAgent = __ctx.spawnCliAgent;
-  const startProgressTimer = __ctx.startProgressTimer;
-  const startTaskExecutionForAgent = __ctx.startTaskExecutionForAgent;
-
-  const { linkCrossDeptTaskToParentSubtask, reconcileCrossDeptSubtasks } = createCrossDeptSubtaskTools({
-    db,
-    nowMs,
-    broadcast,
-    delegatedTaskToSubtask,
-  });
+  const db = ctx.db;
 
   function normalizeTextField(value: unknown): string | null {
     if (typeof value !== "string") return null;
@@ -59,11 +19,8 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
   }
 
   /**
-   * Detect project path from Client message.
-   * Recognizes:
-   * 1. Absolute paths: /home/user/Projects/foo, ~/Projects/bar
-   * 2. Project names: "agentdesk 프로젝트", "agentdesk-kanban에서"
-   * 3. Known project directories under ~/Projects
+   * Detect project path from message text.
+   * Recognizes absolute paths, ~ paths, and known project directories.
    */
   function detectProjectPath(message: string): string | null {
     const homeDir = os.homedir();
@@ -87,7 +44,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
       }
     };
 
-    // 1a. Explicit absolute path in message (Unix)
+    // 1a. Explicit absolute path (Unix)
     const absMatch = message.match(/(?:^|\s)(\/[\w./-]+)/);
     if (absMatch) {
       const p = absMatch[1];
@@ -96,10 +53,10 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
       if (isDirectorySafe(parent)) return parent;
     }
 
-    // 1b. Explicit absolute path in message (Windows: C:\path\to\project)
+    // 1b. Explicit absolute path (Windows)
     const winAbsMatch = message.match(/(?:^|\s)([A-Za-z]:[/\\][\w./\\ -]+)/);
     if (winAbsMatch) {
-      const p = winAbsMatch[1].replace(/[\\/]+$/, ""); // trim trailing slashes
+      const p = winAbsMatch[1].replace(/[\\/]+$/, "");
       if (isDirectorySafe(p)) return p;
       const parent = path.dirname(p);
       if (isDirectorySafe(parent)) return parent;
@@ -112,14 +69,11 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
       if (isDirectorySafe(expanded)) return expanded;
     }
 
-    // 3. Scan known project directories and match by name
+    // 3. Scan known project directories
     const knownProjects = [projectsDir, projectsDirLower].flatMap((projectDir) => readProjectNamesSafe(projectDir));
-
-    // Match project names in the message (case-insensitive)
     const msgLower = message.toLowerCase();
     for (const proj of knownProjects) {
       if (msgLower.includes(proj.toLowerCase())) {
-        // Return the actual path
         const fullPath = path.join(projectsDir, proj);
         if (isDirectorySafe(fullPath)) return fullPath;
         const fullPathLower = path.join(projectsDirLower, proj);
@@ -136,26 +90,14 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
    * 2) task.project_path
    * 3) detect from description/title
    * 4) latest known project path from DB
-   * 5) process.cwd() (unless it's a packaged app dir)
-   *
-   * When called with a plain string, it is treated as `project_id`.
+   * 5) process.cwd()
    */
   function resolveProjectPath(taskOrId: ResolveProjectPathInput): string {
-    const task =
-      typeof taskOrId === "string"
-        ? { project_id: taskOrId }
-        : taskOrId;
+    const task = typeof taskOrId === "string" ? { project_id: taskOrId } : taskOrId;
     const projectId = String(task.project_id ?? "").trim();
     if (projectId) {
       const row = db
-        .prepare(
-          `
-      SELECT project_path
-      FROM projects
-      WHERE id = ?
-      LIMIT 1
-    `,
-        )
+        .prepare(`SELECT project_path FROM projects WHERE id = ? LIMIT 1`)
         .get(projectId) as { project_path: string | null } | undefined;
       const canonical = String(row?.project_path ?? "").trim();
       if (canonical) {
@@ -173,7 +115,6 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
     const detected = detectProjectPath(task.description || "") || detectProjectPath(task.title || "");
     if (detected) return detected;
 
-    // Try latest known project path from previous tasks
     const latestKnown = getLatestKnownProjectPath();
     if (latestKnown) return latestKnown;
 
@@ -182,22 +123,14 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
 
   function getLatestKnownProjectPath(): string | null {
     const row = db
-      .prepare(
-        `
-    SELECT project_path
-    FROM tasks
-    WHERE project_path IS NOT NULL AND TRIM(project_path) != ''
-    ORDER BY updated_at DESC
-    LIMIT 1
-  `,
-      )
+      .prepare(`SELECT project_path FROM tasks WHERE project_path IS NOT NULL AND TRIM(project_path) != '' ORDER BY updated_at DESC LIMIT 1`)
       .get() as { project_path: string | null } | undefined;
     const candidate = normalizeTextField(row?.project_path ?? null);
     if (!candidate) return null;
     try {
       if (fs.statSync(candidate).isDirectory()) return candidate;
     } catch {
-      // Ignore stale paths from historical task rows.
+      /* stale path */
     }
     return null;
   }
@@ -209,7 +142,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
       try {
         if (fs.statSync(candidate).isDirectory()) return candidate;
       } catch {
-        // Ignore inaccessible or non-existent directories.
+        /* skip */
       }
     }
     return process.cwd();
@@ -222,14 +155,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
     const explicitProjectId = normalizeTextField((options as { projectId?: unknown }).projectId);
     if (explicitProjectId) {
       const projectById = db
-        .prepare(
-          `
-      SELECT project_path
-      FROM projects
-      WHERE id = ?
-      LIMIT 1
-    `,
-        )
+        .prepare(`SELECT project_path FROM projects WHERE id = ? LIMIT 1`)
         .get(explicitProjectId) as { project_path: string | null } | undefined;
       const byIdPath = normalizeTextField(projectById?.project_path);
       if (byIdPath) {
@@ -250,9 +176,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
       if (detectedFromContext) return { projectPath: detectedFromContext, source: "project_context" };
 
       const newProjectHint =
-        /신규\s*프로젝트|새\s*프로젝트|new project|greenfield|from scratch|新規.*プロジェクト|新项目/i.test(
-          contextHint,
-        );
+        /신규\s*프로젝트|새\s*프로젝트|new project|greenfield|from scratch|新規.*プロジェクト|新项目/i.test(contextHint);
       if (newProjectHint) {
         return { projectPath: getDefaultProjectRoot(), source: "new_project_default" };
       }
@@ -264,60 +188,15 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
     return { projectPath: null, source: "none" };
   }
 
-  const { recoverCrossDeptQueueAfterMissingCallback, startCrossDeptCooperation } = createCrossDeptCooperationTools({
-    db,
-    nowMs,
-    appendTaskLog,
-    broadcast,
-    recordTaskCreationAudit,
-    delegatedTaskToSubtask,
-    crossDeptNextCallbacks,
-    findTeamLeader,
-    findBestSubordinate,
-    resolveLang,
-    getDeptName,
-    getAgentDisplayName,
-    sendAgentMessage,
-    notifyClient,
-    l,
-    pickL,
-    startTaskExecutionForAgent,
-    linkCrossDeptTaskToParentSubtask,
-    detectProjectPath,
-    resolveProjectPath,
-    logsDir,
-    getDeptRoleConstraint,
-    getRecentConversationContext,
-    buildAvailableSkillsPromptBlock,
-    buildTaskExecutionPrompt,
-    hasExplicitWarningFixRequest,
-    ensureTaskExecutionSession,
-    getProviderModelConfig,
-    spawnCliAgent,
-    handleSubtaskDelegationComplete,
-    handleTaskRunComplete,
-    startProgressTimer,
-  });
+  // ── No-op stubs (cross-dept & report routing removed) ────────────────
 
-  const { stripReportRequestPrefix, detectReportOutputFormat, pickPlanningReportAssignee, handleReportRequest } =
-    createReportRoutingTools({
-      db,
-      nowMs,
-      randomDelay,
-      resolveLang,
-      detectProjectPath,
-      normalizeTextField,
-      recordTaskCreationAudit,
-      appendTaskLog,
-      getAgentDisplayName,
-      sendAgentMessage,
-      notifyClient,
-      l,
-      pickL,
-      broadcast,
-      isTaskWorkflowInterrupted,
-      startTaskExecutionForAgent,
-    });
+  const reconcileCrossDeptSubtasks = () => { /* removed */ };
+  const recoverCrossDeptQueueAfterMissingCallback = () => { /* removed */ };
+  const startCrossDeptCooperation = () => { /* removed */ };
+  const stripReportRequestPrefix = (s: string) => s;
+  const detectReportOutputFormat = () => null;
+  const pickPlanningReportAssignee = () => null;
+  const handleReportRequest = () => { /* removed */ };
 
   return {
     reconcileCrossDeptSubtasks,

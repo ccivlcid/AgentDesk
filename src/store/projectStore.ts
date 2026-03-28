@@ -10,6 +10,12 @@ function readProjectIdFromStorage(): string | null {
   try { return window.localStorage.getItem(LS_KEY) ?? null; } catch { return null; }
 }
 
+export interface PendingClarification {
+  projectId: string;
+  clarificationId: string;
+  question: string;
+}
+
 interface ProjectStore {
   categories: Category[];
   projects: Project[];
@@ -19,6 +25,8 @@ interface ProjectStore {
   showProjectCreate: boolean;
   projectCreateBusy: boolean;
   editDirectiveProjectId: string | null;
+  pendingClarification: PendingClarification | null;
+  clarificationBusy: boolean;
 
   setCategories: (a: SA<Category[]>) => void;
   setProjects: (a: SA<Project[]>) => void;
@@ -28,6 +36,8 @@ interface ProjectStore {
   setShowProjectCreate: (a: SA<boolean>) => void;
   setProjectCreateBusy: (a: SA<boolean>) => void;
   setEditDirectiveProjectId: (id: string | null) => void;
+  setPendingClarification: (v: PendingClarification | null) => void;
+  setClarificationBusy: (v: boolean) => void;
 }
 
 export const useProjectStore = create<ProjectStore>()((set) => ({
@@ -39,6 +49,8 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   showProjectCreate: false,
   projectCreateBusy: false,
   editDirectiveProjectId: null,
+  pendingClarification: null,
+  clarificationBusy: false,
 
   setCategories: (a) => set((s) => ({ categories: apply(s.categories, a) })),
   setProjects: (a) => set((s) => ({ projects: apply(s.projects, a) })),
@@ -51,4 +63,6 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   setShowProjectCreate: (a) => set((s) => ({ showProjectCreate: apply(s.showProjectCreate, a) })),
   setProjectCreateBusy: (a) => set((s) => ({ projectCreateBusy: apply(s.projectCreateBusy, a) })),
   setEditDirectiveProjectId: (id) => set({ editDirectiveProjectId: id }),
+  setPendingClarification: (v) => set({ pendingClarification: v }),
+  setClarificationBusy: (v) => set({ clarificationBusy: v }),
 }));

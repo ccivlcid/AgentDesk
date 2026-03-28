@@ -1,22 +1,19 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { useUiStore } from "../store/uiStore";
+import { useProjectStore } from "../store/projectStore";
 import * as api from "../api";
 import type {
   Agent,
-  CrossDeptDelivery,
   MeetingPresence,
   MeetingReviewDecision,
   SubAgent,
   SubTask,
   Task,
-  ClientOfficeCall,
   WSEventType,
 } from "../types";
 import {
   CODEX_THREAD_BINDING_TTL_MS,
-  MAX_CLIENT_OFFICE_CALLS,
   MAX_CODEX_THREAD_BINDINGS,
-  MAX_CROSS_DEPT_DELIVERIES,
   MAX_LIVE_SUBAGENTS,
   MAX_LIVE_SUBTASKS,
   MAX_SUBAGENT_STREAM_TAIL_CHARS,
@@ -46,8 +43,6 @@ interface UseRealtimeSyncParams {
   subAgentStreamTailRef: MutableRefObject<Map<string, string>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
-  setCrossDeptDeliveries: Dispatch<SetStateAction<CrossDeptDelivery[]>>;
-  setClientOfficeCalls: Dispatch<SetStateAction<ClientOfficeCall[]>>;
   setMeetingPresence: Dispatch<SetStateAction<MeetingPresence[]>>;
   setSubtasks: Dispatch<SetStateAction<SubTask[]>>;
   setSubAgents: Dispatch<SetStateAction<SubAgent[]>>;
@@ -70,8 +65,6 @@ export function useRealtimeSync({
   subAgentStreamTailRef,
   setTasks,
   setAgents,
-  setCrossDeptDeliveries,
-  setClientOfficeCalls,
   setMeetingPresence,
   setSubtasks,
   setSubAgents,
@@ -158,20 +151,7 @@ export function useRealtimeSync({
       on("departments_changed", () => {
         scheduleLiveSync(60);
       }),
-      on("cross_dept_delivery", (payload: unknown) => {
-        const p = payload as { from_agent_id: string; to_agent_id: string };
-        setCrossDeptDeliveries((prev) =>
-          appendCapped(
-            prev,
-            {
-              id: `cd-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              fromAgentId: p.from_agent_id,
-              toAgentId: p.to_agent_id,
-            },
-            MAX_CROSS_DEPT_DELIVERIES,
-          ),
-        );
-      }),
+      // cross_dept_delivery removed
       on("client_office_call", (payload: unknown) => {
         const p = payload as {
           from_agent_id: string;
@@ -211,24 +191,7 @@ export function useRealtimeSync({
         } else if (action === "dismiss") {
           setMeetingPresence((prev) => prev.filter((row) => row.agent_id !== p.from_agent_id));
         }
-        setClientOfficeCalls((prev) =>
-          appendCapped(
-            prev,
-            {
-              id: `client-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              fromAgentId: p.from_agent_id,
-              seatIndex: p.seat_index ?? 0,
-              phase: p.phase ?? "kickoff",
-              action,
-              line: p.line,
-              decision: p.decision,
-              taskId: p.task_id,
-              holdUntil: p.hold_until,
-              instant: action === "arrive",
-            },
-            MAX_CLIENT_OFFICE_CALLS,
-          ),
-        );
+        // clientOfficeCalls removed
       }),
       on("subtask_update", (payload: unknown) => {
         const st = payload as SubTask;
@@ -440,6 +403,16 @@ export function useRealtimeSync({
       on("close_cli", (payload: unknown) => {
         const p = payload as { agent_id?: string };
         if (p.agent_id) closeCliWindow(p.agent_id);
+      }),
+      on("clarification_request", (payload: unknown) => {
+        const p = payload as { projectId?: string; clarificationId?: string; question?: string };
+        if (p.projectId && p.clarificationId && p.question) {
+          useProjectStore.getState().setPendingClarification({
+            projectId: p.projectId,
+            clarificationId: p.clarificationId,
+            question: p.question,
+          });
+        }
       }),
       on("kickoff_stage", (payload: unknown) => {
         const p = payload as { stage?: string };

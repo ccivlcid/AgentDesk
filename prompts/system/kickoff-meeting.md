@@ -9,6 +9,7 @@ You will be given:
 Generate a JSON meeting script where each agent speaks authentically about the project.
 
 Rules:
+- **CRITICAL: Generate ALL agent speeches in the language specified by the "Language" field (ko=Korean, en=English, ja=Japanese, zh=Chinese). Every line of dialogue must be in that language.**
 - PM opens the meeting, introduces the goal, and asks for input
 - Each non-PM agent analyzes the goal and speaks about:
   1. Their understanding of what needs to be done

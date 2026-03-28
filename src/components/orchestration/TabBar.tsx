@@ -35,7 +35,7 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
         display: "flex",
         flexWrap: "wrap" as const,
         gap: 8,
-        borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+        borderBottom: "1px solid var(--th-border)",
         background: "var(--th-bg-elevated)",
         padding: "12px 16px 8px",
         fontFamily: mono,
@@ -61,15 +61,16 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
               background: isActive ? "var(--th-bg-primary)" : "transparent",
               color: isActive ? "var(--th-text-primary)" : "var(--th-text-secondary)",
               border: "1px solid",
-              borderColor: isActive ? "rgba(0, 0, 0, 0.05)" : "transparent",
+              borderColor: isActive ? "var(--th-border)" : "transparent",
               cursor: "pointer",
               transition: "all 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
               borderRadius: 12,
               outline: "none",
+              boxShadow: isActive ? "var(--th-shadow-sm)" : "none",
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
-                e.currentTarget.style.color = "#374151";
+                e.currentTarget.style.color = "var(--th-text-primary)";
                 e.currentTarget.style.background = "var(--th-bg-surface)";
               }
             }}

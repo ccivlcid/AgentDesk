@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
-import type { Task, Agent, Project } from "../../../types";
+import { useState, useEffect, useRef, useCallback } from "react";
+import type { Task, Agent, Project, TaskExecutionEvent } from "../../../types";
 import { getTaskProgress } from "../task-progress";
-import { getProjectTeamBoard, type TeamBoardEntry } from "../../../api/organization-projects";
+import { getProjectTeamBoard, getTaskExecutionEvents, updateProject, type TeamBoardEntry } from "../../../api/organization-projects";
+import { kickoffProject } from "../../../api/project-kickoff";
 import { useUiStore } from "../../../store/uiStore";
+import { useProjectStore } from "../../../store/projectStore";
 
 const mono = "var(--th-font-mono)";
 
@@ -13,12 +15,40 @@ interface RoomTabProps {
   projectId?: string;
 }
 
+type PmEventWithTask = TaskExecutionEvent & { _taskId: string };
+
+// Unified chat item for chronological feed
+interface ChatItem {
+  id: string;
+  type: "board" | "pm_event" | "task_status" | "user_directive" | "clarification";
+  sender: string;
+  senderRole: "pm" | "agent" | "system" | "user";
+  content: string;
+  subject?: string;
+  timestamp: number;
+  taskTitle?: string;
+  eventType?: string;
+}
+
 export default function RoomTab({ tasks, agents, project, projectId }: RoomTabProps) {
   const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned"].includes(t.status));
   const doneTasks = tasks.filter((t) => t.status === "done");
 
   const meetingMinutesSeq = useUiStore((s) => s.meetingMinutesSeq);
   const [boardEntries, setBoardEntries] = useState<TeamBoardEntry[]>([]);
+  const [pmEvents, setPmEvents] = useState<PmEventWithTask[]>([]);
+
+  const pendingClarification = useProjectStore((s) => s.pendingClarification);
+  const clarificationBusy = useProjectStore((s) => s.clarificationBusy);
+  const [answerText, setAnswerText] = useState("");
+  const [directiveText, setDirectiveText] = useState("");
+  const [directiveBusy, setDirectiveBusy] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);
+
+  const showClarification = pendingClarification && pendingClarification.projectId === projectId;
+  const taskReviewSignal = tasks.filter((t) => t.status === "done" || t.status === "review").length;
+
+  const pmAgent = agents.find((a) => a.role === "team_leader");
 
   useEffect(() => {
     if (!projectId) { setBoardEntries([]); return; }
@@ -27,121 +57,261 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
       .catch(() => setBoardEntries([]));
   }, [projectId, meetingMinutesSeq]);
 
+  useEffect(() => {
+    if (tasks.length === 0) { setPmEvents([]); return; }
+    const fetchPmEvents = async () => {
+      const allEvents: PmEventWithTask[] = [];
+      for (const task of tasks) {
+        try {
+          const res = await getTaskExecutionEvents(task.id, 20);
+          const pm = res.events.filter((e) =>
+            e.event_type === "pm_approved" || e.event_type === "pm_revision_requested"
+            || e.event_type === "pm_escalated" || e.event_type === "pm_retry"
+            || e.event_type === "pm_reassigned" || e.event_type === "pm_parse_failed"
+          ).map((e) => ({ ...e, _taskId: task.id }));
+          allEvents.push(...pm);
+        } catch { /* non-critical */ }
+      }
+      allEvents.sort((a, b) => a.created_at - b.created_at);
+      setPmEvents(allEvents);
+    };
+    void fetchPmEvents();
+  }, [tasks.length, taskReviewSignal]);
+
+  useEffect(() => {
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+  }, [boardEntries.length, pmEvents.length, showClarification]);
+
+  const handleSubmitClarification = useCallback(() => {
+    if (!pendingClarification || !answerText.trim() || clarificationBusy) return;
+    const { projectId: pId, clarificationId: cId } = pendingClarification;
+    useProjectStore.getState().setClarificationBusy(true);
+    useUiStore.getState().setKickoffBusy(true);
+    kickoffProject(pId, answerText.trim(), undefined, cId)
+      .then(() => { useProjectStore.getState().setPendingClarification(null); setAnswerText(""); })
+      .catch(() => {})
+      .finally(() => { useProjectStore.getState().setClarificationBusy(false); useUiStore.getState().setKickoffBusy(false); });
+  }, [pendingClarification, answerText, clarificationBusy]);
+
+  const handleSendDirective = useCallback(async () => {
+    if (!projectId || !directiveText.trim() || directiveBusy) return;
+    setDirectiveBusy(true);
+    try {
+      await updateProject(projectId, { directive: directiveText.trim() });
+      setBoardEntries((prev) => [...prev, {
+        timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        sender: "USER",
+        target: "PM",
+        subject: "지시 사항",
+        body: directiveText.trim(),
+      }]);
+      setDirectiveText("");
+    } catch { /* best effort */ }
+    setDirectiveBusy(false);
+  }, [projectId, directiveText, directiveBusy]);
+
+  // Build unified chronological chat feed
+  const chatItems: ChatItem[] = [];
+
+  for (let i = 0; i < boardEntries.length; i++) {
+    const e = boardEntries[i];
+    const isUser = e.sender.toUpperCase() === "USER";
+    const isPM = !isUser && (e.sender.toLowerCase().includes("pm") || agents.some((a) => a.role === "team_leader" && a.name.toLowerCase() === e.sender.toLowerCase()));
+    chatItems.push({
+      id: `board-${i}`,
+      type: "board",
+      sender: e.sender,
+      senderRole: isUser ? "user" : isPM ? "pm" : "agent",
+      content: e.body,
+      subject: e.subject,
+      timestamp: new Date(e.timestamp.replace(" ", "T")).getTime() || Date.now() - (boardEntries.length - i) * 60000,
+    });
+  }
+
+  for (const evt of pmEvents) {
+    const task = tasks.find((t) => t.id === evt._taskId);
+    chatItems.push({
+      id: `pm-${evt.id}`,
+      type: "pm_event",
+      sender: pmAgent?.name ?? "PM",
+      senderRole: "pm",
+      content: evt.summary ?? evt.event_type,
+      taskTitle: task?.title,
+      eventType: evt.event_type,
+      timestamp: evt.created_at,
+    });
+  }
+
+  chatItems.sort((a, b) => a.timestamp - b.timestamp);
+
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden", gap: 16 }}>
-      {/* Left: Communication Feed */}
+      {/* Left: Chat Feed */}
       <div style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        background: "var(--th-bg-elevated)",
+        background: "var(--th-bg-primary)",
         border: "1px solid var(--th-border)",
         borderRadius: 16,
         overflow: "hidden",
       }}>
+        {/* Chat header */}
         <div style={{
-          padding: "12px 20px",
+          padding: "10px 20px",
           borderBottom: "1px solid var(--th-border)",
           fontFamily: mono,
           fontSize: 11,
           display: "flex",
           alignItems: "center",
           gap: 10,
-          background: "var(--th-bg-surface)",
+          background: "var(--th-bg-elevated)",
         }}>
           <div style={{ padding: 4, background: "var(--th-accent-glow)", borderRadius: 8, color: "var(--th-accent)", display: "flex", alignItems: "center" }}>
             <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <span style={{ color: "#374151", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Team Room</span>
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: "var(--th-success)",
-          }} />
+          <span style={{ color: "var(--th-text-primary)", fontWeight: 800, fontSize: 12 }}>
+            {project?.name ?? "Team Room"}
+          </span>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--th-success)" }} />
           <div style={{ flex: 1 }} />
           <span style={{ color: "var(--th-text-muted)", fontSize: 10, fontWeight: 600 }}>
-            PEERS: {String(agents.length).padStart(2, "0")}
+            {agents.length}명 참여
           </span>
         </div>
 
-        {/* Feed content */}
-        <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
-          {/* Team board entries from file */}
-          {boardEntries.length > 0 && boardEntries.map((entry, i) => (
-            <CommMessage key={`board-${i}`} entry={entry} agents={agents} />
-          ))}
-
-          {/* Active tasks as live status (fallback when no board entries) */}
-          {boardEntries.length === 0 && activeTasks.length === 0 && (
+        {/* Chat messages */}
+        <div ref={feedRef} className="custom-scrollbar" style={{
+          flex: 1, overflow: "auto", padding: "16px 20px",
+          display: "flex", flexDirection: "column", gap: 12,
+        }}>
+          {chatItems.length === 0 && !showClarification && (
             <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-muted)", textAlign: "center", paddingTop: 40 }}>
-              No active orchestration. Start a kickoff to see team communication.
+              킥오프를 시작하면 팀 대화가 여기에 표시됩니다.
             </div>
           )}
-          {boardEntries.length === 0 && activeTasks.map((task) => {
+
+          {chatItems.map((item) => (
+            <ChatBubble key={item.id} item={item} agents={agents} />
+          ))}
+
+          {/* Active tasks as status messages */}
+          {chatItems.length === 0 && activeTasks.map((task) => {
             const agent = agents.find((a) => a.id === task.assigned_agent_id);
             return (
-              <div key={task.id} style={{ marginBottom: 14 }}>
-                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 6, fontWeight: 600 }}>
-                  <span style={{ color: "var(--th-accent)", fontWeight: 800 }}>
-                    {agent?.name.toUpperCase().replace(/\s+/g, "_") ?? "SYSTEM"}
-                  </span>
-                  {" "}@{task.status === "review" ? "Peer-Review" : "Status"}
-                </div>
-                <div style={{
-                  fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
-                  background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-                  borderRadius: 14,
-                  padding: "12px 16px",
-                }}>
-                  {task.title}
-                  {task.status === "in_progress" && (
-                    <div style={{ height: 4, background: "var(--th-border)", width: "100%", marginTop: 10, borderRadius: 2 }}>
-                      <div style={{ height: 4, background: "var(--th-accent)", width: `${getTaskProgress(task)}%`, borderRadius: 2 }} />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ChatBubble key={`task-${task.id}`} item={{
+                id: `task-${task.id}`,
+                type: "task_status",
+                sender: agent?.name ?? "System",
+                senderRole: "agent",
+                content: `${task.title}${task.status === "in_progress" ? ` (${getTaskProgress(task)}%)` : ""}`,
+                subject: task.status === "review" ? "검토 중" : "진행 중",
+                timestamp: Date.now(),
+              }} agents={agents} />
             );
           })}
+
+          {/* Clarification */}
+          {showClarification && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <ChatBubble item={{
+                id: "clarification",
+                type: "clarification",
+                sender: pmAgent?.name ?? "PM",
+                senderRole: "pm",
+                content: pendingClarification.question,
+                subject: "확인 필요",
+                timestamp: Date.now(),
+              }} agents={agents} />
+              <div style={{ display: "flex", gap: 8, alignItems: "center", paddingLeft: 44 }}>
+                <input
+                  type="text"
+                  value={answerText}
+                  onChange={(e) => setAnswerText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && answerText.trim() && !clarificationBusy) handleSubmitClarification(); }}
+                  placeholder="답변을 입력하세요..."
+                  disabled={clarificationBusy}
+                  style={{
+                    flex: 1, fontFamily: mono, fontSize: 11,
+                    padding: "8px 14px", borderRadius: 18,
+                    border: "1px solid var(--th-border)",
+                    background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={!answerText.trim() || clarificationBusy}
+                  onClick={handleSubmitClarification}
+                  style={{
+                    padding: "7px 16px", borderRadius: 18, border: "none",
+                    fontFamily: mono, fontSize: 10, fontWeight: 700,
+                    background: answerText.trim() && !clarificationBusy ? "var(--th-accent)" : "var(--th-bg-surface)",
+                    color: answerText.trim() && !clarificationBusy ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                    cursor: answerText.trim() && !clarificationBusy ? "pointer" : "not-allowed",
+                  }}
+                >
+                  {clarificationBusy ? "전송 중..." : "전송"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Command input */}
+        {/* Input bar */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
           padding: "10px 16px",
           borderTop: "1px solid var(--th-border)",
-          background: "var(--th-bg-surface)",
+          background: "var(--th-bg-elevated)",
         }}>
-          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-accent)", fontWeight: 700 }}>{">"}_</span>
           <input
             type="text"
-            placeholder="Enter command or message..."
+            value={directiveText}
+            onChange={(e) => setDirectiveText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && directiveText.trim() && !directiveBusy) void handleSendDirective(); }}
+            placeholder="PM에게 지시하기... (우선순위, 방향, 피드백)"
+            disabled={directiveBusy || !projectId}
             style={{
-              flex: 1, background: "transparent", border: "none", outline: "none",
-              fontFamily: mono, fontSize: 11, color: "var(--th-text-primary)",
+              flex: 1,
+              padding: "9px 16px",
+              borderRadius: 20,
+              border: "1px solid var(--th-border)",
+              background: "var(--th-bg-surface)",
+              outline: "none",
+              fontFamily: mono,
+              fontSize: 11,
+              color: "var(--th-text-primary)",
             }}
           />
-          <span style={{
-            fontFamily: mono, fontSize: 9, fontWeight: 600, color: "var(--th-text-muted)",
-            border: "1px solid var(--th-border)", padding: "3px 8px", borderRadius: 6,
-          }}>
-            ESC
-          </span>
-          <span style={{
-            fontFamily: mono, fontSize: 9, fontWeight: 700, color: "var(--th-bg-elevated)",
-            background: "var(--th-accent)", padding: "3px 8px", borderRadius: 6,
-          }}>
-            ENTER
-          </span>
+          <button
+            type="button"
+            disabled={!directiveText.trim() || directiveBusy}
+            onClick={() => void handleSendDirective()}
+            style={{
+              width: 34, height: 34, borderRadius: "50%",
+              border: "none",
+              background: directiveText.trim() && !directiveBusy ? "var(--th-accent)" : "var(--th-bg-surface)",
+              color: directiveText.trim() && !directiveBusy ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+              cursor: directiveText.trim() && !directiveBusy ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Right: Reasoning Tree */}
-      <div style={{
-        width: 300,
+      {/* Right: Project Status */}
+      <div className="custom-scrollbar" style={{
+        width: 280,
         display: "flex",
         flexDirection: "column",
         overflow: "auto",
@@ -160,55 +330,45 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
           gap: 8,
           background: "var(--th-bg-surface)",
         }}>
-          <div style={{ padding: 4, background: "#FEF3C7", borderRadius: 8, color: "#D97706", display: "flex", alignItems: "center" }}>
-            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-          </div>
-          <span style={{ color: "#374151", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
-            Logic View
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth={2.5}>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          <span style={{ color: "var(--th-text-primary)", fontWeight: 800 }}>
+            프로젝트 현황
           </span>
         </div>
 
-        <div style={{ padding: 20 }}>
-          {/* Mission objective */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-              Mission Objective
-            </div>
+        <div style={{ padding: 16 }}>
+          {/* Project info */}
+          <div style={{ marginBottom: 16 }}>
             <div style={{
               background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-              borderRadius: 14,
-              padding: "12px 16px",
+              borderRadius: 14, padding: "12px 16px",
             }}>
-              <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 800, color: "var(--th-text-primary)" }}>
-                {project?.name?.toUpperCase().replace(/\s+/g, "_") ?? "NO_PROJECT"}
+              <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 800, color: "var(--th-text-primary)" }}>
+                {project?.name ?? "프로젝트 없음"}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
                 <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 600 }}>
-                  STATUS: {activeTasks.length > 0 ? "ACTIVE" : "IDLE"}
+                  {activeTasks.length > 0 ? "진행 중" : "대기"}
                 </span>
                 <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-accent)", fontWeight: 700 }}>
                   {tasks.length > 0 ? `${Math.round((doneTasks.length / tasks.length) * 100)}%` : "0%"}
                 </span>
               </div>
+              {tasks.length > 0 && (
+                <div style={{ height: 4, background: "var(--th-border)", width: "100%", marginTop: 6, borderRadius: 2 }}>
+                  <div style={{ height: 4, background: "var(--th-accent)", width: `${Math.round((doneTasks.length / tasks.length) * 100)}%`, borderRadius: 2, transition: "width 0.3s" }} />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Step progress tree */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-              Tasks
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {tasks.slice(0, 8).map((task) => (
-                <StepTreeNode key={task.id} task={task} agents={agents} />
-              ))}
-            </div>
-          </div>
+          {/* Task tree */}
+          <CollapsibleTaskTree tasks={tasks} agents={agents} />
 
-          {/* Active Dependencies */}
+          {/* Dependencies */}
           <ActiveDependencies tasks={tasks} />
         </div>
       </div>
@@ -216,74 +376,182 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   );
 }
 
-/* -- Communication Message with type-based styling -- */
+/* -- Chat Bubble (KakaoTalk style) -- */
 
-function detectMessageType(entry: TeamBoardEntry): "system" | "success" | "blocker" | "instruction" | "status" | "review" {
-  const sub = entry.subject.toLowerCase();
-  const body = entry.body.toLowerCase();
-  if (sub.includes("blocker") || body.includes("blocker") || body.includes("conflict")) return "blocker";
-  if (sub.includes("success") || sub.includes("approve") || sub.includes("completed")) return "success";
-  if (entry.sender.toLowerCase().includes("pm") || sub.includes("instruction") || sub.includes("assigned")) return "instruction";
-  if (sub.includes("review") || body.includes("review")) return "review";
-  if (sub.includes("system") || entry.sender === "SYSTEM") return "system";
-  return "status";
-}
-
-const MESSAGE_STYLES: Record<string, { labelColor: string; borderColor: string; bgTint: string; label: string | null }> = {
-  system: { labelColor: "var(--th-accent)", borderColor: "var(--th-accent-border)", bgTint: "var(--th-accent-glow)", label: "SYSTEM" },
-  success: { labelColor: "var(--th-success)", borderColor: "#A7F3D0", bgTint: "#ECFDF5", label: "SUCCESS" },
-  blocker: { labelColor: "var(--th-danger-text)", borderColor: "var(--th-danger-border)", bgTint: "var(--th-danger-bg)", label: "BLOCKER" },
-  instruction: { labelColor: "#D97706", borderColor: "var(--th-border)", bgTint: "var(--th-bg-elevated)", label: null },
-  status: { labelColor: "var(--th-accent)", borderColor: "var(--th-border)", bgTint: "var(--th-bg-elevated)", label: null },
-  review: { labelColor: "#7C3AED", borderColor: "#DDD6FE", bgTint: "#F5F3FF", label: null },
+const PM_EVENT_COLORS: Record<string, { bg: string; text: string }> = {
+  pm_approved: { bg: "var(--th-success-bg)", text: "var(--th-success)" },
+  pm_revision_requested: { bg: "var(--th-warning-bg)", text: "var(--th-warning)" },
+  pm_escalated: { bg: "var(--th-danger-bg)", text: "var(--th-danger-text)" },
+  pm_retry: { bg: "var(--th-warning-bg)", text: "var(--th-warning)" },
+  pm_reassigned: { bg: "var(--th-accent-glow)", text: "var(--th-accent)" },
+  pm_parse_failed: { bg: "var(--th-danger-bg)", text: "var(--th-danger-text)" },
 };
 
-function CommMessage({ entry, agents }: { entry: TeamBoardEntry; agents: Agent[] }) {
-  const msgType = detectMessageType(entry);
-  const style = MESSAGE_STYLES[msgType];
-  const isPM = agents.some((a) => a.role === "team_leader" && a.name.toLowerCase() === entry.sender.toLowerCase());
+const PM_EVENT_LABELS: Record<string, string> = {
+  pm_approved: "승인",
+  pm_revision_requested: "수정 요청",
+  pm_escalated: "에스컬레이션",
+  pm_retry: "재시도",
+  pm_reassigned: "재배정",
+  pm_parse_failed: "파싱 실패",
+};
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getAvatarColor(role: string): string {
+  if (role === "pm") return "var(--th-accent)";
+  if (role === "user") return "var(--th-success)";
+  return "var(--th-review)";
+}
+
+function ChatBubble({ item, agents }: { item: ChatItem; agents: Agent[] }) {
+  const isUser = item.senderRole === "user";
+  const isPM = item.senderRole === "pm";
+  const ts = new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const pmEventColor = item.eventType ? PM_EVENT_COLORS[item.eventType] : null;
+  const pmEventLabel = item.eventType ? PM_EVENT_LABELS[item.eventType] : null;
+
+  // User messages: right aligned, accent color
+  if (isUser) {
+    return (
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, alignItems: "flex-end" }}>
+        <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0, marginBottom: 2 }}>{ts}</span>
+        <div style={{
+          maxWidth: "70%",
+          background: "var(--th-accent)",
+          color: "var(--th-accent-text)",
+          borderRadius: "16px 16px 4px 16px",
+          padding: "10px 14px",
+          fontFamily: mono,
+          fontSize: 12,
+          lineHeight: 1.5,
+          wordBreak: "break-word",
+        }}>
+          {item.subject && (
+            <div style={{ fontSize: 10, fontWeight: 700, marginBottom: 4, opacity: 0.8 }}>{item.subject}</div>
+          )}
+          {item.content}
+        </div>
+      </div>
+    );
+  }
+
+  // Agent/PM/System messages: left aligned with avatar
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+      {/* Avatar */}
+      <div style={{
+        width: 32, height: 32, borderRadius: 10,
+        background: getAvatarColor(item.senderRole),
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+        fontSize: 11, fontWeight: 800, color: "var(--th-bg-primary)",
+        fontFamily: mono,
+      }}>
+        {getInitials(item.sender)}
+      </div>
+
+      <div style={{ maxWidth: "75%", minWidth: 0 }}>
+        {/* Name + time */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+          <span style={{
+            fontFamily: mono, fontSize: 10, fontWeight: 700,
+            color: isPM ? "var(--th-accent)" : "var(--th-text-primary)",
+          }}>
+            {item.sender}
+          </span>
+          {isPM && (
+            <span style={{ fontFamily: mono, fontSize: 8, fontWeight: 800, color: "var(--th-accent)", background: "var(--th-accent-glow)", padding: "1px 5px", borderRadius: 4 }}>PM</span>
+          )}
+          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>{ts}</span>
+        </div>
+
+        {/* Bubble */}
+        <div style={{
+          background: pmEventColor ? pmEventColor.bg : "var(--th-bg-elevated)",
+          border: `1px solid ${pmEventColor ? pmEventColor.text + "20" : "var(--th-border)"}`,
+          borderRadius: "4px 16px 16px 16px",
+          padding: "10px 14px",
+          fontFamily: mono,
+          fontSize: 12,
+          lineHeight: 1.5,
+          color: "var(--th-text-primary)",
+          wordBreak: "break-word",
+        }}>
+          {/* PM event badge */}
+          {pmEventLabel && (
+            <div style={{
+              display: "inline-block",
+              fontSize: 9, fontWeight: 800,
+              color: pmEventColor?.text ?? "var(--th-text-muted)",
+              background: pmEventColor?.text ? pmEventColor.text + "15" : "transparent",
+              padding: "2px 8px", borderRadius: 6,
+              marginBottom: 6,
+            }}>
+              {pmEventLabel}
+            </div>
+          )}
+
+          {/* Task reference */}
+          {item.taskTitle && (
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 600 }}>
+              {item.taskTitle}
+            </div>
+          )}
+
+          {/* Subject line */}
+          {item.subject && !pmEventLabel && (
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--th-text-secondary)", marginBottom: 4 }}>
+              {item.subject}
+            </div>
+          )}
+
+          <div style={{ whiteSpace: "pre-wrap" }}>
+            {item.content.length > 400 ? `${item.content.slice(0, 397)}...` : item.content}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -- Collapsible task tree -- */
+
+const INITIAL_SHOW_COUNT = 6;
+
+function CollapsibleTaskTree({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visibleTasks = expanded ? tasks : tasks.slice(0, INITIAL_SHOW_COUNT);
+  const hiddenCount = tasks.length - INITIAL_SHOW_COUNT;
 
   return (
-    <div style={{ marginBottom: 14 }}>
-      {/* Type label */}
-      {style.label && (
-        <div style={{
-          fontFamily: mono, fontSize: 9, fontWeight: 800,
-          color: style.labelColor, letterSpacing: "0.05em", marginBottom: 4,
-        }}>
-          [{style.label}]
-        </div>
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8 }}>
+        태스크 ({tasks.length})
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {visibleTasks.map((task) => (
+          <StepTreeNode key={task.id} task={task} agents={agents} />
+        ))}
+      </div>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            marginTop: 8, fontFamily: mono, fontSize: 10, fontWeight: 600,
+            color: "var(--th-accent)", background: "transparent", border: "none",
+            cursor: "pointer", padding: 0,
+          }}
+        >
+          {expanded ? "접기" : `+${hiddenCount}개 더 보기...`}
+        </button>
       )}
-
-      {/* Sender line */}
-      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 6, fontWeight: 600 }}>
-        <span style={{ color: isPM ? "var(--th-danger-text)" : style.labelColor, fontWeight: 800 }}>
-          {entry.sender.toUpperCase().replace(/\s+/g, "_")}
-        </span>
-        {" "}
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle" }}>
-          <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-        </svg>
-        {" "}
-        <span style={{ color: "var(--th-text-secondary)" }}>{entry.target.toUpperCase()}</span>
-        <span style={{ color: "var(--th-border-strong)", marginLeft: 8, fontSize: 9 }}>{entry.timestamp}</span>
-      </div>
-
-      {/* Message body */}
-      <div style={{
-        fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)",
-        background: style.bgTint,
-        border: `1px solid ${style.borderColor}`,
-        borderRadius: 14,
-        padding: "12px 16px",
-      }}>
-        <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 11, color: style.labelColor }}>
-          {entry.subject}
-        </div>
-        <div style={{ whiteSpace: "pre-wrap", fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.6 }}>
-          {entry.body.length > 300 ? `${entry.body.slice(0, 297)}...` : entry.body}
-        </div>
-      </div>
     </div>
   );
 }
@@ -299,7 +567,7 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
 
   const color = isDone ? "var(--th-success)"
     : isFailed ? "var(--th-danger-text)"
-    : isReview ? "#7C3AED"
+    : isReview ? "var(--th-review)"
     : isRunning ? "var(--th-accent)"
     : "var(--th-border-strong)";
 
@@ -313,8 +581,6 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           ) : isRunning ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6" /></svg>
-          ) : isReview ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /><path d="M12 6v6" /></svg>
           ) : (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /></svg>
           )}
@@ -329,15 +595,9 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
           {task.title.length > 28 ? task.title.substring(0, 28) + "..." : task.title}
         </span>
       </div>
-
-      {/* Sub-info for running tasks */}
       {isRunning && (
         <div style={{ marginLeft: 22, marginTop: 4 }}>
-          {agent && (
-            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 600 }}>
-              {agent.name.split(" ")[0]?.toLowerCase()}
-            </span>
-          )}
+          {agent && <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 600 }}>{agent.name}</span>}
           <div style={{ height: 3, background: "var(--th-border)", width: "80%", marginTop: 4, borderRadius: 2 }}>
             <div style={{ height: 3, background: "var(--th-accent)", width: `${getTaskProgress(task)}%`, transition: "width 0.3s", borderRadius: 2 }} />
           </div>
@@ -356,73 +616,43 @@ interface Dependency {
 }
 
 function ActiveDependencies({ tasks }: { tasks: Task[] }) {
-  // Derive dependencies from task states
   const deps: Dependency[] = [];
-
   const blockedTasks = tasks.filter((t) => t.execution_state === "blocked" || t.status === "failed");
   const reviewTasks = tasks.filter((t) => t.status === "review");
   const runningTasks = tasks.filter((t) => t.status === "in_progress");
 
   if (blockedTasks.length > 0) {
     for (const t of blockedTasks.slice(0, 2)) {
-      deps.push({
-        name: t.title.slice(0, 20),
-        type: "Task",
-        status: t.status === "failed" ? "CONFLICT" : "LOCKED",
-      });
+      deps.push({ name: t.title.slice(0, 20), type: "태스크", status: t.status === "failed" ? "CONFLICT" : "LOCKED" });
     }
   }
-  if (reviewTasks.length > 0) {
-    deps.push({ name: `${reviewTasks.length} review(s)`, type: "PM", status: "WAITING" });
-  }
-  if (runningTasks.length > 0) {
-    deps.push({ name: `${runningTasks.length} running`, type: "Exec", status: "READY" });
-  }
+  if (reviewTasks.length > 0) deps.push({ name: `${reviewTasks.length}건 검토`, type: "PM", status: "WAITING" });
+  if (runningTasks.length > 0) deps.push({ name: `${runningTasks.length}건 실행`, type: "실행", status: "READY" });
 
   if (deps.length === 0) return null;
 
   const statusColors: Record<string, { text: string; bg: string; border: string }> = {
-    READY: { text: "var(--th-success)", bg: "#ECFDF5", border: "#A7F3D0" },
+    READY: { text: "var(--th-success)", bg: "var(--th-success-bg)", border: "var(--th-success-border)" },
     CONFLICT: { text: "var(--th-danger-text)", bg: "var(--th-danger-bg)", border: "var(--th-danger-border)" },
-    LOCKED: { text: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
-    WAITING: { text: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
+    LOCKED: { text: "var(--th-warning)", bg: "var(--th-warning-bg)", border: "var(--th-warning-border)" },
+    WAITING: { text: "var(--th-review)", bg: "var(--th-review-bg)", border: "var(--th-review-bg)" },
   };
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-        Active Dependencies
+      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 8 }}>
+        의존성
       </div>
-      <div style={{
-        background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-        borderRadius: 14,
-        padding: "10px 14px",
-      }}>
+      <div style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: 14, padding: "10px 14px" }}>
         {deps.map((dep, i) => {
           const sc = statusColors[dep.status] ?? { text: "var(--th-text-muted)", bg: "var(--th-bg-surface)", border: "var(--th-border)" };
           return (
-            <div key={i} style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "5px 0",
-              fontFamily: mono,
-              fontSize: 10,
-            }}>
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", fontFamily: mono, fontSize: 10 }}>
               <span style={{ color: "var(--th-text-secondary)" }}>
                 <span style={{ color: "var(--th-text-muted)", marginRight: 4, fontWeight: 600 }}>{dep.type}:</span>
                 {dep.name}
               </span>
-              <span style={{
-                color: sc.text,
-                fontWeight: 800,
-                fontSize: 9,
-                background: sc.bg,
-                border: `1px solid ${sc.border}`,
-                borderRadius: 6,
-                padding: "1px 6px",
-                letterSpacing: "0.05em",
-              }}>
+              <span style={{ color: sc.text, fontWeight: 800, fontSize: 9, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 6, padding: "1px 6px" }}>
                 {dep.status}
               </span>
             </div>

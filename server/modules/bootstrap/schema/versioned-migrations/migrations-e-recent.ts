@@ -999,4 +999,90 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       try { db.exec("DELETE FROM categories WHERE id = 'cat_devops'"); } catch { /* ok */ }
     },
   },
+  {
+    id: "2026-03-29-003-expand-notification-types",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS notifications_v2 (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL CHECK(type IN (
+              'task_complete','task_error','task_started','decision_created',
+              'agent_error','system','cost_alert','agent_anomaly','heartbeat','kickoff',
+              'pm_approved','pm_revision','pm_parse_failed','pm_project_review','project_complete'
+            )),
+            title TEXT NOT NULL,
+            body TEXT,
+            task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
+            agent_id TEXT,
+            read INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER DEFAULT (unixepoch()*1000)
+          );
+          INSERT OR IGNORE INTO notifications_v2 SELECT * FROM notifications;
+          DROP TABLE notifications;
+          ALTER TABLE notifications_v2 RENAME TO notifications;
+        `);
+      } catch { /* already migrated */ }
+    },
+  },
+  {
+    id: "2026-03-29-004-notification-version-released-type",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS notifications_v3 (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL CHECK(type IN (
+              'task_complete','task_error','task_started','decision_created',
+              'agent_error','system','cost_alert','agent_anomaly','heartbeat','kickoff',
+              'pm_approved','pm_revision','pm_parse_failed','pm_project_review','project_complete',
+              'version_released'
+            )),
+            title TEXT NOT NULL,
+            body TEXT,
+            task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
+            agent_id TEXT,
+            read INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER DEFAULT (unixepoch()*1000)
+          );
+          INSERT OR IGNORE INTO notifications_v3 SELECT * FROM notifications;
+          DROP TABLE notifications;
+          ALTER TABLE notifications_v3 RENAME TO notifications;
+        `);
+      } catch { /* already migrated */ }
+    },
+  },
+  {
+    id: "2026-03-29-005-tui-sessions",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE tui_sessions (
+            id TEXT PRIMARY KEY,
+            project_id TEXT,
+            mode TEXT DEFAULT 'build',
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        `);
+      } catch { /* already exists */ }
+      try {
+        db.exec(`
+          CREATE TABLE tui_messages (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            agent_name TEXT,
+            metadata TEXT,
+            created_at INTEGER NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES tui_sessions(id)
+          )
+        `);
+      } catch { /* already exists */ }
+      try {
+        db.exec(`CREATE INDEX idx_tui_messages_session ON tui_messages(session_id)`);
+      } catch { /* already exists */ }
+    },
+  },
 ];

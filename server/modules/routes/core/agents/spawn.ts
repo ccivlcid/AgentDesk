@@ -2,8 +2,6 @@ import path from "node:path";
 import { notifyTaskStatus } from "../../../../gateway/client.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/execution-guidance.ts";
-import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
-import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
 import { buildDocumentGenerationGuidance } from "../../../workflow/core/document-generation-guidance.ts";
 
@@ -94,14 +92,6 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
       return res.status(400).json({ error: "task_not_found" });
     }
     const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
-    ensureVideoPreprodRemotionBestPracticesSkill({
-      db: db as Parameters<typeof ensureVideoPreprodRemotionBestPracticesSkill>[0]["db"],
-      nowMs,
-      workflowPackKey: effectivePackKey,
-      provider,
-      taskId,
-      appendTaskLog,
-    });
     const taskLang = resolveLang(task.description ?? task.title);
 
     const projectPath = task.project_path || process.cwd();
@@ -137,18 +127,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
       : "";
     const departmentPrompt = normalizeTextField(agent.department_prompt);
     const departmentPromptBlock = departmentPrompt ? `[Department Shared Prompt]\n${departmentPrompt}` : "";
-    const videoArtifactSpec =
-      effectivePackKey === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db as Parameters<typeof resolveVideoArtifactSpecForTask>[0], {
-            project_id: task.project_id,
-            project_path: task.project_path,
-            department_id: task.department_id,
-            workflow_pack_key: effectivePackKey,
-          })
-        : null;
-    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(effectivePackKey, taskLang, {
-      videoArtifactRelativePath: videoArtifactSpec?.relativePath,
-    });
+    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(effectivePackKey, taskLang, {});
 
     const prompt = buildTaskExecutionPrompt(
       [

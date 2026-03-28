@@ -270,6 +270,25 @@ async function runViaCli(
     };
     signal.addEventListener("abort", abortHandler, { once: true });
 
+    // Stall detection: kill process if no output for 5 minutes
+    const STALL_TIMEOUT_MS = 300_000;
+    const STALL_WARN_MS = 60_000;
+    let lastOutputAt = Date.now();
+    let stallWarned = false;
+    const stallCheckId = setInterval(() => {
+      const elapsed = Date.now() - lastOutputAt;
+      if (!stallWarned && elapsed >= STALL_WARN_MS) {
+        stallWarned = true;
+        logger.warn({ cliProvider, elapsed }, "[execution-loop] CLI agent stalled — no output for 60s");
+      }
+      if (elapsed >= STALL_TIMEOUT_MS) {
+        clearInterval(stallCheckId);
+        logger.error({ cliProvider, elapsed }, "[execution-loop] CLI agent stalled — killing after 5min inactivity");
+        try { child.kill(); } catch { /* ignore */ }
+        reject(new Error(`CLI provider '${cliProvider}' stalled — no output for ${Math.round(STALL_TIMEOUT_MS / 1000)}s`));
+      }
+    }, 15_000);
+
     // Auth error patterns emitted by CLI providers when credentials are missing
     const AUTH_ERROR_PATTERNS = [
       "please set an auth method",
@@ -290,6 +309,7 @@ async function runViaCli(
     child.stdout?.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
       output += text;
+      lastOutputAt = Date.now(); stallWarned = false;
       if (codexBuf) {
         const completeLines = codexBuf.push(text);
         const parts: string[] = [];
@@ -306,14 +326,17 @@ async function runViaCli(
     child.stderr?.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
       output += text;
+      lastOutputAt = Date.now(); stallWarned = false;
       onChunk?.(text);
     });
     child.on("error", (err) => {
+      clearInterval(stallCheckId);
       clearTimeout(timeoutId);
       signal.removeEventListener("abort", abortHandler);
       reject(err);
     });
     child.on("close", (code) => {
+      clearInterval(stallCheckId);
       clearTimeout(timeoutId);
       signal.removeEventListener("abort", abortHandler);
 

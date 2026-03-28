@@ -97,14 +97,16 @@ export function createProcessTools(deps: CreateProcessToolsDeps) {
 
   function appendTaskLog(taskId: string | null, kind: string, message: string): void {
     const t = nowMs();
+    // Normalize empty string to null (avoids FK constraint failure on task_logs.task_id)
+    const safeTaskId = taskId && taskId.trim() ? taskId : null;
     // Resolve project_id so records survive even after the task is deleted.
     let projectId: string | null = null;
-    if (taskId) {
-      const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;
+    if (safeTaskId) {
+      const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(safeTaskId) as { project_id: string | null } | undefined;
       projectId = row?.project_id ?? null;
     }
     db.prepare("INSERT INTO task_logs (task_id, kind, message, created_at, project_id) VALUES (?, ?, ?, ?, ?)").run(
-      taskId,
+      safeTaskId,
       kind,
       message,
       t,

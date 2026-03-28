@@ -88,7 +88,7 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
       .replace(/\[(tool|result|output|spawn_agent|agent_done|one-shot-error)[^\]]*\]/gi, " ")
       .replace(/^\[(copilot|antigravity)\][^\n]*$/gim, "")
       .replace(
-        /\{"type"\s*:\s*"(?:step_finish|step-finish|tool_use|tool_result|thinking|reasoning|text|content)"[^\n]*\}/gm,
+        /\{"type"\s*:\s*"(?:step_finish|step-finish|tool_use|tool_result|thinking|reasoning|text|content|thread\.started|thread\.completed|turn\.started|turn\.completed|system|content_block_delta|content_block_start|content_block_stop)"[^\n]*\}/gm,
         " ",
       )
       .replace(/^!?\s*permission requested:.*auto-rejecting\s*$/gim, "")

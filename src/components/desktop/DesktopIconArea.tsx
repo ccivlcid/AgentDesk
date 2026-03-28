@@ -83,23 +83,35 @@ export function DesktopIconArea({
 
   const [groupDragInitialPositions, setGroupDragInitialPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
 
-  const handleGroupDragStart = (draggedId: string) => {
+  const handleGroupDragStart = (draggedId: string, currentX: number, currentY: number) => {
     // If the dragged icon is part of current selection, start group drag
-    if (selectedIconIds.has(draggedId)) {
-      const initial: Record<string, { x: number; y: number }> = {};
-      selectedIconIds.forEach(id => {
-        const entry = desktopIconLayout[id];
-        if (entry) initial[id] = { ...entry };
-        else {
-          // If not in layout, it might be using defaultX/Y. We need to find its current pos.
-          // This is a bit tricky, but for now we focus on items already in desktopIconLayout
-        }
-      });
-      setGroupDragInitialPositions(initial);
-    } else {
-      setGroupDragInitialPositions(null);
-      setSelectedIconIds(new Set([draggedId]));
+    const isAlreadySelected = selectedIconIds.has(draggedId);
+    const targetSelection = isAlreadySelected ? selectedIconIds : new Set([draggedId]);
+    
+    if (!isAlreadySelected) {
+      setSelectedIconIds(targetSelection);
     }
+
+    const initial: Record<string, { x: number; y: number }> = {};
+    targetSelection.forEach(id => {
+      // 1. check layout store
+      const entry = desktopIconLayout[id];
+      if (entry) {
+        initial[id] = { ...entry };
+      } else {
+        // 2. if not in layout, it's either currently being dragged (use currentX/Y)
+        // or just sitting at its default position. 
+        // We'll rely on the DesktopIcon reporting its current position via onDragStart call
+        if (id === draggedId) {
+          initial[id] = { x: currentX, y: currentY };
+        } else {
+          // This is a fallback - for other selected icons not in layout, 
+          // we'd need to find their default positions.
+          // For now, we prioritize the icons already in layout or the one being grabbed.
+        }
+      }
+    });
+    setGroupDragInitialPositions(initial);
   };
 
   const handleGroupDragMove = (dx: number, dy: number) => {
@@ -181,7 +193,7 @@ export function DesktopIconArea({
             defaultX={defaultPos.x}
             defaultY={defaultPos.y}
             isSelected={selectedIconIds.has(def.id)}
-            onDragStart={handleGroupDragStart}
+            onDragStart={(id, x, y) => handleGroupDragStart(id, x, y)}
             onDragMove={handleGroupDragMove}
             onDragEnd={handleGroupDragEnd}
           />
@@ -211,7 +223,7 @@ export function DesktopIconArea({
             defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
             defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
             isSelected={selectedIconIds.has(def.id)}
-            onDragStart={handleGroupDragStart}
+            onDragStart={(id, x, y) => handleGroupDragStart(id, x, y)}
             onDragMove={handleGroupDragMove}
             onDragEnd={handleGroupDragEnd}
           />
@@ -231,8 +243,12 @@ export function DesktopIconArea({
           defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
           defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
           isSelected={selectedIconIds.has(`folder-${folder.id}`)}
-          onSelect={() => setSelectedIconIds(new Set([`folder-${folder.id}`]))}
-          onDragStart={handleGroupDragStart}
+          onSelect={() => {
+            if (!selectedIconIds.has(`folder-${folder.id}`)) {
+              setSelectedIconIds(new Set([`folder-${folder.id}`]));
+            }
+          }}
+          onDragStart={(id, x, y) => handleGroupDragStart(id, x, y)}
           onDragMove={handleGroupDragMove}
           onDragEnd={handleGroupDragEnd}
           isDragOver={dragOverFolderId === folder.id}
@@ -347,7 +363,7 @@ export function DesktopIconArea({
               defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
               isSelected={selectedIconIds.has(`project-${project.id}`)}
               isNewlyInstalled={project.id === newlyInstalledProjectId}
-              onDragStart={handleGroupDragStart}
+              onDragStart={(id, x, y) => handleGroupDragStart(id, x, y)}
               onDragMove={handleGroupDragMove}
               onDragEnd={handleGroupDragEnd}
             />

@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-29-001-drop-removed-features`
+- **Last applied ID**: `2026-03-29-005-tui-sessions`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -89,11 +89,48 @@ All inline SVG icons must follow this standard:
 
 ---
 
+### 0-8. Verification — Every Change
+
+> **MUST run after every code change. No exceptions.**
+
+```bash
+npx tsc -b --noEmit    # TypeScript — zero errors
+pnpm test              # Tests — all passing
+pnpm lint              # Lint — no warnings
+```
+
+If any fails, fix before moving to the next task. Never leave broken builds.
+
+### 0-9. Removed Features — Do Not Reintroduce
+
+> The following features have been permanently removed. Do NOT reintroduce them.
+
+**Removed:** Cross-Dept Cooperation, Video system, Report Workflow, non-dev Workflow Packs (novel, roleplay, asset_management, video_preprod, web_research_report), Announcement Response, non-dev departments (research, investment, video, data, marketing, content).
+
+### 0-10. Dual Interface Rules
+
+> AgentDesk has two interfaces. Respect the audience for each.
+
+| Interface | Audience | Tech |
+|-----------|----------|------|
+| **GUI** (localhost:8800) | Non-developers (PM, designers, managers) | React + Vite |
+| **TUI** (terminal `agentdesk`) | Developers | ink (React CLI) |
+| **CLI** (terminal `agentdesk <cmd>`) | Developers | commander.js |
+
+- GUI and TUI share the **same server** (localhost:8790), **same API**, **same DB**.
+- GUI code lives in `src/`. TUI/CLI code lives in `cli/`.
+- Shared types live in `shared/` (when created). Do NOT duplicate type definitions.
+- Server changes must work for both GUI and TUI clients.
+
+---
+
 ## 1. Project Summary
 
-**AgentDesk** = Developer-focused multi-LLM orchestrator OS — running, monitoring, and controlling multiple AI agents simultaneously.
-UI uses a macOS desktop metaphor (menu bar + desktop icons + Dock + app windows), but the core purpose is developer-centric agent orchestration across multiple LLM providers.
-Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
+**AgentDesk** = Multi-LLM orchestrator for software development.
+Two audiences: GUI for non-developers, TUI for developers. Same server, same data.
+Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3) + ink TUI.
+
+See `docs/architecture/FULLSTACK-ARCHITECTURE.md` for full architecture.
 
 ### 1-1. Terminology Mapping (DB ↔ UI)
 
@@ -305,6 +342,15 @@ PM이 LLM으로 프로젝트 전체 평가 (prompts/pm/project-review.md)
 # Dev server (frontend 8800, API 8790)
 pnpm dev
 
+# TUI (developer interface — requires server running)
+pnpm cli                    # TUI mode (interactive)
+pnpm cli status             # CLI mode (quick command)
+pnpm cli kickoff --name "My Project" --goal "Build auth" --yolo
+
+# Or directly with tsx
+npx tsx cli/index.ts         # TUI mode
+npx tsx cli/index.ts status  # CLI mode
+
 # Tests
 pnpm test              # frontend + server (all)
 pnpm run test:web      # frontend only (vitest)
@@ -478,7 +524,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-29-001-drop-removed-features` → next: `2026-03-29-002-*`
+3. **Last known ID**: `2026-03-29-005-tui-sessions` → next: `2026-03-29-006-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

@@ -3,7 +3,7 @@ import AppWindow from "../windows/AppWindow";
 import { useI18n } from "../../i18n";
 import { useTaskStore } from "../../store/taskStore";
 import { useAgentStore } from "../../store/agentStore";
-import { useProjectStore } from "../../store/projectStore";
+import { useProjectStore, type PendingClarification } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
 import StageRail from "./StageRail";
 import MetricsHeader from "./MetricsHeader";
@@ -25,6 +25,7 @@ export default function OrchestrationWindow() {
   const { tasks } = useTaskStore();
   const { agents, departments } = useAgentStore();
   const { currentProjectId, projects, projectAgentIds } = useProjectStore();
+  const pendingClarification = useProjectStore((s) => s.pendingClarification) as PendingClarification | null;
   const { kickoffStage } = useUiStore();
 
   const currentProject = useMemo(
@@ -38,10 +39,10 @@ export default function OrchestrationWindow() {
   );
 
   const projectAgents = useMemo(() => {
+    // Merge task-assigned agents AND project_agents (includes PM who never gets tasks)
     const assignedIds = new Set(projectTasks.map((t) => t.assigned_agent_id).filter(Boolean));
-    if (assignedIds.size > 0) return agents.filter((a) => assignedIds.has(a.id));
-    // Before tasks are assigned (e.g. during kickoff meeting), fall back to project_agents table
-    if (projectAgentIds.size > 0) return agents.filter((a) => projectAgentIds.has(a.id));
+    const allIds = new Set([...projectAgentIds, ...assignedIds]);
+    if (allIds.size > 0) return agents.filter((a) => allIds.has(a.id));
     return [];
   }, [agents, projectTasks, projectAgentIds]);
 
@@ -64,6 +65,13 @@ export default function OrchestrationWindow() {
       return;
     }
   }, [kickoffStage]);
+
+  // Auto-switch to room tab when clarification arrives for this project
+  useEffect(() => {
+    if (pendingClarification && pendingClarification.projectId === currentProjectId) {
+      setActiveTab("room");
+    }
+  }, [pendingClarification, currentProjectId]);
 
   const titleIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,15 +112,24 @@ export default function OrchestrationWindow() {
 
           {/* Tab Content */}
           <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            <div style={{ flex: 1, overflow: "auto", padding: "24px 20px" }}>
+            <div className={activeTab !== "room" ? "custom-scrollbar" : undefined} style={{
+              flex: 1,
+              overflow: activeTab === "room" ? "hidden" : "auto",
+              padding: activeTab === "room" ? "12px 16px" : "20px 24px",
+              display: "flex",
+              flexDirection: "column",
+            }}>
               <div style={{
-                background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "var(--th-glass-blur)",
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                borderRadius: 24,
-                padding: "24px 24px",
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
-                minHeight: "100%",
+                background: activeTab === "room" ? "transparent" : "var(--th-bg-elevated)",
+                backdropFilter: activeTab === "room" ? "none" : "var(--th-glass-blur)",
+                border: activeTab === "room" ? "none" : "1px solid var(--th-border)",
+                borderRadius: activeTab === "room" ? 0 : 20,
+                padding: activeTab === "room" ? 0 : "24px 28px",
+                boxShadow: activeTab === "room" ? "none" : "var(--th-shadow-sm)",
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
               }}>
               {activeTab === "timeline" && (
                 <TimelineTab
@@ -133,6 +150,7 @@ export default function OrchestrationWindow() {
                   tasks={projectTasks}
                   departments={departments}
                   projectId={currentProjectId ?? undefined}
+                  onSwitchToLogs={() => { setActiveTab("logs"); }}
                 />
               )}
               {activeTab === "room" && (

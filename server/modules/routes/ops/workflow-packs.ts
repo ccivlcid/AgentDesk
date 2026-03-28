@@ -113,18 +113,7 @@ export function registerWorkflowPackRoutes(
         `
       SELECT *
       FROM workflow_packs
-      ORDER BY
-        CASE key
-          WHEN 'development' THEN 1
-          WHEN 'report' THEN 2
-          WHEN 'web_research_report' THEN 3
-          WHEN 'roleplay' THEN 4
-          WHEN 'novel' THEN 5
-          WHEN 'video_preprod' THEN 6
-          WHEN 'asset_management' THEN 7
-          ELSE 99
-        END,
-        key
+      ORDER BY key
     `,
       )
       .all() as WorkflowPackRow[];

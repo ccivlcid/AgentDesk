@@ -1,47 +1,70 @@
-# AgentDesk Documentation Index
+# AgentDesk Documentation
 
-> **Start here:** [`/CLAUDE.md`](../CLAUDE.md) — Coding rules, file map, core flows.
+> **AgentDesk** — Multi-LLM Orchestrator for Software Development
 >
-> **Drift check:** `pnpm lint:docs` — automated verification of code↔docs sync (12 checks).
+> GUI (non-developers) + TUI (developers), same server, same data.
 
 ---
 
-## Essential
+## Quick Start
 
-| Document | Purpose |
-|----------|---------|
-| [`/CLAUDE.md`](../CLAUDE.md) | Coding rules, file map, kickoff/PM/review flows, terminology |
-| [FEATURES.md](FEATURES.md) | **All features** — 23 categories, code-based complete inventory |
-| [GLOSSARY.md](GLOSSARY.md) | System terminology — DB/UI mapping, state machines, domain concepts |
-| [schema-erd.md](architecture/schema-erd.md) | DB schema ER diagram, tables, indexes |
-| [api.md](specs/api.md) | REST API spec (v1.6.5) |
-| [progress.md](progress.md) | Current state — what's done, what's pending |
+```bash
+# Start server first
+pnpm dev
+
+# GUI (PM, designers, managers) — open in browser
+open http://localhost:8800
+
+# TUI (developers) — interactive terminal
+pnpm cli
+
+# CLI (developers) — quick commands
+pnpm cli status
+pnpm cli agents
+pnpm cli tasks
+pnpm cli kickoff --name "Auth Service" --goal "OAuth2 implementation"
+pnpm cli logs -f --project <id>
+```
+
+---
+
+## Core Docs
+
+| Document | Audience | Purpose |
+|----------|----------|---------|
+| [`/CLAUDE.md`](../CLAUDE.md) | AI agents | Coding rules, file map, core flows |
+| [FULLSTACK-ARCHITECTURE.md](architecture/FULLSTACK-ARCHITECTURE.md) | All | System architecture — dual client, server, Intent API |
+| [progress.md](progress.md) | All | Development status and roadmap |
+
+## Design
+
+| Document | Audience | Purpose |
+|----------|----------|---------|
+| [TUI-DESIGN.md](design/TUI-DESIGN.md) | Developers | TUI spec — conversational terminal interface |
+| [UI-SCREENS.md](design/UI-SCREENS.md) | Non-developers | GUI spec — macOS desktop metaphor |
+| [DESIGN.md](design/DESIGN.md) | Frontend | CSS variables, component style rules |
 
 ## Architecture
 
 | Document | Purpose |
 |----------|---------|
-| [AGENT-CONFIGURATION-AND-EXECUTION.md](architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution branching — CLI/API/OAuth/runtime |
-| [llm-call-patterns.md](architecture/llm-call-patterns.md) | LLM call patterns — all prompts must be .md files |
-| [cli-detection.md](architecture/cli-detection.md) | CLI 도구 감지 — Settings CLI 탭 설치/인증 감지 흐름, 도구별 판정 방법 |
-| [cli-execution.md](architecture/cli-execution.md) | CLI 실행 흐름 — 오케스트레이션 → 프로세스 스폰 → 출력 스트리밍 전체 경로 |
-| [PM-WORKFLOW-SPEC.md](strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, project-level review, fitness |
+| [schema-erd.md](architecture/schema-erd.md) | DB schema ER diagram |
+| [AGENT-CONFIGURATION-AND-EXECUTION.md](architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution — CLI/API/OAuth branching |
+| [llm-call-patterns.md](architecture/llm-call-patterns.md) | LLM call patterns — all prompts in .md files |
+| [cli-detection.md](architecture/cli-detection.md) | CLI tool detection flow |
+| [cli-execution.md](architecture/cli-execution.md) | CLI execution — spawn to streaming |
+| [PM-WORKFLOW-SPEC.md](strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, fitness |
+
+## Specs
+
+| Document | Purpose |
+|----------|---------|
+| [api.md](specs/api.md) | REST API specification |
 | [websocket-protocol.md](specs/websocket-protocol.md) | WebSocket event types and payloads |
-| [kova-comparison.md](architecture/kova-comparison.md) | Kova vs AgentDesk — strengths, weaknesses, integration points |
-| [any-type-removal-guide.md](architecture/any-type-removal-guide.md) | `any` type removal — 589 occurrences, 4-phase execution plan |
-| [execution-path-consistency.md](architecture/execution-path-consistency.md) | P1: 실행 경로 불일치 — 태스크 실행 vs PM 리뷰 경로 분석 + 오케스트레이션 화면 연동 수정 계획 |
 
-## Design
+## Reference
 
 | Document | Purpose |
 |----------|---------|
-| [DESIGN.md](design/DESIGN.md) | CSS variables, component style rules |
-| [UI-SCREENS.md](design/UI-SCREENS.md) | Screen & modal specs (macOS desktop metaphor) |
-| [ORCHESTRATION-TIMELINE.md](design/ORCHESTRATION-TIMELINE.md) | Orchestration Timeline UI — TaskBoard 대체, 개발자 중심 실시간 오케스트레이션 뷰 |
-
-## Strategy
-
-| Document | Purpose |
-|----------|---------|
-| [I18N-LOCALIZATION-PLAN.md](strategy/I18N-LOCALIZATION-PLAN.md) | i18n plan (2,454 strings remaining) |
-| [I18N-AGENT-WORKPACK.md](strategy/I18N-AGENT-WORKPACK.md) | i18n execution spec for AI agents |
+| [FEATURES.md](FEATURES.md) | Complete feature inventory |
+| [GLOSSARY.md](GLOSSARY.md) | Terminology — DB/UI mapping, domain concepts |

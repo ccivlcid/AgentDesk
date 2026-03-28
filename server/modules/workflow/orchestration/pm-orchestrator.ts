@@ -206,8 +206,29 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
   const {
     db, nowMs, runAgentOneShot, startTaskExecutionForAgent,
     finishReview, appendTaskLog, broadcast, sendAgentMessage,
-    getPreferredLanguage, resolveProjectPath, insertNotification,
+    getPreferredLanguage: _getPreferredLanguage, resolveProjectPath, insertNotification,
   } = deps;
+
+  // Safe wrapper: falls back to reading language directly from DB
+  // when the deferred runtime function hasn't been initialized yet
+  // (e.g. during server startup restore before registerApiRoutes completes)
+  const VALID_LANGS = new Set(["ko", "en", "ja", "zh"]);
+  function getPreferredLanguage(): string {
+    try {
+      return _getPreferredLanguage();
+    } catch {
+      // Fallback: read directly from settings table
+      try {
+        const row = db.prepare("SELECT value FROM settings WHERE key = 'language'").get() as { value: string } | undefined;
+        if (row) {
+          let val = row.value;
+          try { const parsed = JSON.parse(val); if (typeof parsed === "string") val = parsed; } catch { /* raw string */ }
+          if (VALID_LANGS.has(val)) return val;
+        }
+      } catch { /* settings table may not exist */ }
+      return "en";
+    }
+  }
 
   const learnDeps = {
     db, nowMs, runAgentOneShot, appendTaskLog, broadcast, getPreferredLanguage, resolveProjectPath,
@@ -380,15 +401,35 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       });
 
       if (!prompt) {
-        finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_prompt_missing" });
+        // Prompt file missing — keep task in review, notify user instead of auto-approving
+        logger.error({ taskId }, "[pm-orchestrator] PM review prompt missing — task remains in review");
+        appendTaskLog(taskId, "pm_oversight", "PM review prompt file missing — manual review required");
+        broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+        insertNotification({
+          type: "pm_parse_failed",
+          title: `PM review blocked: ${task.title}`,
+          body: "PM review prompt file could not be loaded. Manual review required.",
+          task_id: taskId,
+        });
         return;
       }
 
-      const response = await runAgentOneShot(pm, prompt, {
-        projectPath,
-        timeoutMs: 30_000,
-        noTools: true,
-      });
+      // PM review with retry on timeout
+      let response: { text?: string | null } = { text: "" };
+      for (let attempt = 0; attempt < 2; attempt++) {
+        response = await runAgentOneShot(pm, prompt, {
+          projectPath,
+          timeoutMs: 60_000,
+          noTools: true,
+        });
+        const responseText = response.text ?? "";
+        // If we got a timeout message and haven't retried yet, try once more
+        if (attempt === 0 && /timeout/i.test(responseText) && parseReviewDecision(responseText) === "UNKNOWN") {
+          logger.warn({ taskId, attempt }, "[pm-orchestrator] PM review timed out, retrying once");
+          continue;
+        }
+        break;
+      }
 
       // 상태 재확인 — LLM 호출 동안 상태가 바뀌었을 수 있음
       const current = db.prepare("SELECT status FROM tasks WHERE id = ?").get(taskId) as { status: string } | undefined;
@@ -562,11 +603,19 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         });
       }
     } catch (err) {
-      logger.error({ err, taskId }, "[pm-orchestrator] review failed, auto-approving as fallback");
+      logger.error({ err, taskId }, "[pm-orchestrator] review failed — task remains in review for manual action");
       try {
         const task = db.prepare("SELECT title, status FROM tasks WHERE id = ?").get(taskId) as { title: string; status: string } | undefined;
         if (task?.status === "review") {
-          finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_error_fallback" });
+          // Keep task in review — do NOT auto-approve on PM error
+          appendTaskLog(taskId, "pm_oversight", `PM review error: ${err instanceof Error ? err.message : String(err)} — manual review required`);
+          broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+          insertNotification({
+            type: "pm_parse_failed",
+            title: `PM review error: ${task.title}`,
+            body: `PM agent failed to review this task. Manual action required.`,
+            task_id: taskId,
+          });
         }
       } catch { /* best effort */ }
     } finally {
@@ -685,7 +734,7 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
 
       const response = await runAgentOneShot(pm, prompt, {
         projectPath,
-        timeoutMs: 20_000,
+        timeoutMs: 45_000,
         noTools: true,
       });
 
@@ -796,7 +845,7 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
 
       const response = await runAgentOneShot(pm, prompt, {
         projectPath,
-        timeoutMs: 20_000,
+        timeoutMs: 45_000,
         noTools: true,
       });
 
@@ -910,7 +959,7 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       let projectPath = "";
       try { projectPath = resolveProjectPath(projectId); } catch { /* optional */ }
 
-      const response = await runAgentOneShot(pm, prompt, { projectPath, timeoutMs: 30_000, noTools: true });
+      const response = await runAgentOneShot(pm, prompt, { projectPath, timeoutMs: 60_000, noTools: true });
       const text = response.text ?? "";
       const isSatisfied = /^SATISFIED[:\s]/im.test(text);
 
@@ -943,10 +992,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         });
       }
     } catch (err) {
-      logger.error({ err, projectId }, "[pm-orchestrator] project review failed, completing normally");
-      const pm = findProjectPm(db, projectId);
-      if (pm) void generateProjectRetrospective(pm, projectId, learnDeps);
-      db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+      logger.error({ err, projectId }, "[pm-orchestrator] project review failed — keeping oversight state");
+      // Do NOT clear oversight state or auto-complete — notify user instead
+      const proj = db.prepare("SELECT name FROM projects WHERE id = ?").get(projectId) as { name: string } | undefined;
+      insertNotification({
+        type: "pm_project_review",
+        title: `Project review failed: ${proj?.name ?? projectId}`,
+        body: `PM could not complete project-level review. Manual review needed. Error: ${err instanceof Error ? err.message.slice(0, 150) : "unknown"}`,
+      });
     } finally {
       pmInFlight.delete(guardKey);
     }

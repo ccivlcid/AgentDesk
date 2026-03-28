@@ -10,6 +10,7 @@ You will be given:
 Generate a JSON meeting script. Each agent reacts to the new directive based on their role.
 
 Rules:
+- **CRITICAL: Generate ALL agent speeches in the language specified by the "Language" field (ko=Korean, en=English, ja=Japanese, zh=Chinese). Every line of dialogue must be in that language.**
 - PM opens by stating the new directive clearly
 - Each non-PM agent says 1-3 sentences:
   - Acknowledge the new work

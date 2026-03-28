@@ -124,6 +124,15 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
     res.json({ ok: true, project: { ...project, assigned_agent_ids: assignedAgentIds } });
   });
 
+  // ── GET /api/projects/:id/agents — fetch assigned agents for a project ──
+  app.get("/api/projects/:id/agents", (req, res) => {
+    const id = String(req.params.id);
+    const rows = db
+      .prepare("SELECT agent_id AS id FROM project_agents WHERE project_id = ?")
+      .all(id) as Array<{ id: string }>;
+    res.json({ agents: rows });
+  });
+
   app.patch("/api/projects/:id", (req, res) => {
     const id = String(req.params.id);
     const existing = db.prepare("SELECT * FROM projects WHERE id = ?").get(id);

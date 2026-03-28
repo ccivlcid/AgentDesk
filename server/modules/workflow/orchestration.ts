@@ -37,23 +37,11 @@ import { createPlanningArchiveTools } from "./orchestration/planning-archive-too
 import { createProgressNotifyTools } from "./orchestration/progress-notify-tools.ts";
 import { createReviewFinalizeTools } from "./orchestration/review-finalize-tools.ts";
 import { createRunCompleteHandler } from "./orchestration/run-complete-handler.ts";
-import { createReportWorkflowTools } from "./orchestration/report-workflow-tools.ts";
 import { createSessionReviewTools, type TaskExecutionSession } from "./orchestration/session-review-tools.ts";
 import { startAgentAnomalyMonitor } from "./orchestration/agent-anomaly-monitor.ts";
 import { startHeartbeatEngine } from "./orchestration/heartbeat.ts";
 import { startPmOrchestrator } from "./orchestration/pm-orchestrator.ts";
 import { startTaskScheduler } from "./orchestration/task-scheduler.ts";
-import {
-  extractReportDesignParentTaskId,
-  extractReportPathByLabel,
-  isPresentationReportTask,
-  isReportDesignCheckpointTask,
-  isReportRequestTask,
-  REPORT_DESIGN_TASK_PREFIX,
-  REPORT_FLOW_PREFIX,
-  readReportFlowValue,
-  upsertReportFlowValue,
-} from "./orchestration/report-flow-helpers.ts";
 
 
 export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrationExports {
@@ -353,23 +341,19 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getAgentDisplayName,
   });
 
-  function pickDesignCheckpointAgent(): AgentRow | null {
-    return reportWorkflowTools.pickDesignCheckpointAgent();
+  function emitTaskReportEvent(_taskId: string): void {
+    /* report workflow removed */
   }
 
-  function emitTaskReportEvent(taskId: string): void {
-    reportWorkflowTools.emitTaskReportEvent(taskId);
-  }
-
-  function shouldDeferTaskReportUntilPlanningArchive(task: {
+  function shouldDeferTaskReportUntilPlanningArchive(_task: {
     source_task_id?: string | null;
     department_id?: string | null;
   }): boolean {
-    return reportWorkflowTools.shouldDeferTaskReportUntilPlanningArchive(task);
+    return false;
   }
 
   function completeTaskWithoutReview(
-    task: {
+    _task: {
       id: string;
       title: string;
       description: string | null;
@@ -377,12 +361,12 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
       source_task_id: string | null;
       assigned_agent_id: string | null;
     },
-    note: string,
+    _note: string,
   ): void {
-    reportWorkflowTools.completeTaskWithoutReview(task, note);
+    /* report workflow removed */
   }
 
-  function startReportDesignCheckpoint(task: {
+  function startReportDesignCheckpoint(_task: {
     id: string;
     title: string;
     description: string | null;
@@ -390,11 +374,11 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     project_path: string | null;
     assigned_agent_id: string | null;
   }): boolean {
-    return reportWorkflowTools.startReportDesignCheckpoint(task);
+    return false;
   }
 
-  function resumeReportAfterDesignCheckpoint(parentTaskId: string, triggerTaskId: string): void {
-    reportWorkflowTools.resumeReportAfterDesignCheckpoint(parentTaskId, triggerTaskId);
+  function resumeReportAfterDesignCheckpoint(_parentTaskId: string, _triggerTaskId: string): void {
+    /* report workflow removed */
   }
 
   function startProgressTimer(taskId: string, taskTitle: string, departmentId: string | null): void {
@@ -590,41 +574,6 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     startPlannedApprovalMeeting,
   });
 
-  const reportWorkflowTools = createReportWorkflowTools({
-    db,
-    broadcast,
-    appendTaskLog,
-    nowMs,
-    resolveLang,
-    pickL,
-    l,
-    sendAgentMessage,
-    findTeamLeader,
-    getAgentDisplayName,
-    setTaskCreationAuditCompletion,
-    reviewRoundState,
-    reviewInFlight,
-    endTaskExecutionSession,
-    notifyTaskStatus,
-    refreshCliUsageData,
-    archivePlanningConsolidatedReport,
-    crossDeptNextCallbacks,
-    recoverCrossDeptQueueAfterMissingCallback,
-    subtaskDelegationCallbacks,
-    randomUUID,
-    REPORT_DESIGN_TASK_PREFIX,
-    REPORT_FLOW_PREFIX,
-    extractReportPathByLabel,
-    upsertReportFlowValue,
-    readReportFlowValue,
-    recordTaskCreationAudit,
-    startTaskExecutionForAgent,
-    getDeptName,
-    randomDelay,
-    notifyClient,
-    insertNotification,
-  });
-
   // ---------------------------------------------------------------------------
   // Run completion handler — enhanced with review flow + Client reporting
   // ---------------------------------------------------------------------------
@@ -665,14 +614,14 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     finishReview,
     reconcileDelegatedSubtasksAfterRun,
     completeTaskWithoutReview,
-    isReportDesignCheckpointTask,
-    extractReportDesignParentTaskId,
+    isReportDesignCheckpointTask: () => false,
+    extractReportDesignParentTaskId: () => null,
     resumeReportAfterDesignCheckpoint,
-    isPresentationReportTask,
-    readReportFlowValue,
+    isPresentationReportTask: () => false,
+    readReportFlowValue: () => null,
     startReportDesignCheckpoint,
-    upsertReportFlowValue,
-    isReportRequestTask,
+    upsertReportFlowValue: (d: string | null) => d ?? "",
+    isReportRequestTask: () => false,
     notifyTaskStatus,
     prettyStreamJson,
     getWorktreeDiffSummary,

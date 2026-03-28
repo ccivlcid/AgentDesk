@@ -1,5 +1,4 @@
 import type { ResolveProjectPathInput, RuntimeContext, RouteCollabExports } from "../../types/runtime-context.ts";
-import { createAnnouncementReplyScheduler } from "./collab/announcement-response.ts";
 import { initializeCollabCoordination } from "./collab/coordination.ts";
 import { createDirectChatHandlers, type AgentRow } from "./collab/direct-chat.ts";
 import { initializeCollabLanguagePolicy } from "./collab/language-policy.ts";
@@ -105,15 +104,10 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     getHandleTaskDelegation: () => taskDelegationRef.handle!,
   });
 
-  const { scheduleAnnouncementReplies } = createAnnouncementReplyScheduler({
-    db,
-    resolveLang,
-    getDeptName,
-    getRoleLabel,
-    l,
-    pickL,
-    sendAgentMessage,
-  });
+  // Announcement replies removed (Chat system deleted). No-op stub preserved for RuntimeContext compatibility.
+  const scheduleAnnouncementReplies = (_announcement: string, _projectId?: string | null) => {
+    /* removed */
+  };
 
   const { normalizeTextField, resolveProjectFromOptions, buildRoundGoal } = initializeProjectResolution({ db });
 

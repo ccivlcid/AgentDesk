@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Task, Agent, TaskExecutionEvent, TaskLog } from "../../../types";
 import { getTaskProgress } from "../task-progress";
 import { getTaskExecutionEvents, getTask } from "../../../api/organization-projects";
@@ -46,10 +46,10 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
 
   if (agentLanes.size === 0) {
     const isKickoffActive = kickoffStage && kickoffStage !== "idle";
-    const stageLabel = kickoffStage === "meeting" ? "Kickoff meeting in progress..."
-      : kickoffStage === "planning" ? "Planning tasks..."
-      : kickoffStage === "assigning" ? "Assigning tasks to agents..."
-      : kickoffStage === "executing" ? "Execution starting..."
+    const stageLabel = kickoffStage === "meeting" ? "킥오프 회의 진행 중..."
+      : kickoffStage === "planning" ? "태스크 계획 중..."
+      : kickoffStage === "assigning" ? "에이전트 배정 중..."
+      : kickoffStage === "executing" ? "실행 시작..."
       : null;
 
     return (
@@ -64,16 +64,16 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
                 animation: "pulse 1.5s ease-in-out infinite",
               }} />
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.05em" }}>
-                {stageLabel ?? "Orchestration in progress..."}
+                {stageLabel ?? "오케스트레이션 진행 중..."}
               </span>
             </div>
             <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
-              Tasks will appear here once the meeting concludes and planning begins.
+              회의가 끝나면 태스크가 여기에 표시됩니다.
             </span>
           </>
         ) : (
           <span style={{ fontSize: 13, color: "var(--th-text-muted)" }}>
-            No active agent lanes. Start a project kickoff to begin orchestration.
+            활성 에이전트가 없습니다. 킥오프를 시작하세요.
           </span>
         )}
       </div>
@@ -93,8 +93,8 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
               <rect x="14" y="14" width="7" height="7" />
             </svg>
           </div>
-          <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", color: "#374151", fontFamily: mono, margin: 0 }}>
-            Active Agent Lanes
+          <h3 style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-primary)", fontFamily: mono, margin: 0 }}>
+            에이전트 실행 현황
           </h3>
         </div>
         <span style={{
@@ -108,7 +108,11 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
           padding: "3px 10px",
           letterSpacing: "0.05em",
         }}>
-          {clusterStatus}
+          {clusterStatus === "ALL_COMPLETE" ? "전체 완료"
+            : clusterStatus === "HAS_FAILURES" ? "오류 발생"
+            : clusterStatus === "EXECUTING" ? "실행 중"
+            : clusterStatus === "READY" ? "준비 완료"
+            : "안정"}
         </span>
       </div>
 
@@ -129,7 +133,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
   const nextTask = tasks.find((t) => t.status === "planned");
 
   const isWorking = agent.status === "working";
-  const statusLabel = isWorking ? "EXECUTING" : agent.status === "idle" ? "IDLE" : agent.status.toUpperCase();
+  const statusLabel = isWorking ? "실행 중" : agent.status === "idle" ? "대기" : agent.status;
 
   const handleTaskClick = useCallback((taskId: string) => {
     onSelectTask(selectedTaskId === taskId ? null : taskId);
@@ -154,7 +158,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           <div style={{
             width: 8, height: 8, borderRadius: "50%",
             background: isWorking ? "var(--th-success)" : "var(--th-border-strong)",
-            boxShadow: isWorking ? "0 0 8px rgba(5, 150, 105, 0.4)" : "none",
+            boxShadow: isWorking ? "0 0 8px var(--th-green-glow)" : "none",
           }} />
           <span style={{
             fontFamily: mono,
@@ -178,8 +182,8 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           fontSize: 10,
           fontWeight: 800,
           color: isWorking ? "var(--th-success)" : "var(--th-text-muted)",
-          background: isWorking ? "#ECFDF5" : "var(--th-bg-surface)",
-          border: `1px solid ${isWorking ? "#A7F3D0" : "var(--th-border)"}`,
+          background: isWorking ? "var(--th-success-bg)" : "var(--th-bg-surface)",
+          border: `1px solid ${isWorking ? "var(--th-success-border)" : "var(--th-border)"}`,
           borderRadius: 8,
           padding: "3px 10px",
           letterSpacing: "0.05em",
@@ -192,7 +196,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
       {currentTask && (
         <TaskCard
           task={currentTask}
-          label="CURRENT_TASK"
+          label="현재 태스크"
           isSelected={selectedTaskId === currentTask.id}
           onClick={() => handleTaskClick(currentTask.id)}
         />
@@ -219,7 +223,7 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
           onClick={() => handleTaskClick(nextTask.id)}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, flexShrink: 0 }}><polyline points="9 10 4 15 9 20" /><path d="M20 4v7a4 4 0 0 1-4 4H4" /></svg>
-          NEXT: {nextTask.title}
+          다음: {nextTask.title}
         </div>
       )}
 
@@ -238,12 +242,12 @@ function TaskCard({ task, label, isSelected, onClick }: {
   onClick: () => void;
 }) {
   const progress = getTaskProgress(task);
-  const statusLabel = task.status === "in_progress" ? "running" : task.status;
+  const statusLabel = task.status === "in_progress" ? "실행 중" : task.status === "done" ? "완료" : task.status === "review" ? "검토 중" : task.status === "planned" ? "대기" : task.status;
 
   return (
     <div
       style={{
-        background: isSelected ? "#F0F7FF" : "var(--th-bg-surface)",
+        background: isSelected ? "var(--th-info-bg)" : "var(--th-bg-surface)",
         border: `1px solid ${isSelected ? "var(--th-accent-border)" : "var(--th-border)"}`,
         borderRadius: 14,
         padding: "12px 16px",
@@ -265,8 +269,8 @@ function TaskCard({ task, label, isSelected, onClick }: {
           )}
           <span style={{
             fontFamily: mono, fontSize: 10, fontWeight: 700,
-            color: statusLabel === "running" ? "var(--th-success)" : statusLabel === "done" ? "var(--th-success)" : "var(--th-text-secondary)",
-            background: statusLabel === "running" ? "#ECFDF5" : statusLabel === "done" ? "#ECFDF5" : "var(--th-bg-primary)",
+            color: statusLabel === "실행 중" ? "var(--th-success)" : statusLabel === "완료" ? "var(--th-success)" : statusLabel === "검토 중" ? "var(--th-review)" : "var(--th-text-secondary)",
+            background: statusLabel === "실행 중" ? "var(--th-success-bg)" : statusLabel === "완료" ? "var(--th-success-bg)" : statusLabel === "검토 중" ? "var(--th-review-bg)" : "var(--th-bg-primary)",
             borderRadius: 6,
             padding: "1px 6px",
           }}>
@@ -298,7 +302,9 @@ function TaskInspector({ taskId }: { taskId: string }) {
   const [taskLogs, setTaskLogs] = useState<TaskLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<"files" | "cli" | "logic" | "events">("files");
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Initial load
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -314,14 +320,28 @@ function TaskInspector({ taskId }: { taskId: string }) {
       if (reportResult.status === "fulfilled" && reportResult.value) setReport(reportResult.value);
       if (diffRes.status === "fulfilled" && diffRes.value) setDiffResult(diffRes.value as TaskDiffResult);
       if (taskRes.status === "fulfilled" && taskRes.value) {
-        const detail = taskRes.value as { logs: TaskLog[] };
-        setTaskLogs(detail.logs ?? []);
+        setTaskLogs(taskRes.value.logs ?? []);
       }
       setLoading(false);
     });
 
     return () => { cancelled = true; };
   }, [taskId]);
+
+  // Live refresh for CLI tab — poll every 3s while the CLI tab is active
+  useEffect(() => {
+    if (activeSection !== "cli") {
+      if (refreshTimerRef.current) { clearInterval(refreshTimerRef.current); refreshTimerRef.current = null; }
+      return;
+    }
+    const refresh = () => {
+      getTask(taskId)
+        .then((res) => { setTaskLogs(res.logs ?? []); })
+        .catch(() => { /* polling failure is non-critical */ });
+    };
+    refreshTimerRef.current = setInterval(refresh, 3_000);
+    return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); };
+  }, [taskId, activeSection]);
 
   if (loading) {
     return (
@@ -330,15 +350,20 @@ function TaskInspector({ taskId }: { taskId: string }) {
           <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
           <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
         </svg>
-        Loading inspector...
+        로딩 중...
       </div>
     );
   }
 
-  const pmEvents = events.filter((e) => e.event_type === "pm_review" || e.event_type === "state_change");
+  const pmEvents = events.filter((e) =>
+    e.event_type === "pm_review" || e.event_type === "state_change"
+    || e.event_type === "pm_approved" || e.event_type === "pm_revision_requested"
+    || e.event_type === "pm_parse_failed" || e.event_type === "pm_escalated"
+    || e.event_type === "pm_reassigned" || e.event_type === "pm_retry"
+  );
   const planningContent = report?.planning_summary?.content;
   const fileChanges = parseDiffStat(diffResult?.stat);
-  const cliLogs = taskLogs.filter((l) => l.kind === "cli_output" || l.kind === "system").slice(0, 20);
+  const cliLogs = taskLogs.filter((l) => l.kind === "cli_output" || l.kind === "system").slice(-50);
   const orchestrationLogs = taskLogs.filter((l) => l.kind === "pm_oversight");
 
   const hasAnyData = fileChanges.length > 0 || cliLogs.length > 0 || orchestrationLogs.length > 0
@@ -347,16 +372,16 @@ function TaskInspector({ taskId }: { taskId: string }) {
   if (!hasAnyData) {
     return (
       <div style={{ padding: "12px 16px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", marginBottom: 6 }}>
-        No execution data yet.
+        실행 데이터 없음
       </div>
     );
   }
 
   const tabs: { key: typeof activeSection; label: string; count: number }[] = [
-    { key: "files", label: "FILES", count: fileChanges.length },
+    { key: "files", label: "파일", count: fileChanges.length },
     { key: "cli", label: "CLI", count: cliLogs.length },
-    { key: "logic", label: "LOGIC", count: orchestrationLogs.length },
-    { key: "events", label: "EVENTS", count: pmEvents.length },
+    { key: "logic", label: "PM 판단", count: orchestrationLogs.length },
+    { key: "events", label: "이벤트", count: pmEvents.length },
   ];
 
   return (
@@ -399,7 +424,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
       </div>
 
       {/* Section content */}
-      <div style={{ padding: "12px 16px", maxHeight: 220, overflowY: "auto" }}>
+      <div className="custom-scrollbar" style={{ padding: "12px 16px", maxHeight: 300, overflowY: "auto" }}>
         {activeSection === "files" && (
           <FilesChangedSection files={fileChanges} />
         )}
@@ -430,29 +455,35 @@ function parseDiffStat(stat: string | undefined | null): DiffFileStat[] {
   if (!stat) return [];
   const lines = stat.split("\n").filter((l) => l.includes("|"));
   return lines.map((line) => {
-    const match = line.match(/^\s*(.+?)\s*\|\s*(\d+)\s*([+-]+)?/);
+    // Match: " src/file.ts | 5 ++---" or " src/file.ts | Bin 0 -> 123 bytes"
+    const match = line.match(/^\s*(.+?)\s*\|\s*(\d+)\s*([+-]*)/);
     if (!match) return null;
     const filePath = match[1].trim();
-    const plusCount = (match[3] ?? "").split("").filter((c) => c === "+").length;
-    const minusCount = (match[3] ?? "").split("").filter((c) => c === "-").length;
+    const totalChanges = parseInt(match[2], 10) || 0;
+    const symbols = match[3] ?? "";
+    const plusCount = symbols.split("").filter((c) => c === "+").length;
+    const minusCount = symbols.split("").filter((c) => c === "-").length;
+    // If no +/- symbols shown (e.g., new file or git --stat truncation), use total as added
+    const added = plusCount || (!minusCount ? totalChanges : 0);
+    const removed = minusCount;
     return {
       path: filePath,
-      added: plusCount,
-      removed: minusCount,
-      isNew: minusCount === 0 && plusCount > 0,
+      added,
+      removed,
+      isNew: removed === 0 && added > 0,
     };
   }).filter((x): x is DiffFileStat => x !== null);
 }
 
 function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
   if (files.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No file changes detected.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>변경된 파일 없음</div>;
   }
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "#374151", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-        Files Changed
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+        변경된 파일
       </div>
       {files.map((f) => (
         <div key={f.path} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", fontFamily: mono, fontSize: 11 }}>
@@ -478,13 +509,13 @@ function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
 
 function CliHistorySection({ logs }: { logs: TaskLog[] }) {
   if (logs.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No CLI output recorded.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>CLI 출력 없음</div>;
   }
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "#374151", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-        CLI History
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+        CLI 히스토리
       </div>
       {logs.map((log) => {
         const ts = new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -513,13 +544,13 @@ function CliHistorySection({ logs }: { logs: TaskLog[] }) {
 function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[]; planningContent?: string | null }) {
   const hasContent = logs.length > 0 || !!planningContent;
   if (!hasContent) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No orchestration data.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>PM 판단 데이터 없음</div>;
   }
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "#374151", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-        Orchestration Logic
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+        PM 판단 내역
       </div>
 
       {/* PM oversight logs */}
@@ -532,7 +563,7 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
             fontSize: 11,
             color: "var(--th-text-secondary)",
             borderLeft: "3px solid var(--th-accent)",
-            background: "#F0F7FF",
+            background: "var(--th-info-bg)",
             borderRadius: "0 8px 8px 0",
             marginBottom: 6,
           }}>
@@ -551,13 +582,13 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
           color: "var(--th-text-secondary)",
           lineHeight: 1.5,
           whiteSpace: "pre-wrap",
-          borderLeft: "3px solid #059669",
-          background: "#ECFDF5",
+          borderLeft: "3px solid var(--th-success)",
+          background: "var(--th-success-bg)",
           borderRadius: "0 8px 8px 0",
           padding: "8px 12px",
         }}>
           <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-success)", marginBottom: 4, letterSpacing: "0.1em" }}>
-            PLANNING SUMMARY
+            기획 요약
           </div>
           {planningContent.length > 500 ? `${planningContent.slice(0, 497)}...` : planningContent}
         </div>
@@ -570,13 +601,13 @@ function OrchestrationLogicSection({ logs, planningContent }: { logs: TaskLog[];
 
 function EventsSection({ events }: { events: TaskExecutionEvent[] }) {
   if (events.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>No events recorded.</div>;
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>기록된 이벤트 없음</div>;
   }
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "#374151", letterSpacing: "0.1em", marginBottom: 6, textTransform: "uppercase" as const }}>
-        Events ({events.length})
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 6, textTransform: "uppercase" as const }}>
+        이벤트 ({events.length})
       </div>
       {events.map((evt) => (
         <ExecutionEventRow key={evt.id} event={evt} />
@@ -588,50 +619,79 @@ function EventsSection({ events }: { events: TaskExecutionEvent[] }) {
 function ExecutionEventRow({ event }: { event: TaskExecutionEvent }) {
   const meta = event.metadata_json ? tryParseJson(event.metadata_json) : null;
   const decision = meta?.action ?? meta?.decision ?? event.event_type;
-  const decisionColor = decision === "APPROVE" || decision === "approve"
+  const isPmDecision = event.event_type.startsWith("pm_");
+  const decisionColor = decision === "APPROVE" || decision === "approve" || event.event_type === "pm_approved"
     ? "var(--th-success)"
-    : decision === "REVISE" || decision === "revise"
-      ? "#D97706"
-      : "var(--th-text-secondary)";
+    : decision === "REVISE" || decision === "revise" || event.event_type === "pm_revision_requested"
+      ? "var(--th-warning)"
+      : event.event_type === "pm_escalated" || event.event_type === "pm_parse_failed"
+        ? "var(--th-danger-text)"
+        : "var(--th-text-secondary)";
 
   const ts = new Date(event.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+  // Extract PM checklist from metadata if present
+  const checklist = meta?.checklist as { scopeMatch?: boolean; errorsDetected?: boolean; minimalScope?: boolean; completeness?: boolean } | undefined;
+
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 8,
-      padding: "4px 0",
-      fontFamily: mono,
-      fontSize: 11,
-    }}>
-      <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 42 }}>{ts}</span>
-      {event.from_state && event.to_state ? (
-        <span style={{ color: "var(--th-text-secondary)" }}>
-          {event.from_state}
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 4px", verticalAlign: "middle" }}>
-            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-          </svg>
-          {event.to_state}
-        </span>
-      ) : (
-        <span style={{
-          color: decisionColor,
-          fontWeight: 800,
-          fontSize: 10,
-          background: `${decisionColor}15`,
-          borderRadius: 6,
-          padding: "1px 6px",
-        }}>
-          {String(decision).toUpperCase()}
-        </span>
-      )}
-      {event.summary && (
-        <span style={{ color: "var(--th-text-secondary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {event.summary.length > 80 ? `${event.summary.slice(0, 77)}...` : event.summary}
-        </span>
+    <div style={{ padding: "6px 0", fontFamily: mono, fontSize: 11, borderBottom: isPmDecision ? "1px solid var(--th-border)" : "none", marginBottom: isPmDecision ? 4 : 0 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 42 }}>{ts}</span>
+        {isPmDecision && (
+          <span style={{ fontSize: 9, fontWeight: 800, color: "var(--th-accent)", letterSpacing: "0.05em" }}>PM</span>
+        )}
+        {event.from_state && event.to_state ? (
+          <span style={{ color: "var(--th-text-secondary)" }}>
+            {event.from_state}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 4px", verticalAlign: "middle" }}>
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+            {event.to_state}
+          </span>
+        ) : (
+          <span style={{
+            color: decisionColor,
+            fontWeight: 800,
+            fontSize: 10,
+            background: `${decisionColor}15`,
+            borderRadius: 6,
+            padding: "1px 6px",
+          }}>
+            {String(decision).toUpperCase()}
+          </span>
+        )}
+        {event.summary && (
+          <span style={{ color: "var(--th-text-secondary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {event.summary.length > 100 ? `${event.summary.slice(0, 97)}...` : event.summary}
+          </span>
+        )}
+      </div>
+
+      {/* PM Checklist (shown for pm_approved / pm_revision_requested) */}
+      {checklist && (
+        <div style={{ display: "flex", gap: 10, marginTop: 4, marginLeft: 50, fontSize: 9, fontWeight: 700 }}>
+          <CheckItem label="SCOPE" pass={checklist.scopeMatch ?? true} />
+          <CheckItem label="ERRORS" pass={!checklist.errorsDetected} />
+          <CheckItem label="MINIMAL" pass={checklist.minimalScope ?? true} />
+          <CheckItem label="COMPLETE" pass={checklist.completeness ?? true} />
+        </div>
       )}
     </div>
+  );
+}
+
+function CheckItem({ label, pass }: { label: string; pass: boolean }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={pass ? "var(--th-success)" : "var(--th-danger-text)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        {pass
+          ? <polyline points="20 6 9 17 4 12" />
+          : <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+        }
+      </svg>
+      <span style={{ color: pass ? "var(--th-success)" : "var(--th-danger-text)" }}>{label}</span>
+    </span>
   );
 }
 

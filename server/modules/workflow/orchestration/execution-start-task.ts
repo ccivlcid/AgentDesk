@@ -4,9 +4,7 @@ import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import type { AgentRow } from "../core/conversation-types.ts";
 import { resolveProviderForAgent } from "../../agent-runtime/llm-client.ts";
 import { getDepartmentPromptForPack } from "../packs/department-scope.ts";
-import { ensureVideoPreprodRemotionBestPracticesSkill } from "../core/video-skill-bootstrap.ts";
 import { buildWorkflowPackExecutionGuidance } from "../packs/execution-guidance.ts";
-import { resolveVideoArtifactSpecForTask } from "../packs/video-artifact.ts";
 import {
   buildInterruptPromptBlock,
   consumeInterruptPrompts,
@@ -201,27 +199,8 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       onEarlyReturn?.(taskId);
       return;
     }
-    ensureVideoPreprodRemotionBestPracticesSkill({
-      db,
-      nowMs,
-      workflowPackKey: taskData.workflow_pack_key,
-      provider,
-      taskId,
-      appendTaskLog,
-    });
     const taskLang = typeof getPreferredLanguage === "function" ? getPreferredLanguage() : resolveLang(taskData.description ?? taskData.title);
-    const videoArtifactSpec =
-      taskData.workflow_pack_key === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db, {
-            project_id: taskData.project_id,
-            project_path: taskData.project_path,
-            department_id: deptId ?? taskData.department_id ?? null,
-            workflow_pack_key: taskData.workflow_pack_key,
-          })
-        : null;
-    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(taskData.workflow_pack_key, taskLang, {
-      videoArtifactRelativePath: videoArtifactSpec?.relativePath,
-    });
+    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(taskData.workflow_pack_key, taskLang, {});
     notifyTaskStatus(taskId, taskData.title, "in_progress", taskLang);
 
     const projPath = resolveProjectPath(taskData);

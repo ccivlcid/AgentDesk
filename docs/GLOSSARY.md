@@ -1,7 +1,7 @@
 # AgentDesk Glossary
 
 > Domain terminology reference for AI agents and developers.
-> Last updated: 2026-03-25 (Phase 26 Developer OS 전환 — 제거 기능 반영)
+> Last updated: 2026-03-28 (Phase 26 Developer OS 전환 — 제거 기능 반영)
 
 ---
 
@@ -12,7 +12,7 @@
 | ---------------- | --------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **Department**   | `departments`         | Specialty Area                | Agent group organized by expertise domain (dev, planning, design), NOT org hierarchy                                         |
 | **Agent**        | `agents`              | —                             | AI runtime process with role, department, persona, and execution capability                                                  |
-| **Agent Role**   | `agents.role`         | PM / Senior / Junior / Intern | Seniority level: `team_leader`→PM, `senior`→Senior, `junior`→Junior, `intern`→Intern (legacy/deprecated if phased out in UI) |
+| **Agent Role**   | `agents.role`         | PM / Senior / Junior          | Seniority level: `team_leader`→PM, `senior`→Senior, `junior`→Junior, `intern`→(removed) |
 | **Agent Status** | `agents.status`       | —                             | `idle` | `working` | `break` | `offline`                                                                                     |
 | **CLI Provider** | `agents.cli_provider` | —                             | Execution backend: `claude` | `codex` | `gemini` | `opencode` | `copilot` | `antigravity` | `cursor` | `api` | `ollama`      |
 | **Persona**      | `agents.persona_id`   | —                             | Thinking style profile (structured, creative, analytical, empathetic, strategic, pragmatic)                                  |
@@ -63,7 +63,7 @@
 | **Execution State** | `tasks.execution_state`                                 | Engine-internal lifecycle. Current type includes `queued` | `claiming` | `workspace_preparing` | `ready` | `running` | `awaiting_review` | `retry_backoff` | `blocked` | `stalled` | `recovering` | `succeeded` | `failed` | `cancelled` |
 | **Subtask**         | `subtasks`                                              | Decomposed unit delegated during execution. Status: `pending` | `in_progress` | `done` | `blocked`                                                                                                                                       |
 | **Task Type**       | `tasks.task_type`                                       | `general` | `development` | `design` | `analysis` | `presentation` | `documentation`                                                                                                                                                     |
-| **Workflow Pack**   | `tasks.workflow_pack_key`                               | Execution template: `development` | `novel` | `report` | `video_preprod` | `web_research_report` | `roleplay` | `asset_management`                                                                                                       |
+| **Workflow Pack**   | `tasks.workflow_pack_key`                               | Execution template: `development`                                                                                                                                                                                                        |
 | **Task Handoff**    | `tasks.handoff_to_agent_id` + `tasks.handoff_condition` | Optional post-task transfer. `handoff_to_agent_id` stores the target agent, `handoff_condition` stores `always` | `on_success` | `on_fail`                                                                                               |
 | **Task Report**     | `task_report_archives`                                  | Archived deliverables and execution summary                                                                                                                                                                                              |
 
@@ -111,7 +111,6 @@ queued → claiming → workspace_preparing → ready → running → awaiting_r
 | **Leader Selection**         | Algorithm to elect a meeting facilitator among available agents (`meetings/leader-selection.ts`)                               |
 | **Review Consensus**         | Multi-agent agreement mechanism for PM review decisions (`meetings/review-consensus.ts`)                                       |
 | **Task Scheduler**           | Orchestration-level cron for scheduled task triggering within a project (`orchestration/task-scheduler.ts`)                    |
-| **Report Workflow**          | Structured reporting pipeline — data gathering → synthesis → deliverable generation (`orchestration/report-workflow-tools.ts`) |
 
 
 ### PM Decision Matrix
@@ -174,10 +173,12 @@ project > agent > department > workflow_pack > global
 | Term                    | DB Name                   | Definition                                                                                                                    |
 | ----------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Decision Inbox**      | `decision_inbox_messages` | Queue of mid-task decisions agents request from users                                                                         |
-| **Cross-Dept Delivery** | —                         | Task handoff between agents of different departments                                                                          |
+| **Cross-Dept Delivery** | —                         | Task handoff between agents of different departments (removed)                                                                |
 | **Client Office Call**  | —                         | Meeting room interaction during kickoff/review phases                                                                         |
 
 ### Messenger Channels
+
+> (UI removed, type retained) The Messenger UI was removed in Phase 26. The `MessengerChannelType` type definition remains in `src/types/index.ts`.
 
 Supported external messenger channel types (`MessengerChannelType` in `src/types/index.ts`):
 
@@ -242,7 +243,7 @@ Supported external messenger channel types (`MessengerChannelType` in `src/types
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **Repo Store**            | GitHub trending browser, clone, and project registration                                                               |
 | **Performance Dashboard** | Agent success rate, completion time, activity metrics                                                                  |
-| **GitLab Import**         | Import existing GitLab repositories as AgentDesk projects (`GitLabImportWindow`)                                       |
+| **GitLab Import**         | Import existing GitLab repositories as AgentDesk projects (`GitLabImportWindow` — component removed)                   |
 | **One-Shot Runner**       | Single-pass agent execution without iterative loop — used for fast, bounded tasks (`workflow/core/one-shot-runner.ts`) |
 
 
@@ -308,7 +309,7 @@ Supported external messenger channel types (`MessengerChannelType` in `src/types
 
 | Term             | Definition                                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-29-001-drop-removed-features` → next: `2026-03-29-002-`* |
+| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-29-005-tui-sessions` → next: `2026-03-29-006-`* |
 | **Append-Only**  | Never edit/delete existing migrations. DDL wrapped in try/catch                                                |
 | **Version Bump** | Patch increment on task completion (0.1.2 → 0.1.3). Files: VERSION, package.json, CHANGELOG.md                 |
 

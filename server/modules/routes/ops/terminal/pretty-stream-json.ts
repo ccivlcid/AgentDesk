@@ -129,6 +129,30 @@ export function prettyStreamJson(raw: string, opts: { includeReasoning?: boolean
         continue;
       }
 
+      // Claude CLI streaming control events — no text content, skip silently
+      if (j.type === "thread.started" || j.type === "thread.completed"
+        || j.type === "turn.started" || j.type === "turn.completed"
+        || j.type === "system") {
+        continue;
+      }
+
+      // Top-level content_block_delta / content_block_start (newer CLI format without stream_event wrapper)
+      if (j.type === "content_block_delta") {
+        const delta = asObj(j.delta);
+        if (delta?.type === "text_delta" && typeof delta.text === "string") {
+          sawClaudeTextDelta = true;
+          chunks.push(delta.text);
+        }
+        continue;
+      }
+      if (j.type === "content_block_start") {
+        const cb = asObj(j.content_block);
+        if (cb?.type === "text" && typeof cb.text === "string") {
+          chunks.push(cb.text);
+        }
+        continue;
+      }
+
       if (j.role === "assistant") {
         if (typeof j.content === "string") {
           pushMessageChunk(j.content);

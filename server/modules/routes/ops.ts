@@ -26,10 +26,11 @@ import { registerBackupRoutes } from "./ops/backup.ts";
 import { registerAgentUsageRoutes } from "./ops/agent-usage.ts";
 import { registerHeartbeatRoutes } from "./ops/heartbeat.ts";
 import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
-import { registerVideoRenderRoutes } from "./ops/video-render.ts";
 import { registerProjectFolderRoutes } from "./ops/project-folders.ts";
 import { registerCliInstallRoutes } from "./ops/cli-install.ts";
 import { registerAgentRuntimeRoutes } from "../agent-runtime/routes.ts";
+import { registerTuiRoutes } from "./ops/tui/sessions.ts";
+import { registerTuiInterpretRoute } from "./ops/tui/interpret.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -269,11 +270,16 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerBackupRoutes(__ctx);
   registerHeartbeatRoutes(__ctx);
   registerScheduledTaskRoutes({ app, db, nowMs });
-  registerVideoRenderRoutes({ app, broadcast, appendTaskLog });
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
   // local-llm + synapse + image-studio routes removed
   registerProjectFolderRoutes({ app, db, nowMs });
   registerCliInstallRoutes({ app });
+
+  // ---------------------------------------------------------------------------
+  // TUI session + intent routes
+  // ---------------------------------------------------------------------------
+  registerTuiRoutes(ctx);
+  registerTuiInterpretRoute(ctx);
 
   // ---------------------------------------------------------------------------
   // Queue status API (P2-3)

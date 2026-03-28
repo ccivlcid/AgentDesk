@@ -28,6 +28,7 @@ export async function runKickoffMeeting(
   if (agents.length === 0) return;
 
   const lang = readLang(db);
+  logger.info({ lang, projectName }, "[kickoff] meeting language resolved");
   const meetingId = randomUUID();
   const startTs = nowMs();
 

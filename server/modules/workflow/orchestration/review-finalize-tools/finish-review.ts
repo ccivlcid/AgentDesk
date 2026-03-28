@@ -1,7 +1,5 @@
 import type { CountRow } from "../../../routes/shared/types.ts";
-import { reconcileVideoRenderDelegationState } from "../video-render-delegation-state.ts";
 import { createFinalizeApprovedReview } from "./finalize-approved-review.ts";
-import { shouldAbortFinishReviewForVideoPreprodPack } from "./finish-review-video-gate.ts";
 import type { CreateReviewFinalizeToolsDeps } from "./types.ts";
 import type { FinishReviewFn } from "./reconcile-delegated-subtasks.ts";
 
@@ -122,62 +120,12 @@ export function createFinishReview(
       );
     }
 
-    let remainingSubtaskCount = (
+    const remainingSubtaskCount = (
       db
         .prepare("SELECT COUNT(*) as cnt FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled')")
         .get(taskId) as CountRow
     ).cnt;
     if (remainingSubtaskCount > 0) {
-      let pendingRender = db
-        .prepare(
-          "SELECT * FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled') AND title LIKE '%[VIDEO_FINAL_RENDER]%'",
-        )
-        .all(taskId) as Array<{ id: string; status: string; delegated_task_id: string | null }>;
-      let nonRenderRemaining = remainingSubtaskCount - pendingRender.length;
-
-      if (nonRenderRemaining === 0 && pendingRender.length > 0) {
-        const repair = reconcileVideoRenderDelegationState({ db, nowMs, broadcast }, pendingRender);
-        if (repair.staleResetCount > 0 || repair.recoveredDoneCount > 0) {
-          appendTaskLog(
-            taskId,
-            "system",
-            `Review hold repair: VIDEO_FINAL_RENDER delegation reconciled (stale_reset=${repair.staleResetCount}, recovered_done=${repair.recoveredDoneCount})`,
-          );
-          remainingSubtaskCount = (
-            db
-              .prepare("SELECT COUNT(*) as cnt FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled')")
-              .get(taskId) as CountRow
-          ).cnt;
-          pendingRender = db
-            .prepare(
-              "SELECT * FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled') AND title LIKE '%[VIDEO_FINAL_RENDER]%'",
-            )
-            .all(taskId) as Array<{ id: string; status: string; delegated_task_id: string | null }>;
-          nonRenderRemaining = remainingSubtaskCount - pendingRender.length;
-        }
-      }
-
-      if (nonRenderRemaining === 0 && pendingRender.length > 0) {
-        const undelegated = pendingRender.filter((s) => !String(s.delegated_task_id ?? "").trim());
-        if (undelegated.length > 0) {
-          for (const sub of undelegated) {
-            if (sub.status === "blocked") {
-              db.prepare("UPDATE subtasks SET status = 'pending', blocked_reason = NULL WHERE id = ?").run(sub.id);
-              broadcast("subtask_update", db.prepare("SELECT * FROM subtasks WHERE id = ?").get(sub.id));
-            }
-          }
-          appendTaskLog(
-            taskId,
-            "system",
-            "Review hold: only VIDEO_FINAL_RENDER remains — unblocking and triggering delegation.",
-          );
-          processSubtaskDelegations(taskId, { includeRender: true });
-        } else {
-          appendTaskLog(taskId, "system", `Review hold: VIDEO_FINAL_RENDER already delegated, waiting for completion.`);
-        }
-        return;
-      }
-
       notifyClient(
         pickL(
           l(
@@ -236,18 +184,6 @@ export function createFinishReview(
         );
         return;
       }
-    }
-
-    if (
-      shouldAbortFinishReviewForVideoPreprodPack({
-        taskId,
-        taskTitle,
-        lang,
-        currentTask,
-        deps,
-      })
-    ) {
-      return;
     }
 
     const finalizeApprovedReview = createFinalizeApprovedReview({

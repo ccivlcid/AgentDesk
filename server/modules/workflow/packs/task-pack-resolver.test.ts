@@ -25,15 +25,15 @@ describe("task-pack-resolver", () => {
   it("explicit pack key가 있으면 최우선으로 사용한다", () => {
     const db = setupDb();
     try {
-      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "novel");
-      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "report");
+      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "development");
+      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "development");
       const resolved = resolveWorkflowPackKeyForTask({
         db,
-        explicitPackKey: "video_preprod",
+        explicitPackKey: "development",
         sourceTaskId: "task-1",
         projectId: "project-1",
       });
-      expect(resolved).toBe("video_preprod");
+      expect(resolved).toBe("development");
     } finally {
       db.close();
     }
@@ -42,8 +42,8 @@ describe("task-pack-resolver", () => {
   it("source task pack -> project default 순으로 폴백한다", () => {
     const db = setupDb();
     try {
-      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "novel");
-      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "report");
+      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "development");
+      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "development");
 
       const fromTask = resolveWorkflowPackKeyForTask({
         db,
@@ -56,8 +56,8 @@ describe("task-pack-resolver", () => {
         projectId: "project-1",
       });
 
-      expect(fromTask).toBe("report");
-      expect(fromProject).toBe("novel");
+      expect(fromTask).toBe("development");
+      expect(fromProject).toBe("development");
     } finally {
       db.close();
     }
@@ -69,13 +69,13 @@ describe("task-pack-resolver", () => {
       const withFallback = resolveWorkflowPackKeyForTask({
         db,
         explicitPackKey: "invalid-pack",
-        fallbackPackKey: "report",
+        fallbackPackKey: "development",
       });
       const withDefault = resolveWorkflowPackKeyForTask({
         db,
         explicitPackKey: "invalid-pack",
       });
-      expect(withFallback).toBe("report");
+      expect(withFallback).toBe("development");
       expect(withDefault).toBe("development");
     } finally {
       db.close();
@@ -85,13 +85,13 @@ describe("task-pack-resolver", () => {
   it("project/task 단건 조회 헬퍼가 유효한 pack만 반환한다", () => {
     const db = setupDb();
     try {
-      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "roleplay");
-      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "report");
+      db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-1", "development");
+      db.prepare("INSERT INTO tasks (id, workflow_pack_key) VALUES (?, ?)").run("task-1", "development");
       db.prepare("INSERT INTO projects (id, default_pack_key) VALUES (?, ?)").run("project-2", "invalid");
 
-      expect(resolveProjectDefaultPackKey(db, "project-1")).toBe("roleplay");
+      expect(resolveProjectDefaultPackKey(db, "project-1")).toBe("development");
       expect(resolveProjectDefaultPackKey(db, "project-2")).toBeNull();
-      expect(resolveTaskPackKeyById(db, "task-1")).toBe("report");
+      expect(resolveTaskPackKeyById(db, "task-1")).toBe("development");
       expect(resolveTaskPackKeyById(db, "missing")).toBeNull();
     } finally {
       db.close();

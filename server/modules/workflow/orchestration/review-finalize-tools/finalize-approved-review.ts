@@ -1,8 +1,6 @@
-import { trySendTaskDeliverablesToMessenger } from "./finalize-deliverable-messenger.ts";
 import { triggerWebhooks } from "../../../routes/core/webhooks.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../core/task-execution-meta.ts";
 import { autoSaveTaskReport, autoCheckProjectDeliverables } from "../run-complete-handler/auto-completions.ts";
-import { recordArtifactsFromDirectoryScan, recordMergedArtifacts } from "./review-artifact-recorders.ts";
 import { eventBus } from "../../../../lib/event-bus.ts";
 import { shipAutomation } from "./ship-automation.ts";
 import type { SQLInputValue } from "node:sqlite";
@@ -86,11 +84,6 @@ export function createFinalizeApprovedReview(params: {
 
       if (mergeResult.success) {
         appendTaskLog(taskId, "system", `Git merge completed: ${mergeResult.message}`);
-        try {
-          recordMergedArtifacts(db, nowMs, wtInfo.projectPath, taskId);
-        } catch (artifactErr) {
-          appendTaskLog(taskId, "system", `Failed to record artifacts: ${artifactErr}`);
-        }
         cleanupWorktree(wtInfo.projectPath, taskId);
         appendTaskLog(taskId, "system", "Worktree cleaned up after successful merge");
         if (!currentTask.project_path && wtInfo.projectPath) {
@@ -160,21 +153,6 @@ export function createFinalizeApprovedReview(params: {
       }
     }
 
-    if (!wtInfo) {
-      try {
-        const directProjectPath = (currentTask as { project_path?: string | null }).project_path || process.cwd();
-        const existingArtifacts = (db.prepare("SELECT COUNT(*) as cnt FROM task_artifacts WHERE task_id = ?").get(taskId) as {
-          cnt: number;
-        }).cnt;
-        if (existingArtifacts === 0 && directProjectPath) {
-          recordArtifactsFromDirectoryScan(db, nowMs, directProjectPath, taskId);
-          appendTaskLog(taskId, "system", `Direct mode: scanned project directory for artifacts (${directProjectPath})`);
-        }
-      } catch {
-        /* best effort */
-      }
-    }
-
     {
       const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
       const params: unknown[] = [t, t];
@@ -236,15 +214,6 @@ export function createFinalizeApprovedReview(params: {
         insertNotification,
       });
     }
-
-    trySendTaskDeliverablesToMessenger({
-      db,
-      taskId,
-      taskTitle,
-      lang,
-      projectPathFallback: (currentTask as { project_path?: string | null }).project_path,
-      appendTaskLog,
-    });
 
     refreshCliUsageData()
       .then((usage: unknown) => broadcast("cli_usage_update", usage))

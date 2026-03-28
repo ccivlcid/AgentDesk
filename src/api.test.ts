@@ -106,13 +106,13 @@ describe("api client", () => {
       department_id: "planning",
       agent_id: "agent-1",
       project_id: "project-1",
-      workflow_pack_key: "report",
+      workflow_pack_key: "development",
     });
 
     expect(tasks).toEqual([{ id: "task-1", title: "Task 1", status: "inbox" }]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      "/api/tasks?status=inbox&department_id=planning&agent_id=agent-1&project_id=project-1&workflow_pack_key=report",
+      "/api/tasks?status=inbox&department_id=planning&agent_id=agent-1&project_id=project-1&workflow_pack_key=development",
     );
   });
 

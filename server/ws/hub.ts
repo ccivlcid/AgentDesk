@@ -26,6 +26,9 @@ export function createWsHub(
   // All other event types are broadcast to every connected client regardless.
   const taskSubscriptions = new Map<WebSocket, Set<string>>();
 
+  // Per-client session subscriptions: session_message events are filtered by session id.
+  const sessionSubscriptions = new Map<WebSocket, Set<string>>();
+
   function sendRaw(type: string, payload: unknown): void {
     const message = JSON.stringify({ type, payload, ts: nowMs() });
     for (const ws of wsClients) {
@@ -109,6 +112,20 @@ export function createWsHub(
   }
 
   function broadcast(type: string, payload: unknown): void {
+    // session_message: subscription-filtered delivery per session id
+    if (type === "session_message") {
+      const p = payload as { sessionId?: string };
+      const sessionId = p.sessionId;
+      const msg = JSON.stringify({ type, payload, ts: nowMs() });
+      for (const ws of wsClients) {
+        if (ws.readyState !== WebSocket.OPEN) continue;
+        const subs = sessionSubscriptions.get(ws);
+        if (!subs || !sessionId || !subs.has(sessionId)) continue;
+        ws.send(msg);
+      }
+      return;
+    }
+
     // Step 1: stdout chunk splitting for cli_output
     if (type === "cli_output") {
       const p = payload as { taskId?: string; line?: string };
@@ -199,6 +216,22 @@ export function createWsHub(
       return;
     }
 
+    // Session subscription messages
+    const sessionId = msg.sessionId as string | undefined;
+    if (type === "subscribe_session" && sessionId) {
+      if (!sessionSubscriptions.has(ws)) {
+        sessionSubscriptions.set(ws, new Set());
+      }
+      sessionSubscriptions.get(ws)!.add(sessionId);
+      logger.debug({ sessionId }, "[ws] client subscribed to session_message");
+      return;
+    }
+    if (type === "unsubscribe_session" && sessionId) {
+      sessionSubscriptions.get(ws)?.delete(sessionId);
+      logger.debug({ sessionId }, "[ws] client unsubscribed from session_message");
+      return;
+    }
+
     // PTY messages
     const id = msg.id as string | undefined;
     if (!id) return;
@@ -226,6 +259,7 @@ export function createWsHub(
   function removeClient(ws: WebSocket): void {
     wsClients.delete(ws);
     taskSubscriptions.delete(ws);
+    sessionSubscriptions.delete(ws);
     ptyManager.destroySessionsForClient(ws);
   }
 
