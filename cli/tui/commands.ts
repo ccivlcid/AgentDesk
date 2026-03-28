@@ -45,14 +45,14 @@ export async function handleSlashCommand(
     case "status": {
       try {
         const [projects, tasks, agents] = await Promise.all([
-          api.get<{ rows: { id: string; name: string; status: string }[] }>("/api/projects"),
-          api.get<{ rows: { id: string; status: string }[] }>("/api/tasks?status=in_progress"),
-          api.get<{ rows: { id: string; name: string; status: string }[] }>("/api/agents"),
+          api.get<{ projects: { id: string; name: string; status: string }[] }>("/api/projects"),
+          api.get<{ tasks: { id: string; status: string }[] }>("/api/tasks?status=in_progress"),
+          api.get<{ agents: { id: string; name: string; status: string }[] }>("/api/agents"),
         ]);
         const lines = [
-          `Projects: ${projects.rows?.length ?? 0}`,
-          `Active tasks: ${tasks.rows?.length ?? 0}`,
-          `Agents: ${agents.rows?.length ?? 0}`,
+          `Projects: ${projects.projects?.length ?? 0}`,
+          `Active tasks: ${tasks.tasks?.length ?? 0}`,
+          `Agents: ${agents.agents?.length ?? 0}`,
         ];
         addMessage(sysMsg(lines.join("\n")));
       } catch {
@@ -62,8 +62,8 @@ export async function handleSlashCommand(
     }
     case "tasks": {
       try {
-        const data = await api.get<{ rows: Pick<Task, "id" | "title" | "status" | "agent_name">[] }>("/api/tasks");
-        const rows = data.rows ?? [];
+        const data = await api.get<{ tasks: Pick<Task, "id" | "title" | "status" | "agent_name">[] }>("/api/tasks");
+        const rows = data.tasks ?? [];
         if (rows.length === 0) {
           addMessage(sysMsg("No tasks."));
         } else {
@@ -80,8 +80,8 @@ export async function handleSlashCommand(
     }
     case "agents": {
       try {
-        const data = await api.get<{ rows: Pick<Agent, "id" | "name" | "role" | "status">[] }>("/api/agents");
-        const rows = data.rows ?? [];
+        const data = await api.get<{ agents: Pick<Agent, "id" | "name" | "role" | "status">[] }>("/api/agents");
+        const rows = data.agents ?? [];
         if (rows.length === 0) {
           addMessage(sysMsg("No agents registered."));
         } else {
@@ -102,8 +102,8 @@ export async function handleSlashCommand(
 
       if (!subCmd || subCmd === "list") {
         try {
-          const data = await api.get<{ rows: Pick<Agent, "id" | "name" | "role" | "status">[] }>("/api/agents");
-          const rows = data.rows ?? [];
+          const data = await api.get<{ agents: Pick<Agent, "id" | "name" | "role" | "status">[] }>("/api/agents");
+          const rows = data.agents ?? [];
           if (rows.length === 0) {
             addMessage(sysMsg("No agents registered."));
           } else {
@@ -186,8 +186,8 @@ export async function handleSlashCommand(
           return true;
         }
         try {
-          const agentsData = await api.get<{ rows: Array<{ id: string; name: string }> }>("/api/agents");
-          const agentsList = agentsData.rows ?? [];
+          const agentsData = await api.get<{ agents: Array<{ id: string; name: string }> }>("/api/agents");
+          const agentsList = agentsData.agents ?? [];
           const agent = agentsList.find(
             (a) => a.id.startsWith(nameOrId) || a.name.toLowerCase() === nameOrId.toLowerCase(),
           );
@@ -215,8 +215,8 @@ export async function handleSlashCommand(
         }
 
         try {
-          const agentsData = await api.get<{ rows: Array<{ id: string; name: string }> }>("/api/agents");
-          const agentsList = agentsData.rows ?? [];
+          const agentsData = await api.get<{ agents: Array<{ id: string; name: string }> }>("/api/agents");
+          const agentsList = agentsData.agents ?? [];
           const agent = agentsList.find(
             (a) => a.id.startsWith(nameOrId) || a.name.toLowerCase() === nameOrId.toLowerCase(),
           );
@@ -237,11 +237,96 @@ export async function handleSlashCommand(
       }
 
       if (subCmd === "edit") {
-        addMessage(sysMsg("Agent editing via /agent edit is not yet supported. Use /open for GUI."));
+        // /agent edit <name-or-id> <field> <value>
+        const nameOrId = args[1];
+        const field = args[2]?.toLowerCase();
+        const value = args.slice(3).join(" ");
+
+        if (!nameOrId || !field || !value) {
+          addMessage(sysMsg([
+            "Usage: /agent edit <name-or-id> <field> <value>",
+            "",
+            "Fields:",
+            "  name     <new name>",
+            "  model    <model id>       e.g. claude-opus-4-6",
+            "  provider <provider id>    e.g. claude",
+            "  role     <role>           senior | junior | team_leader",
+            "  system   <system prompt>",
+            "",
+            "Examples:",
+            "  /agent edit Alice model claude-opus-4-6",
+            '  /agent edit "Backend Dev" name "Backend Senior"',
+            "  /agent edit pm role team_leader",
+          ].join("\n")));
+          return true;
+        }
+
+        const FIELD_MAP: Record<string, string> = {
+          name: "name",
+          model: "api_model",
+          provider: "api_provider_id",
+          role: "role",
+          system: "system_prompt",
+        };
+
+        const patchKey = FIELD_MAP[field];
+        if (!patchKey) {
+          addMessage(sysMsg(`Unknown field: ${field}. Use: name, model, provider, role, system`));
+          return true;
+        }
+
+        try {
+          const agentsData = await api.get<{ agents: Array<{ id: string; name: string }> }>("/api/agents");
+          const agentsList = agentsData.agents ?? [];
+          const agent = agentsList.find(
+            (a) => a.id.startsWith(nameOrId) || a.name.toLowerCase() === nameOrId.toLowerCase(),
+          );
+          if (!agent) {
+            addMessage(sysMsg(`Agent not found: ${nameOrId}`));
+            return true;
+          }
+          await api.patch(`/api/agents/${agent.id}`, { [patchKey]: value });
+          addMessage(sysMsg(`Agent "${agent.name}" updated: ${field} = ${value}`));
+        } catch {
+          addMessage(sysMsg(`Failed to edit agent: ${nameOrId}`));
+        }
         return true;
       }
 
-      addMessage(sysMsg("Unknown subcommand. Use: /agent create, /agent list, /agent delete, /agent assign"));
+      if (subCmd === "show") {
+        // /agent show <name-or-id>
+        const nameOrId = args[1];
+        if (!nameOrId) {
+          addMessage(sysMsg("Usage: /agent show <name-or-id>"));
+          return true;
+        }
+        try {
+          const agentsData = await api.get<{ agents: Array<{ id: string; name: string; role: string; status: string; api_model?: string | null; cli_provider?: string | null; system_prompt?: string | null }> }>("/api/agents");
+          const agentsList = agentsData.agents ?? [];
+          const agent = agentsList.find(
+            (a) => a.id.startsWith(nameOrId) || a.name.toLowerCase() === nameOrId.toLowerCase(),
+          );
+          if (!agent) {
+            addMessage(sysMsg(`Agent not found: ${nameOrId}`));
+            return true;
+          }
+          const roleLabel = (r: string) => r === "team_leader" ? "PM" : r === "senior" ? "Senior" : r === "junior" ? "Junior" : r;
+          addMessage(sysMsg([
+            `Agent: ${agent.name}`,
+            `  ID:       ${agent.id.slice(0, 8)}`,
+            `  Role:     ${roleLabel(agent.role)}`,
+            `  Status:   ${agent.status}`,
+            `  Provider: ${agent.cli_provider ?? "(none)"}`,
+            `  Model:    ${agent.api_model ?? "(none)"}`,
+            agent.system_prompt ? `  System:   ${agent.system_prompt.slice(0, 60)}${agent.system_prompt.length > 60 ? "..." : ""}` : "",
+          ].filter(Boolean).join("\n")));
+        } catch {
+          addMessage(sysMsg(`Failed to fetch agent: ${nameOrId}`));
+        }
+        return true;
+      }
+
+      addMessage(sysMsg("Unknown subcommand. Use: /agent list, /agent create, /agent edit, /agent show, /agent delete, /agent assign"));
       return true;
     }
     case "connect": {
@@ -278,20 +363,81 @@ export async function handleSlashCommand(
         const presetList = Object.keys(presetMap);
 
         if (args.length === 0) {
-          // Show usage
-          addMessage(
-            sysMsg(
-              [
-                "Available providers:",
-                ...presetList.map((p, i) => `  ${i + 1}. ${p}`),
-                "",
-                "Usage: /connect <type> <api-key>",
-                "Example: /connect anthropic sk-ant-api03-xxxxx",
-                "         /connect openai sk-xxxxx",
-                "         /connect ollama (no key needed)",
-              ].join("\n"),
-            ),
-          );
+          // Show CLI tools (auto-detected) + API providers
+          const lines: string[] = ["LLM 연결 현황:", ""];
+
+          // 1. CLI tools (locally installed)
+          try {
+            const cliData = await api.get<{
+              providers: Record<string, { installed: boolean; authenticated: boolean; version?: string }>;
+            }>("/api/cli-status");
+            const cliProviders = cliData.providers ?? {};
+            const cliEntries = Object.entries(cliProviders).filter(([, s]) => s.installed);
+            if (cliEntries.length > 0) {
+              lines.push("CLI 도구 (로컬 설치됨):");
+              for (const [name, status] of cliEntries) {
+                const auth = status.authenticated ? "[AUTH OK]" : "[AUTH REQ]";
+                const ver = status.version ? ` v${status.version}` : "";
+                lines.push(`  ${status.authenticated ? "●" : "○"} ${name}${ver}  ${auth}`);
+              }
+              lines.push("");
+              lines.push("  → 에이전트에 CLI 프로바이더 지정:");
+              lines.push("    /agent edit PM provider claude");
+              lines.push("    /agent edit \"Backend Senior\" provider cursor");
+              lines.push("");
+            } else {
+              lines.push("CLI 도구: 설치된 도구 없음");
+              lines.push("  (Claude Code, Cursor 등을 먼저 설치하거나 API key 방식 사용)");
+              lines.push("");
+            }
+          } catch {
+            // skip cli status
+          }
+
+          // 2. API providers
+          lines.push("API 프로바이더 추가:");
+          lines.push(...presetList.map((p) => `  /connect ${p} <api-key>`));
+          lines.push("  /connect ollama  (no key needed)");
+          addMessage(sysMsg(lines.join("\n")));
+          return true;
+        }
+
+        // /connect detect — auto-assign CLI providers to agents
+        if (args[0] === "detect") {
+          addMessage(sysMsg("CLI 도구 감지 중..."));
+          try {
+            const cliData = await api.get<{
+              providers: Record<string, { installed: boolean; authenticated: boolean }>;
+            }>("/api/cli-status?refresh=1");
+            const ready = Object.entries(cliData.providers ?? {})
+              .filter(([, s]) => s.installed && s.authenticated)
+              .map(([name]) => name);
+
+            if (ready.length === 0) {
+              addMessage(sysMsg("인증된 CLI 도구가 없습니다. Claude Code나 Cursor에 먼저 로그인하세요."));
+              return true;
+            }
+
+            const agentsData = await api.get<{ agents: Array<{ id: string; name: string; cli_provider?: string | null }> }>("/api/agents");
+            const agentsList = agentsData.agents ?? [];
+            const defaultProvider = ready[0];
+            let updated = 0;
+            for (const agent of agentsList) {
+              await api.patch(`/api/agents/${agent.id}`, { cli_provider: defaultProvider });
+              updated++;
+            }
+            addMessage(sysMsg([
+              `감지된 CLI 도구: ${ready.join(", ")}`,
+              `${updated}개 에이전트에 "${defaultProvider}" 프로바이더 지정 완료.`,
+              "",
+              "사이드바 에이전트 목록이 초록색으로 변경됩니다.",
+              "",
+              "특정 에이전트에 다른 도구 지정:",
+              `/agent edit <name> provider ${ready.join("|")}`,
+            ].join("\n")));
+          } catch {
+            addMessage(sysMsg("CLI 감지 실패."));
+          }
           return true;
         }
 
@@ -400,8 +546,8 @@ export async function handleSlashCommand(
         // Switch to project by ID (or ID prefix)
         const projectIdArg = args[0];
         try {
-          const data = await api.get<{ rows: { id: string; name: string; status: string }[] }>("/api/projects");
-          const rows = data.rows ?? [];
+          const data = await api.get<{ projects: { id: string; name: string; status: string }[] }>("/api/projects");
+          const rows = data.projects ?? [];
           const match = rows.find((p) => p.id === projectIdArg || p.id.startsWith(projectIdArg));
           if (!match) {
             addMessage(sysMsg(`No project found matching: ${projectIdArg}`));
@@ -415,10 +561,10 @@ export async function handleSlashCommand(
       } else {
         // List projects
         try {
-          const data = await api.get<{ rows: { id: string; name: string; status: string; core_goal?: string }[] }>(
+          const data = await api.get<{ projects: { id: string; name: string; status: string; core_goal?: string }[] }>(
             "/api/projects",
           );
-          const rows = data.rows ?? [];
+          const rows = data.projects ?? [];
           if (rows.length === 0) {
             addMessage(sysMsg("No projects."));
           } else {
@@ -428,6 +574,64 @@ export async function handleSlashCommand(
         } catch {
           addMessage(sysMsg("Failed to fetch projects."));
         }
+      }
+      return true;
+    }
+    case "import": {
+      // Import current directory (or specified path) as a project
+      const dirArg = args[0];
+      try {
+        const { execSync } = await import("child_process");
+        const cwd = dirArg ?? process.cwd();
+
+        // Detect git remote for github_repo
+        let githubRepo: string | null = null;
+        try {
+          const remote = execSync("git remote get-url origin", { cwd, encoding: "utf8" }).trim();
+          const m = remote.match(/github\.com[:/](.+?)(?:\.git)?$/);
+          if (m) githubRepo = m[1];
+        } catch {
+          // not a git repo or no remote
+        }
+
+        // Detect git branch
+        let branch: string | null = null;
+        try {
+          branch = execSync("git rev-parse --abbrev-ref HEAD", { cwd, encoding: "utf8" }).trim();
+        } catch {
+          // ignore
+        }
+
+        // Check if a project already exists with this path
+        const data = await api.get<{ projects: Array<{ id: string; name: string; project_path: string }> }>("/api/projects");
+        const existing = (data.projects ?? []).find((p) => p.project_path === cwd);
+        if (existing) {
+          extras.setProjectId(existing.id);
+          addMessage(sysMsg(`Switched to existing project: ${existing.name} (${existing.id.slice(0, 8)})${branch ? ` [${branch}]` : ""}`));
+          return true;
+        }
+
+        // Create new project from this directory
+        const dirName = cwd.split(/[\\/]/).filter(Boolean).pop() ?? "project";
+        const goal = args.slice(1).join(" ") || `Work on ${dirName}`;
+        const created = await api.post<{ id: string; name: string }>("/api/projects", {
+          name: dirName,
+          project_path: cwd,
+          core_goal: goal,
+          github_repo: githubRepo,
+        });
+        extras.setProjectId(created.id);
+        addMessage(sysMsg([
+          `Project imported: ${created.name} (${created.id.slice(0, 8)})`,
+          `  Path: ${cwd}`,
+          githubRepo ? `  GitHub: ${githubRepo}` : "",
+          branch ? `  Branch: ${branch}` : "",
+          "",
+          "Run /kickoff to start PM orchestration.",
+        ].filter(Boolean).join("\n")));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        addMessage(sysMsg(`Failed to import project: ${msg}`));
       }
       return true;
     }
@@ -443,24 +647,74 @@ export async function handleSlashCommand(
       return true;
     }
     case "setup": {
-      try {
-        const agents = await api.get<{ rows: unknown[] }>("/api/agents");
-        if ((agents.rows?.length ?? 0) > 0) {
-          addMessage(sysMsg(`${agents.rows.length} agents already configured. Use /agents to view.`));
-          return true;
+      if (args[0] === "quick") {
+        // Create default dev team directly via API
+        addMessage(sysMsg("기본 dev 팀 생성 중..."));
+        const defaultAgents = [
+          { name: "PM", role: "team_leader", department_id: "planning" },
+          { name: "Backend Senior", role: "senior", department_id: "dev" },
+          { name: "Frontend Senior", role: "senior", department_id: "dev" },
+          { name: "QA", role: "junior", department_id: "qa" },
+        ];
+        let created = 0;
+        let skipped = 0;
+        for (const agent of defaultAgents) {
+          try {
+            await api.post("/api/agents", agent);
+            created++;
+          } catch {
+            skipped++;
+          }
         }
-      } catch {
-        // ignore — show setup options anyway
+        addMessage(sysMsg([
+          `완료: ${created}개 에이전트 생성${skipped > 0 ? `, ${skipped}개 스킵` : ""}.`,
+          "",
+          "다음 단계: /connect anthropic <api-key> 로 LLM 연결",
+          "모델 지정: /agent edit PM model claude-opus-4-6",
+        ].join("\n")));
+        return true;
       }
-      addMessage(
-        sysMsg(
-          [
-            "Setup options:",
-            "  Type 'quick' — Auto-create dev team (PM + Backend + Frontend + QA)",
-            "  Type '/open'  — Open GUI for detailed setup",
-          ].join("\n"),
-        ),
-      );
+
+      // Show setup guide
+      let agentCount = 0;
+      let hasModel = false;
+      try {
+        const data = await api.get<{ agents: Array<{ api_model?: string | null }> }>("/api/agents");
+        agentCount = data.agents?.length ?? 0;
+        hasModel = (data.agents ?? []).some((a) => !!a.api_model);
+      } catch {
+        // ignore
+      }
+
+      const lines = ["Setup 가이드:", ""];
+      if (agentCount === 0) {
+        lines.push("  [1/3] 에이전트 생성");
+        lines.push("        /setup quick  — PM + Backend + Frontend + QA 자동 생성");
+        lines.push('        /agent create "Backend Sr" senior  — 수동 생성');
+        lines.push("");
+      } else {
+        lines.push(`  [v] 에이전트 ${agentCount}개 등록됨`);
+        lines.push("");
+      }
+      lines.push("  [2/3] LLM 프로바이더 연결");
+      lines.push("        /connect detect              — 설치된 CLI 도구 자동 감지 (Claude Code, Cursor)");
+      lines.push("        /connect anthropic sk-ant-xxxxx  — API key 방식");
+      lines.push("        /connect openai sk-xxxxx");
+      lines.push("        /connect ollama");
+      lines.push("");
+      if (!hasModel && agentCount > 0) {
+        lines.push("  [3/3] 에이전트에 모델 지정");
+        lines.push("        /agent edit PM model claude-opus-4-6");
+        lines.push("        /agent edit \"Backend Senior\" model claude-sonnet-4-6");
+      } else if (hasModel) {
+        lines.push("  [v] 모델 연결됨 — /kickoff 으로 프로젝트 시작");
+      } else {
+        lines.push("  [3/3] 에이전트에 모델 지정");
+        lines.push("        /agent edit <name> model <model-id>");
+      }
+      lines.push("");
+      lines.push("  GUI 설정: /open");
+      addMessage(sysMsg(lines.join("\n")));
       return true;
     }
     case "plan":
@@ -496,14 +750,18 @@ export async function handleSlashCommand(
             "Available commands:",
             "",
             "Setup:",
-            "  /connect [type] [key]       Add LLM provider",
-            "  /providers                  List providers",
+            "  /connect                    Show CLI tools + API providers",
+            "  /connect detect             Auto-detect & assign CLI tools to agents",
+            "  /connect <type> <key>       Add API provider (anthropic/openai/ollama)",
+            "  /providers                  List API providers",
             "  /models                     List models",
             "  /setup quick                Auto-create dev team",
             "",
             "Agents:",
             "  /agent create <n> <r>       Create agent",
             "  /agent list                 List agents",
+            "  /agent show <name>          Show agent details",
+            "  /agent edit <n> <f> <v>     Edit field (name/model/provider/role/system)",
             "  /agent delete <name>        Delete agent",
             "  /agent assign <n> <p> <m>   Assign model",
             "",
@@ -511,6 +769,7 @@ export async function handleSlashCommand(
             "  /status                     Overview",
             "  /tasks                      Task list",
             "  /projects [id]              List/switch projects",
+            "  /import [path] [goal]        Import current dir (or path) as project",
             "  /logs [task-id]             Recent logs",
             "",
             "PM Decisions:",
@@ -566,8 +825,8 @@ export async function handleSlashCommand(
     }
     case "inbox": {
       try {
-        const data = await api.get<{ rows: Array<{ id: string; title: string; status: string; agent_name?: string }> }>("/api/tasks?status=review");
-        const tasks = data.rows ?? [];
+        const data = await api.get<{ tasks: Array<{ id: string; title: string; status: string; agent_name?: string }> }>("/api/tasks?status=review");
+        const tasks = data.tasks ?? [];
         if (tasks.length === 0) {
           addMessage(sysMsg("No pending decisions."));
         } else {
@@ -582,8 +841,8 @@ export async function handleSlashCommand(
     case "approve": {
       try {
         let taskId = args[0];
-        const tasksData = await api.get<{ rows: Array<{ id: string }> }>("/api/tasks?status=review");
-        const reviewTasks = tasksData.rows ?? [];
+        const tasksData = await api.get<{ tasks: Array<{ id: string }> }>("/api/tasks?status=review");
+        const reviewTasks = tasksData.tasks ?? [];
         if (!taskId) {
           const first = reviewTasks[0];
           if (!first) {
@@ -614,8 +873,8 @@ export async function handleSlashCommand(
           addMessage(sysMsg("Usage: /revise <task-id> <feedback>"));
           return true;
         }
-        const tasksData = await api.get<{ rows: Array<{ id: string }> }>("/api/tasks?status=review");
-        const match = (tasksData.rows ?? []).find(t => t.id.startsWith(taskIdArg));
+        const tasksData = await api.get<{ tasks: Array<{ id: string }> }>("/api/tasks?status=review");
+        const match = (tasksData.tasks ?? []).find(t => t.id.startsWith(taskIdArg));
         if (!match) {
           addMessage(sysMsg(`No review task found: ${taskIdArg}`));
           return true;
@@ -670,8 +929,8 @@ export async function handleSlashCommand(
           addMessage(sysMsg("Rule deleted."));
           return true;
         }
-        const data = await api.get<{ ok: boolean; rows?: Array<{ id: string; content: string; category?: string }> }>("/api/agent-rules");
-        const rules = data.rows ?? [];
+        const data = await api.get<Array<{ id: string; content: string; category?: string }>>("/api/agent-rules");
+        const rules = Array.isArray(data) ? data : [];
         if (rules.length === 0) {
           addMessage(sysMsg("No rules. Use /rules add <content>"));
         } else {
@@ -696,8 +955,8 @@ export async function handleSlashCommand(
           addMessage(sysMsg("Memory deleted."));
           return true;
         }
-        const data = await api.get<{ ok: boolean; rows?: Array<{ id: string; content: string; category?: string }> }>("/api/memory");
-        const rows = data.rows ?? [];
+        const data = await api.get<Array<{ id: string; content: string; category?: string }>>("/api/memory");
+        const rows = Array.isArray(data) ? data : [];
         if (rows.length === 0) {
           addMessage(sysMsg("No memory entries. Use /memory add <content>"));
         } else {
@@ -723,8 +982,8 @@ export async function handleSlashCommand(
           addMessage(sysMsg("Hook deleted."));
           return true;
         }
-        const data = await api.get<{ ok: boolean; rows?: Array<{ id: string; event: string; action: string }> }>("/api/hooks");
-        const hookRows = data.rows ?? [];
+        const data = await api.get<Array<{ id: string; event: string; action: string }>>("/api/hooks");
+        const hookRows = Array.isArray(data) ? data : [];
         if (hookRows.length === 0) {
           addMessage(sysMsg("No hooks. Use /hooks add <event> <action>"));
         } else {
@@ -738,17 +997,19 @@ export async function handleSlashCommand(
     }
     case "cost": {
       try {
-        const data = await api.get<{ ok: boolean; total_tokens?: number; total_cost?: number; by_agent?: Array<{ agent_name: string; tokens: number; cost: number }> }>("/api/agent-usage");
-        const total = data.total_tokens ?? 0;
-        const cost = data.total_cost ?? 0;
-        const agents = data.by_agent ?? [];
+        const data = await api.get<{ ok: boolean; usage?: Array<{ agent_name?: string; run_count?: number; total_duration_ms?: number; success_count?: number; failure_count?: number }> }>("/api/agent-usage");
+        const usageRows = data.usage ?? [];
+        const totalRuns = usageRows.reduce((s, u) => s + (u.run_count ?? 0), 0);
+        const totalMs = usageRows.reduce((s, u) => s + (u.total_duration_ms ?? 0), 0);
+        const totalSec = Math.round(totalMs / 1000);
         const lines = [
-          `Total: ${total >= 1000 ? Math.round(total/1000) + "k" : total} tokens  $${cost.toFixed(2)}`,
+          `Total runs: ${totalRuns}  Total duration: ${totalSec}s`,
         ];
-        if (agents.length > 0) {
+        if (usageRows.length > 0) {
           lines.push("", "By agent:");
-          for (const a of agents) {
-            lines.push(`  ${a.agent_name.padEnd(20)} ${String(a.tokens).padEnd(10)} $${a.cost.toFixed(2)}`);
+          for (const u of usageRows) {
+            const dur = Math.round((u.total_duration_ms ?? 0) / 1000);
+            lines.push(`  ${(u.agent_name ?? "-").padEnd(20)} ${String(u.run_count ?? 0).padEnd(6)} runs  ${dur}s`);
           }
         }
         addMessage(sysMsg(lines.join("\n")));
@@ -760,18 +1021,25 @@ export async function handleSlashCommand(
     case "usage": {
       try {
         if (args[0] === "daily") {
-          const data = await api.get<{ ok: boolean; trends?: Array<{ date: string; tokens: number; cost: number }> }>("/api/agent-usage/trends/daily");
-          const trends = data.trends ?? [];
-          if (trends.length === 0) {
+          const data = await api.get<{ ok: boolean; daily?: Array<{ day_epoch: number; provider?: string; run_count?: number; total_duration_ms?: number }> }>("/api/agent-usage/trends/daily");
+          const daily = data.daily ?? [];
+          if (daily.length === 0) {
             addMessage(sysMsg("No usage data yet."));
           } else {
-            const lines = trends.slice(-7).map(t => `  ${t.date}  ${String(t.tokens).padEnd(10)} $${t.cost.toFixed(2)}`);
-            addMessage(sysMsg(["Daily usage (last 7 days):", "  DATE        TOKENS     COST", ...lines].join("\n")));
+            const lines = daily.slice(-7).map(d => {
+              const date = new Date(d.day_epoch * 86400000).toISOString().slice(0, 10);
+              const dur = Math.round((d.total_duration_ms ?? 0) / 1000);
+              return `  ${date}  ${String(d.run_count ?? 0).padEnd(6)} runs  ${dur}s`;
+            });
+            addMessage(sysMsg(["Daily usage (last 7 days):", "  DATE        RUNS   DURATION", ...lines].join("\n")));
           }
           return true;
         }
-        const data = await api.get<{ ok: boolean; total_tokens?: number; total_cost?: number }>("/api/agent-usage");
-        addMessage(sysMsg(`Tokens: ${data.total_tokens ?? 0}  Cost: $${(data.total_cost ?? 0).toFixed(2)}\n\nUse /usage daily for trends.`));
+        const data = await api.get<{ ok: boolean; usage?: Array<{ run_count?: number; total_duration_ms?: number }> }>("/api/agent-usage");
+        const usageRows = data.usage ?? [];
+        const totalRuns = usageRows.reduce((s, u) => s + (u.run_count ?? 0), 0);
+        const totalSec = Math.round(usageRows.reduce((s, u) => s + (u.total_duration_ms ?? 0), 0) / 1000);
+        addMessage(sysMsg(`Runs: ${totalRuns}  Duration: ${totalSec}s\n\nUse /usage daily for trends.`));
       } catch {
         addMessage(sysMsg("Failed to fetch usage data."));
       }
@@ -838,14 +1106,14 @@ export async function handleSlashCommand(
       try {
         const taskIdArg = args[0];
         if (taskIdArg) {
-          const tasksData = await api.get<{ rows: Array<{ id: string; title: string }> }>("/api/tasks");
-          const task = (tasksData.rows ?? []).find(t => t.id.startsWith(taskIdArg));
+          const tasksData = await api.get<{ tasks: Array<{ id: string; title: string }> }>("/api/tasks");
+          const task = (tasksData.tasks ?? []).find(t => t.id.startsWith(taskIdArg));
           if (!task) {
             addMessage(sysMsg(`Task not found: ${taskIdArg}`));
             return true;
           }
-          const logsData = await api.get<{ rows: Array<{ id: string; content: string; created_at: number }> }>(`/api/tasks/${task.id}/logs`);
-          const logRows = logsData.rows ?? [];
+          const taskData = await api.get<{ task: { id: string; title: string }; logs: Array<{ id: string; content: string; created_at: number }> }>(`/api/tasks/${task.id}`);
+          const logRows = taskData.logs ?? [];
           if (logRows.length === 0) {
             addMessage(sysMsg(`No logs for task ${task.id.slice(0,8)}.`));
           } else {
@@ -853,14 +1121,7 @@ export async function handleSlashCommand(
             addMessage(sysMsg([`Logs for ${task.title}:`, ...lines].join("\n")));
           }
         } else {
-          const logsData = await api.get<{ rows: Array<{ id: string; content: string; task_id?: string; created_at: number }> }>("/api/task-logs?limit=20");
-          const logRows = logsData.rows ?? [];
-          if (logRows.length === 0) {
-            addMessage(sysMsg("No recent logs."));
-          } else {
-            const lines = logRows.map(l => `  ${l.task_id?.slice(0,8) ?? "?"}  ${l.content.slice(0, 80)}`);
-            addMessage(sysMsg(["Recent logs (last 20):", ...lines].join("\n")));
-          }
+          addMessage(sysMsg("Usage: /logs <task-id>"));
         }
       } catch {
         addMessage(sysMsg("Failed to fetch logs."));

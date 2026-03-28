@@ -9,12 +9,13 @@ const LEADER_BINDINGS: Record<string, string> = {
   a: "/agents",
   n: "/new",
   f: "/fork",
-  d: "/details",
   p: "/providers",
   m: "/models",
   c: "/cost",
   q: "/quit",
   h: "/help",
+  u: "/__scroll_up",
+  d: "/__scroll_down",
 };
 
 interface UseLeaderKeyParams {

@@ -3,11 +3,12 @@ import { Box, Text } from "ink";
 
 interface SidebarProps {
   project: { name: string | null; path: string | null; branch?: string | null };
-  agents: Array<{ name: string; status: string; currentTask?: string }>;
+  agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
   tasks: Array<{ id: string; title: string; status: string }>;
   pipelineStage: string | null;
   tokens: number;
   cost: number;
+  readyCli?: Set<string>;
 }
 
 // Task status -> icon
@@ -31,7 +32,7 @@ const AGENT_INDICATOR: Record<string, string> = {
 // Pipeline stages
 const PIPELINE_STAGES = ["Meeting", "Planning", "Assigning", "Executing", "Review"];
 
-export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost }: SidebarProps): React.ReactElement {
+export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, readyCli = new Set() }: SidebarProps): React.ReactElement {
   const currentStageIdx = PIPELINE_STAGES.findIndex(
     (s) => s.toLowerCase() === pipelineStage?.toLowerCase()
   );
@@ -56,15 +57,26 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost }:
       {agents.length === 0 ? (
         <Text dimColor>  (none)</Text>
       ) : (
-        agents.map((a, i) => (
-          <Text key={i}>
-            <Text color={a.status === "working" || a.status === "running" ? "green" : "gray"}>
-              {"  "}{AGENT_INDICATOR[a.status] ?? "o"}
-            </Text>
-            <Text> {a.name}</Text>
-            <Text dimColor> ({a.status})</Text>
-          </Text>
-        ))
+        agents.map((a, i) => {
+          // Green only if: api_model set OR cli_provider is actually installed+authenticated
+          const cliReady = !!a.cli_provider && readyCli.has(a.cli_provider);
+          const hasLlm = !!a.api_model || cliReady;
+          const label = a.api_model ?? (cliReady ? a.cli_provider : null) ?? null;
+          const model = label ? (label.length > 14 ? label.slice(0, 13) + "~" : label) : null;
+          const llmColor = hasLlm ? "green" : "red";
+          return (
+            <Box key={i} flexDirection="column">
+              <Text>
+                <Text color={a.status === "working" || a.status === "running" ? "green" : "gray"}>
+                  {"  "}{AGENT_INDICATOR[a.status] ?? "o"}
+                </Text>
+                <Text> {a.name.length > 14 ? a.name.slice(0, 13) + "~" : a.name}</Text>
+                <Text color={llmColor}> ●</Text>
+              </Text>
+              {model && <Text dimColor>    {model}</Text>}
+            </Box>
+          );
+        })
       )}
       <Text> </Text>
 

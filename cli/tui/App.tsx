@@ -47,7 +47,14 @@ function sysMsg(content: string): ChatMessage {
 export function App(): React.ReactElement {
   const session = useSession();
   const { exit } = useApp();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const settings = loadCliSettings();
+    if (settings.language) {
+      return [sysMsg(getWelcomeMessage(settings.language, false))];
+    }
+    return [];
+  });
+  const [scrollOffset, setScrollOffset] = useState(0); // 0 = bottom, N = N msgs from bottom
   const [mode, setMode] = useState<"plan" | "build" | "yolo">("build");
   const [showDetails, setShowDetails] = useState(false);
   const [language, setLanguage] = useState<"en" | "ko" | null>(() => {
@@ -61,7 +68,10 @@ export function App(): React.ReactElement {
   const sidebar = useSidebar(session.projectId);
 
   const addMessage = useCallback(
-    (msg: ChatMessage) => setMessages((prev) => [...prev, msg]),
+    (msg: ChatMessage) => {
+      setMessages((prev) => [...prev, msg]);
+      setScrollOffset(0); // auto-scroll to bottom on new message
+    },
     [],
   );
 
@@ -92,7 +102,7 @@ export function App(): React.ReactElement {
     },
   });
 
-  // Tab key cycles plan -> build (yolo stays until explicitly set)
+  // Tab: mode toggle
   useInput((_input, key) => {
     if (key.tab) {
       setMode((prev) => (prev === "plan" ? "build" : "plan"));
@@ -224,7 +234,17 @@ export function App(): React.ReactElement {
   };
 
   const { leaderMode } = useLeaderKey({
-    onCommand: (cmd) => { void handleSend(cmd); },
+    onCommand: (cmd) => {
+      if (cmd === "/__scroll_up") {
+        setScrollOffset((prev) => Math.min(prev + 10, Math.max(0, messages.length - 10)));
+        return;
+      }
+      if (cmd === "/__scroll_down") {
+        setScrollOffset((prev) => Math.max(0, prev - 10));
+        return;
+      }
+      void handleSend(cmd);
+    },
   });
 
   if (language === null) {
@@ -233,11 +253,19 @@ export function App(): React.ReactElement {
 
   const activeTasks = sidebar.tasks.filter((t) => t.status === "in_progress").length;
 
+  const PAGE = 50;
+  const visibleMessages =
+    scrollOffset === 0
+      ? messages.slice(-PAGE)
+      : messages.slice(Math.max(0, messages.length - PAGE - scrollOffset), messages.length - scrollOffset);
+
   return (
     <Box flexDirection="column" height="100%">
-      <Box flexDirection="row" flexGrow={1}>
-        <Box flexDirection="column" flexGrow={1}>
-          <ChatArea messages={messages} showDetails={showDetails} />
+      <Box flexDirection="row" flexGrow={1} overflow="hidden">
+        <Box flexDirection="column" flexGrow={1} overflow="hidden">
+          <Box flexDirection="column" flexGrow={1} overflowY="hidden">
+            <ChatArea messages={visibleMessages} showDetails={showDetails} scrollOffset={scrollOffset} totalMessages={messages.length} />
+          </Box>
           <InputBar onSend={handleSend} mode={mode} projectId={session.projectId} />
         </Box>
         <Sidebar
@@ -247,6 +275,7 @@ export function App(): React.ReactElement {
           pipelineStage={sidebar.pipelineStage}
           tokens={sidebar.tokens}
           cost={sidebar.cost}
+          readyCli={sidebar.readyCli}
         />
       </Box>
       <StatusBar

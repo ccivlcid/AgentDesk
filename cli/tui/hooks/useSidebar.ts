@@ -3,17 +3,19 @@ import { api } from "../../lib/api.js";
 
 interface SidebarState {
   project: { name: string | null; path: string | null; branch: string | null };
-  agents: Array<{ name: string; status: string; currentTask?: string }>;
+  agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
   tasks: Array<{ id: string; title: string; status: string }>;
   pipelineStage: string | null;
   tokens: number;
   cost: number;
+  readyCli: Set<string>; // CLI providers that are installed + authenticated
 }
 
 export interface UseSidebarReturn extends SidebarState {
   refresh: () => Promise<void>;
   setPipelineStage: (stage: string | null) => void;
   updateFromWs: (type: string, payload: unknown) => void;
+  readyCli: Set<string>;
 }
 
 export function useSidebar(projectId: string | null): UseSidebarReturn {
@@ -24,6 +26,7 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
     pipelineStage: null,
     tokens: 0,
     cost: 0,
+    readyCli: new Set(),
   });
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -32,7 +35,7 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
 
   const refresh = useCallback(async () => {
     try {
-      const agentData = await api.get<{ rows: Array<{ name: string; status: string }> }>("/api/agents");
+      const agentData = await api.get<{ agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null }> }>("/api/agents");
 
       let project: SidebarState["project"] = { name: null, path: null, branch: null };
       const currentProjectId = projectIdRef.current;
@@ -51,9 +54,9 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
       if (currentProjectId) {
         try {
           const taskData = await api.get<{
-            rows: Array<{ id: string; title: string; status: string }>;
+            tasks: Array<{ id: string; title: string; status: string }>;
           }>(`/api/tasks?project_id=${currentProjectId}`);
-          tasks = taskData.rows ?? [];
+          tasks = taskData.tasks ?? [];
         } catch {
           // no tasks
         }
@@ -71,13 +74,29 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
         // no usage data
       }
 
+      // CLI status — which providers are actually installed + authenticated
+      let readyCli = new Set<string>();
+      try {
+        const cliData = await api.get<{
+          providers: Record<string, { installed: boolean; authenticated: boolean }>;
+        }>("/api/cli-status");
+        readyCli = new Set(
+          Object.entries(cliData.providers ?? {})
+            .filter(([, s]) => s.installed && s.authenticated)
+            .map(([name]) => name),
+        );
+      } catch {
+        // skip
+      }
+
       setState((prev) => ({
         ...prev,
         project,
-        agents: agentData.rows ?? [],
+        agents: agentData.agents ?? [],
         tasks,
         tokens,
         cost,
+        readyCli,
       }));
     } catch {
       // server down
