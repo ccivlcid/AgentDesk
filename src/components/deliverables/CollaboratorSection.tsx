@@ -108,12 +108,10 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
         <div style={{ borderTop: "1px solid var(--th-border)" }}>
           {collaborators.map((collab) => {
             const agent = collab.agent_id ? agentMap.get(collab.agent_id) : undefined;
-            const name = preferKo
-              ? collab.agent_name_ko || collab.agent_name
-              : collab.agent_name || collab.agent_name_ko;
+            const name = collab.agent_name;
             const dept = preferKo
               ? collab.department_name_ko || collab.department_name
-              : collab.department_name || collab.department_name_ko;
+              : collab.department_name;
             const roleKey = collab.agent_role || "";
             const role = ROLE_LABELS[roleKey]?.[locale] || ROLE_LABELS[roleKey]?.en || roleKey;
 

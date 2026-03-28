@@ -6,7 +6,6 @@ import { createMeetingLeaderSelectionTools } from "./leader-selection.ts";
 type AgentRow = {
   id: string;
   name: string;
-  name_ko: string;
   role: string;
   personality: string | null;
   status: string;
@@ -37,7 +36,6 @@ function setupDb(): DatabaseSync {
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      name_ko TEXT NOT NULL DEFAULT '',
       role TEXT NOT NULL,
       personality TEXT,
       status TEXT NOT NULL,
@@ -86,11 +84,11 @@ function insertLeader(db: DatabaseSync, input: { id: string; dept: string; name?
   db.prepare(
     `
       INSERT INTO agents (
-        id, name, name_ko, role, personality, status, department_id, current_task_id,
+        id, name, role, personality, status, department_id, current_task_id,
         avatar_emoji, cli_provider, oauth_account_id, api_provider_id, api_model, cli_model, cli_reasoning_level, created_at
-      ) VALUES (?, ?, ?, 'team_leader', NULL, ?, ?, NULL, '🤖', 'codex', NULL, NULL, NULL, NULL, NULL, 1)
+      ) VALUES (?, ?, 'team_leader', NULL, ?, ?, NULL, '🤖', 'codex', NULL, NULL, NULL, NULL, NULL, 1)
     `,
-  ).run(input.id, input.name ?? input.id, input.name ?? input.id, input.status ?? "idle", input.dept);
+  ).run(input.id, input.name ?? input.id, input.status ?? "idle", input.dept);
 }
 
 function buildFindTeamLeader(db: DatabaseSync) {
@@ -131,33 +129,24 @@ function buildFindTeamLeader(db: DatabaseSync) {
   };
 }
 
-describe("meeting leader selection - office pack scope", () => {
-  it("video_preprod task review leader 선정 시 동일 팩 리더만 참여한다", () => {
+describe("meeting leader selection - project scope", () => {
+  it("project_agents 범위 내 팀장만 task review에 참여한다", () => {
     const db = setupDb();
     try {
       db.prepare("INSERT INTO departments (id, sort_order) VALUES ('planning', 1), ('dev', 2)").run();
 
       insertLeader(db, { id: "planning-global", dept: "planning" });
       insertLeader(db, { id: "dev-global", dept: "dev" });
-      insertLeader(db, { id: "video_preprod-seed-1", dept: "planning" });
-      insertLeader(db, { id: "video_preprod-seed-2", dept: "dev" });
+      insertLeader(db, { id: "proj-leader-1", dept: "planning" });
+      insertLeader(db, { id: "proj-leader-2", dept: "dev" });
+
+      db.prepare("INSERT INTO projects (id, assignment_mode) VALUES (?, 'manual')").run("proj-1");
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("proj-1", "proj-leader-1");
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("proj-1", "proj-leader-2");
 
       db.prepare(
         "INSERT INTO tasks (id, title, description, department_id, project_id, workflow_pack_key) VALUES (?, ?, ?, ?, ?, ?)",
-      ).run("task-video", "video task", "make storyboard", "planning", null, "video_preprod");
-
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          video_preprod: {
-            departments: [{ id: "planning" }, { id: "dev" }],
-            agents: [
-              { id: "video_preprod-seed-1", department_id: "planning" },
-              { id: "video_preprod-seed-2", department_id: "dev" },
-            ],
-          },
-        }),
-      );
+      ).run("task-1", "dev task", "implement feature", "planning", "proj-1", "development");
 
       const tools = createMeetingLeaderSelectionTools({
         db,
@@ -165,15 +154,15 @@ describe("meeting leader selection - office pack scope", () => {
         detectTargetDepartments: () => [],
       });
 
-      const leaders = tools.getTaskReviewLeaders("task-video", "planning", {
+      const leaders = tools.getTaskReviewLeaders("task-1", "planning", {
         minLeaders: 2,
         includePlanning: true,
         fallbackAll: true,
       });
       const leaderIds = leaders.map((leader) => leader.id);
 
-      expect(leaderIds).toContain("video_preprod-seed-1");
-      expect(leaderIds).toContain("video_preprod-seed-2");
+      expect(leaderIds).toContain("proj-leader-1");
+      expect(leaderIds).toContain("proj-leader-2");
       expect(leaderIds).not.toContain("planning-global");
       expect(leaderIds).not.toContain("dev-global");
     } finally {
@@ -181,53 +170,37 @@ describe("meeting leader selection - office pack scope", () => {
     }
   });
 
-  it("manual 배정이어도 관련부서/팩 범위 팀장을 회의에 포함한다", () => {
+  it("manual 배정 시 관련부서 팀장을 project_agents 범위에서 포함한다", () => {
     const db = setupDb();
     try {
       db.prepare(
         "INSERT INTO departments (id, sort_order) VALUES ('planning', 1), ('dev', 2), ('design', 3), ('qa', 4)",
       ).run();
 
-      // global leaders (must not be picked when pack scope is available)
+      // global leaders (must not be picked when project scope is set)
       insertLeader(db, { id: "planning-global", dept: "planning" });
       insertLeader(db, { id: "dev-global", dept: "dev" });
       insertLeader(db, { id: "design-global", dept: "design" });
 
-      // video pack leaders
-      insertLeader(db, { id: "video_preprod-seed-1", dept: "planning" });
-      insertLeader(db, { id: "video_preprod-seed-2", dept: "dev" });
-      insertLeader(db, { id: "video_preprod-seed-3", dept: "design" });
-
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          video_preprod: {
-            departments: [{ id: "planning" }, { id: "dev" }, { id: "design" }],
-            agents: [
-              { id: "video_preprod-seed-1", department_id: "planning" },
-              { id: "video_preprod-seed-2", department_id: "dev" },
-              { id: "video_preprod-seed-3", department_id: "design" },
-            ],
-          },
-        }),
-      );
+      // project-scoped leaders
+      insertLeader(db, { id: "proj-leader-1", dept: "planning" });
+      insertLeader(db, { id: "proj-leader-2", dept: "dev" });
+      insertLeader(db, { id: "proj-leader-3", dept: "design" });
 
       db.prepare("INSERT INTO projects (id, assignment_mode) VALUES (?, 'manual')").run("proj-manual");
-      // manual 프로젝트에 planning 리더만 지정된 상태
-      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(
-        "proj-manual",
-        "video_preprod-seed-1",
-      );
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("proj-manual", "proj-leader-1");
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("proj-manual", "proj-leader-2");
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("proj-manual", "proj-leader-3");
 
       db.prepare(
         "INSERT INTO tasks (id, title, description, department_id, project_id, workflow_pack_key) VALUES (?, ?, ?, ?, ?, ?)",
       ).run(
-        "task-manual-video",
-        "영상 프리프로덕션 킥오프",
-        "콘티/씬 설계 보강 필요",
+        "task-manual",
+        "개발 킥오프",
+        "설계 보강 필요",
         "planning",
         "proj-manual",
-        "video_preprod",
+        "development",
       );
 
       const tools = createMeetingLeaderSelectionTools({
@@ -236,16 +209,16 @@ describe("meeting leader selection - office pack scope", () => {
         detectTargetDepartments: () => ["design", "dev"],
       });
 
-      const leaders = tools.getTaskReviewLeaders("task-manual-video", "planning", {
+      const leaders = tools.getTaskReviewLeaders("task-manual", "planning", {
         minLeaders: 2,
         includePlanning: true,
         fallbackAll: true,
       });
       const leaderIds = leaders.map((leader) => leader.id);
 
-      expect(leaderIds).toContain("video_preprod-seed-1");
-      expect(leaderIds).toContain("video_preprod-seed-2");
-      expect(leaderIds).toContain("video_preprod-seed-3");
+      expect(leaderIds).toContain("proj-leader-1");
+      expect(leaderIds).toContain("proj-leader-2");
+      expect(leaderIds).toContain("proj-leader-3");
       expect(leaderIds).not.toContain("planning-global");
       expect(leaderIds).not.toContain("dev-global");
       expect(leaderIds).not.toContain("design-global");

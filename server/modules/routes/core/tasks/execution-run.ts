@@ -254,7 +254,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       | {
           id: string;
           name: string;
-          name_ko: string | null;
+          name_ko?: string | null;
           role: string;
           cli_provider: string | null;
           oauth_account_id: string | null;

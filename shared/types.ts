@@ -20,9 +20,6 @@ export interface AgentDepartment {
 export interface Agent {
   id: string;
   name: string;
-  name_ko: string;
-  name_ja?: string | null;
-  name_zh?: string | null;
   department_id: string | null;
   department?: AgentDepartment | null;
   role: AgentRole;

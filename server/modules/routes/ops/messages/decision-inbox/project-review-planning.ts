@@ -187,7 +187,7 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
       ? (db
           .prepare(
             `
-          SELECT id, name, name_ko, avatar_emoji
+          SELECT id, name, avatar_emoji
           FROM agents
           WHERE id = ?
           LIMIT 1
@@ -197,7 +197,6 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
           | {
               id: string;
               name: string;
-              name_ko: string;
               avatar_emoji: string | null;
             }
           | undefined)
@@ -212,7 +211,7 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
     return {
       agent_id: picked?.id ?? null,
       agent_name: (picked?.name || decisionState?.planner_agent_name || defaultName).trim(),
-      agent_name_ko: (picked?.name_ko || decisionState?.planner_agent_name || "PM").trim(),
+      agent_name_ko: (picked?.name || decisionState?.planner_agent_name || "PM").trim(),
       agent_avatar: normalizePlanningLeadAvatar(picked?.avatar_emoji),
     };
   }

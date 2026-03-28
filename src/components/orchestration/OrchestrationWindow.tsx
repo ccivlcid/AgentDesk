@@ -20,6 +20,7 @@ export type OrchestraTab = "timeline" | "logs" | "agents" | "room";
 export default function OrchestrationWindow() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<OrchestraTab>("timeline");
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const prevStageRef = useRef<string | null>(null);
 
   const { tasks } = useTaskStore();
@@ -82,7 +83,7 @@ export default function OrchestrationWindow() {
   return (
     <AppWindow
       windowType="tasks"
-      title={t({ ko: "Orchestration", en: "Orchestration", ja: "Orchestration", zh: "Orchestration" })}
+      title={t({ ko: "워크플로우", en: "Workflow", ja: "ワークフロー", zh: "工作流" })}
       emoji={titleIcon}
       defaultWidth={1120}
       defaultHeight={720}
@@ -100,6 +101,11 @@ export default function OrchestrationWindow() {
           tasks={projectTasks}
           agents={projectAgents}
           project={currentProject}
+          onFailedClick={() => {
+            const failed = projectTasks.find((t) => t.status === "failed" || t.execution_state === "failed");
+            if (failed) setFocusTaskId(failed.id);
+            setActiveTab("timeline");
+          }}
         />
 
         {/* Tab Bar (top, settings-style) */}
@@ -135,6 +141,8 @@ export default function OrchestrationWindow() {
                 <TimelineTab
                   tasks={projectTasks}
                   agents={projectAgents}
+                  focusTaskId={focusTaskId}
+                  onFocusConsumed={() => setFocusTaskId(null)}
                 />
               )}
               {activeTab === "logs" && (

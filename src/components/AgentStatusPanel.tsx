@@ -346,7 +346,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
               ) : (
                 visibleCliProcesses.map((proc) => {
                   const isKillingPid = killingCliPids.has(proc.pid);
-                  const agentName = uiLanguage === "ko" ? proc.agent_name_ko || proc.agent_name || "-" : proc.agent_name || "-";
+                  const agentName = proc.agent_name || "-";
                   const commandText = proc.command || proc.executable;
                   return (
                     <div

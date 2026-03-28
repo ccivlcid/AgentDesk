@@ -80,7 +80,6 @@ function areExtraFieldsEquivalent(
 const AGENT_EQ_KNOWN_KEYS = new Set<string>([
   "id",
   "name",
-  "name_ko",
   "department_id",
   "role",
   "cli_provider",
@@ -123,7 +122,6 @@ export function areAgentsEquivalent(a: Agent, b: Agent): boolean {
   if (
     a.id === b.id &&
     a.name === b.name &&
-    a.name_ko === b.name_ko &&
     a.department_id === b.department_id &&
     a.role === b.role &&
     a.cli_provider === b.cli_provider &&

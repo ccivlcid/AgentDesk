@@ -33,6 +33,27 @@ const ORDERED_STEPS: Step[] = ["category", "directive", "info", "agent"];
 
 const CLI_PROVIDERS = new Set(["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "ollama"]);
 
+const RECENT_PATHS_KEY = "agentdesk:recent_paths";
+const MAX_RECENT_PATHS = 5;
+
+function loadRecentPaths(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_PATHS_KEY) ?? "[]"); } catch { return []; }
+}
+function saveRecentPath(path: string) {
+  const prev = loadRecentPaths().filter((p) => p !== path);
+  localStorage.setItem(RECENT_PATHS_KEY, JSON.stringify([path, ...prev].slice(0, MAX_RECENT_PATHS)));
+}
+
+const CATEGORY_DEFAULT_SLOTS: Record<string, RoleSlot[]> = {
+  development: [{ role: "PM", agentId: null }, { role: "개발자", agentId: null }],
+  dev: [{ role: "PM", agentId: null }, { role: "개발자", agentId: null }],
+  design: [{ role: "PM", agentId: null }, { role: "디자이너", agentId: null }, { role: "개발자", agentId: null }],
+  qa: [{ role: "PM", agentId: null }, { role: "QA", agentId: null }],
+  devsecops: [{ role: "PM", agentId: null }, { role: "DevSecOps", agentId: null }],
+  operations: [{ role: "PM", agentId: null }, { role: "운영", agentId: null }],
+  planning: [{ role: "PM", agentId: null }, { role: "기획자", agentId: null }],
+};
+
 const PROVIDER_LABEL: Record<string, string> = {
   claude: "Claude Code",
   codex: "Codex CLI",
@@ -91,6 +112,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const [directiveTypeSlug, setDirectiveTypeSlug] = useState<string | null>(null);
   const [directiveTemplates, setDirectiveTemplates] = useState<DirectiveTemplateItem[]>([]);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [recentPaths] = useState<string[]>(() => loadRecentPaths());
 
   useEffect(() => {
     fetchDirectiveTemplates().then(setDirectiveTemplates).catch(() => {});
@@ -126,6 +148,13 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
       setDirective(tpl.template);
       setDirectiveTypeSlug(tpl.slug);
     }
+    // Set default role slots based on category
+    const defaultSlots = (cat?.slug ? CATEGORY_DEFAULT_SLOTS[cat.slug] : undefined) ?? [
+      { role: "PM", agentId: null },
+      { role: "개발자", agentId: null },
+    ];
+    setRoleSlots(defaultSlots.map((s) => ({ ...s })));
+
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
     autoAdvanceTimer.current = setTimeout(() => setStep("directive"), 300);
   };
@@ -147,9 +176,42 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const canConfirmInfo = projectName.trim().length > 0 && projectPath.trim().length > 0;
   const canConfirmAgent = roleSlots.some(s => s.agentId && s.role.trim().length > 0);
 
+  const handleAutoAssign = useCallback(async () => {
+    if (autoAssignBusy || cliAgents.length === 0) return;
+    setAutoAssignBusy(true);
+    try {
+      const result = await autoAssignAgents({
+        project_name: projectName.trim() || undefined,
+        core_goal: coreGoal.trim() || undefined,
+        category_name: selectedCategory ? (selectedCategory.name_ko ?? selectedCategory.name) : undefined,
+        directive: directive.trim() || undefined,
+      });
+      if (result.ok && result.assignments.length > 0) {
+        setRoleSlots(result.assignments.map((a) => ({ role: a.role, agentId: a.agent_id })));
+      } else {
+        setRoleSlots((prev) => prev.map((slot, idx) => ({ ...slot, agentId: cliAgents[idx]?.id ?? null })));
+      }
+    } catch {
+      setRoleSlots((prev) => prev.map((slot, idx) => ({ ...slot, agentId: cliAgents[idx]?.id ?? null })));
+    } finally {
+      setAutoAssignBusy(false);
+    }
+  }, [autoAssignBusy, cliAgents, projectName, coreGoal, selectedCategory, directive]);
+
+  // Auto-trigger AI assign when entering agent step with all-empty slots
+  useEffect(() => {
+    if (step !== "agent") return;
+    if (cliAgents.length === 0) return;
+    if (roleSlots.every((s) => s.agentId === null)) {
+      void handleAutoAssign();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const handleConfirm = () => {
     setSubmitted(true);
     if (!canConfirmInfo || !canConfirmAgent) return;
+    if (projectPath.trim()) saveRecentPath(projectPath.trim());
     setBusy(true);
     const roleAssignments: ProjectRoleAssignment[] = roleSlots
       .filter((s): s is ProjectRoleAssignment => s.agentId !== null && s.role.trim().length > 0)
@@ -395,6 +457,32 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                       {t({ ko: "자동 생성됨", en: "Auto-generated", ja: "自動生成済み", zh: "自动生成" })}
                     </p>
                   )}
+                  {recentPaths.length > 0 && !projectPath.trim() && (
+                    <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap" as const, gap: 4 }}>
+                      {recentPaths.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => { setProjectPath(p); setPathAutoGenerated(false); }}
+                          style={{
+                            ...mono, fontSize: "10px",
+                            padding: "2px 8px",
+                            border: "1px solid var(--th-border)",
+                            background: "var(--th-bg-surface)",
+                            color: "var(--th-text-muted)",
+                            cursor: "pointer",
+                            maxWidth: 220,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap" as const,
+                          }}
+                          title={p}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {pathTools.pathApiUnsupported && (
                     <p className="mt-1" style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>{pathTools.unsupportedPathApiMessage}</p>
                   )}
@@ -456,38 +544,6 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
 
             {/* ── STEP 4: Agent Assignment ── */}
             {step === "agent" && (() => {
-              const handleAutoAssign = async () => {
-                setAutoAssignBusy(true);
-                try {
-                  const result = await autoAssignAgents({
-                    project_name: projectName.trim() || undefined,
-                    core_goal: coreGoal.trim() || undefined,
-                    category_name: selectedCategory ? (selectedCategory.name_ko ?? selectedCategory.name) : undefined,
-                    directive: directive.trim() || undefined,
-                  });
-                  if (result.ok && result.assignments.length > 0) {
-                    const newSlots: RoleSlot[] = result.assignments.map((a) => ({
-                      role: a.role,
-                      agentId: a.agent_id,
-                    }));
-                    setRoleSlots(newSlots);
-                  } else {
-                    // fallback: 인덱스 순서
-                    setRoleSlots(prev => prev.map((slot, idx) => ({
-                      ...slot,
-                      agentId: cliAgents[idx]?.id ?? null,
-                    })));
-                  }
-                } catch {
-                  // fallback: 인덱스 순서
-                  setRoleSlots(prev => prev.map((slot, idx) => ({
-                    ...slot,
-                    agentId: cliAgents[idx]?.id ?? null,
-                  })));
-                } finally {
-                  setAutoAssignBusy(false);
-                }
-              };
               const handleAddSlot = () => {
                 setRoleSlots(prev => [...prev, { role: "", agentId: null }]);
                 setOpenSlotIdx(roleSlots.length);
@@ -586,7 +642,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                     </svg>
                                     <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: "var(--th-text-primary)" }}>
-                                      {assignedAgent.name_ko || assignedAgent.name}
+                                      {assignedAgent.name}
                                     </span>
                                     <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
                                       {PROVIDER_LABEL[assignedAgent.cli_provider] ?? assignedAgent.cli_provider}
@@ -664,7 +720,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                           <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-primary)" }}>
-                                            {agent.name_ko || agent.name}
+                                            {agent.name}
                                           </span>
                                           <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
                                             {PROVIDER_LABEL[agent.cli_provider] ?? agent.cli_provider}
@@ -753,9 +809,18 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                 {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一步" })}
               </Button>
             ) : step === "directive" ? (
-              <Button variant="primary" size="sm" onClick={() => setStep("info")}>
-                {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一步" })}
-              </Button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => { setDirective(""); setDirectiveTypeSlug(null); setStep("info"); }}
+                  style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                >
+                  {t({ ko: "건너뛰기", en: "Skip", ja: "スキップ", zh: "跳过" })}
+                </button>
+                <Button variant="primary" size="sm" onClick={() => setStep("info")}>
+                  {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一步" })}
+                </Button>
+              </div>
             ) : (
               <Button variant="primary" size="sm" onClick={() => setStep("agent")} disabled={!canConfirmInfo}>
                 {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一步" })}

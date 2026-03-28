@@ -1085,4 +1085,129 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-29-006-agents-single-name",
+    up: (db) => {
+      // Remove name_ko, name_ja, name_zh from agents table.
+      // SQLite doesn't support DROP COLUMN on older versions, so rebuild the table.
+      // Preserve name_ko data by copying it into name where name is empty.
+      try {
+        const row = db
+          .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'agents'")
+          .get() as { sql?: string } | undefined;
+        const ddl = (row?.sql ?? "").toLowerCase();
+        // If name_ko column doesn't exist, skip migration
+        if (!ddl.includes("name_ko")) return;
+
+        db.exec("PRAGMA foreign_keys = OFF");
+        try {
+          db.exec("BEGIN");
+
+          // Preserve name_ko into name for agents where name is empty but name_ko has a value
+          db.exec(`
+            UPDATE agents SET name = name_ko
+            WHERE (name IS NULL OR name = '') AND name_ko IS NOT NULL AND name_ko != ''
+          `);
+
+          const oldTable = "agents_name_cleanup_old";
+          db.exec(`ALTER TABLE agents RENAME TO ${oldTable}`);
+          db.exec(`
+            CREATE TABLE agents (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              department_id TEXT REFERENCES departments(id),
+              workflow_pack_key TEXT NOT NULL DEFAULT 'development',
+              role TEXT NOT NULL CHECK(role IN ('team_leader','senior','junior','intern')),
+              acts_as_planning_leader INTEGER NOT NULL DEFAULT 0 CHECK(acts_as_planning_leader IN (0,1)),
+              cli_provider TEXT CHECK(cli_provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
+              oauth_account_id TEXT,
+              api_provider_id TEXT,
+              api_model TEXT,
+              cli_model TEXT,
+              cli_reasoning_level TEXT,
+              avatar_emoji TEXT NOT NULL DEFAULT '🤖',
+              sprite_number INTEGER,
+              persona_id TEXT,
+              status TEXT NOT NULL DEFAULT 'idle' CHECK(status IN ('idle','working','break','offline')),
+              current_task_id TEXT,
+              stats_tasks_done INTEGER DEFAULT 0,
+              stats_xp INTEGER DEFAULT 0,
+              created_at INTEGER DEFAULT (unixepoch()*1000),
+              specialty TEXT,
+              autonomy_level TEXT DEFAULT 'balanced',
+              max_concurrent_tasks INTEGER DEFAULT 1
+            )
+          `);
+          db.exec(`
+            INSERT INTO agents (
+              id, name, department_id, workflow_pack_key, role, acts_as_planning_leader,
+              cli_provider, oauth_account_id, api_provider_id, api_model, cli_model, cli_reasoning_level,
+              avatar_emoji, sprite_number, persona_id, status, current_task_id,
+              stats_tasks_done, stats_xp, created_at, specialty, autonomy_level, max_concurrent_tasks
+            )
+            SELECT
+              id, name, department_id, workflow_pack_key, role, acts_as_planning_leader,
+              cli_provider, oauth_account_id, api_provider_id, api_model, cli_model, cli_reasoning_level,
+              avatar_emoji, sprite_number, persona_id, status, current_task_id,
+              stats_tasks_done, stats_xp, created_at, specialty, autonomy_level, max_concurrent_tasks
+            FROM ${oldTable}
+          `);
+          db.exec(`DROP TABLE ${oldTable}`);
+          db.exec("COMMIT");
+        } catch (err) {
+          db.exec("ROLLBACK");
+          throw err;
+        } finally {
+          db.exec("PRAGMA foreign_keys = ON");
+        }
+      } catch { /* already migrated or column doesn't exist */ }
+    },
+  },
+  {
+    id: "2026-03-29-007-agents-korean-names",
+    up: (db) => {
+      try {
+        const nameMap: Record<string, string> = {
+          "Ada Lovelace": "에이다 러브레이스",
+          "Alan Turing": "앨런 튜링",
+          "Nikola Tesla": "니콜라 테슬라",
+          "Andrej Karpathy": "안드레이 카파시",
+          "Leonardo da Vinci": "레오나르도 다 빈치",
+          "Frida Kahlo": "프리다 칼로",
+          "Steve Jobs": "스티브 잡스",
+          "Zhuge Liang": "제갈량",
+          "Machiavelli": "마키아벨리",
+          "Genghis Khan": "칭기즈 칸",
+          "James Watt": "제임스 와트",
+          "Bill Gates": "빌 게이츠",
+          "Marie Curie": "마리 퀴리",
+          "Isaac Newton": "아이작 뉴턴",
+          "Sun Tzu": "손자",
+          "Hedy Lamarr": "헤디 라마",
+          "Galileo Galilei": "갈릴레오 갈릴레이",
+        };
+        const update = db.prepare("UPDATE agents SET name = ? WHERE name = ?");
+        for (const [en, ko] of Object.entries(nameMap)) {
+          update.run(ko, en);
+        }
+      } catch { /* ignore */ }
+    },
+  },
+  {
+    id: "2026-03-29-008-agents-dedup-korean",
+    up: (db) => {
+      try {
+        // 같은 이름의 에이전트가 중복 삽입된 경우 가장 오래된 것(created_at 낮은)만 남기고 제거
+        db.exec(`
+          DELETE FROM agents
+          WHERE id NOT IN (
+            SELECT MIN(id) FROM agents GROUP BY name
+          )
+          AND name IN (
+            SELECT name FROM agents GROUP BY name HAVING COUNT(*) > 1
+          )
+        `);
+      } catch { /* ignore */ }
+    },
+  },
 ];

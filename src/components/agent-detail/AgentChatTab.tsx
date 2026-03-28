@@ -31,7 +31,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isKo = locale.startsWith("ko");
 
-  const agentName = isKo ? agent.name_ko || agent.name : agent.name || agent.name_ko;
+  const agentName = agent.name;
 
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
 
@@ -120,7 +120,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             const senderLabel = isCeo
               ? tr("클라이언트", "Client")
               : msg.sender_agent
-                ? (isKo ? msg.sender_agent.name_ko || msg.sender_agent.name : msg.sender_agent.name || msg.sender_agent.name_ko)
+                ? msg.sender_agent.name
                 : msg.sender_name || tr("시스템", "system");
 
             return (

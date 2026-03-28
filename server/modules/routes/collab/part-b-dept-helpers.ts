@@ -45,13 +45,12 @@ export function createPartBDeptHelpers(deps: {
       }
     }
 
-    const agents = db.prepare("SELECT id, name, name_ko FROM agents").all() as {
+    const agents = db.prepare("SELECT id, name FROM agents").all() as {
       id: string;
       name: string;
-      name_ko: string | null;
     }[];
     for (const agent of agents) {
-      if ((agent.name_ko && message.includes(`@${agent.name_ko}`)) || message.includes(`@${agent.name}`)) {
+      if (message.includes(`@${agent.name}`)) {
         agentIds.push(agent.id);
       }
     }
@@ -63,8 +62,8 @@ export function createPartBDeptHelpers(deps: {
     const crossLeader = findTeamLeader(targetDeptId);
     if (!crossLeader) return;
     const crossDeptName = getDeptName(targetDeptId);
-    const crossLeaderName = lang === "ko" ? crossLeader.name_ko || crossLeader.name : crossLeader.name;
-    const originLeaderName = lang === "ko" ? originLeader.name_ko || originLeader.name : originLeader.name;
+    const crossLeaderName = crossLeader.name;
+    const originLeaderName = originLeader.name;
     const taskTitle = ceoMessage.length > 60 ? ceoMessage.slice(0, 57) + "..." : ceoMessage;
 
     const mentionReq = pickL(

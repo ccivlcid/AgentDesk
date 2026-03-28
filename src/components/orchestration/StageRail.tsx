@@ -15,6 +15,7 @@ const STAGES = [
 const STAGE_ORDER = STAGES.map((s) => s.id);
 
 export default function StageRail({ stage }: StageRailProps) {
+  const isAllDone = stage === "done";
   const activeIdx = STAGE_ORDER.indexOf(stage as typeof STAGE_ORDER[number]);
 
   return (
@@ -29,8 +30,8 @@ export default function StageRail({ stage }: StageRailProps) {
       flexShrink: 0,
     }}>
       {STAGES.map((s, i) => {
-        const isCurrent = s.id === stage;
-        const isDone = activeIdx >= 0 && i < activeIdx;
+        const isCurrent = !isAllDone && s.id === stage;
+        const isDone = isAllDone || (activeIdx >= 0 && i < activeIdx);
 
         let iconBg = "var(--th-bg-surface)";
         let iconColor = "var(--th-text-muted)";

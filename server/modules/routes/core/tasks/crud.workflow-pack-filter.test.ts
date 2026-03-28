@@ -155,37 +155,6 @@ describe("task CRUD workflow pack filter", () => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
       ).run(
-        "task-report-1",
-        "Report task",
-        null,
-        null,
-        null,
-        null,
-        "inbox",
-        1,
-        "general",
-        "report",
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        0,
-        1,
-        1,
-      );
-      db.prepare(
-        `
-          INSERT INTO tasks (
-            id, title, description, department_id, assigned_agent_id, project_id,
-            status, priority, task_type, workflow_pack_key, workflow_meta_json, output_format,
-            project_path, base_branch, result, started_at, completed_at, source_task_id, hidden, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-      ).run(
         "task-dev-1",
         "Dev task",
         null,
@@ -208,19 +177,50 @@ describe("task CRUD workflow pack filter", () => {
         1,
         1,
       );
+      db.prepare(
+        `
+          INSERT INTO tasks (
+            id, title, description, department_id, assigned_agent_id, project_id,
+            status, priority, task_type, workflow_pack_key, workflow_meta_json, output_format,
+            project_path, base_branch, result, started_at, completed_at, source_task_id, hidden, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+      ).run(
+        "task-dev-2",
+        "Dev task 2",
+        null,
+        null,
+        null,
+        null,
+        "inbox",
+        1,
+        "general",
+        "development",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        0,
+        2,
+        2,
+      );
 
       const handler = routes.get("GET /api/tasks");
       expect(handler).toBeTypeOf("function");
 
       const res = createFakeResponse();
-      handler?.({ query: { workflow_pack_key: "report" } }, res);
+      handler?.({ query: { workflow_pack_key: "development" } }, res);
 
       expect(res.statusCode).toBe(200);
       const payload = res.payload as { tasks: Array<{ id: string; workflow_pack_key: string }> };
-      expect(payload.tasks).toHaveLength(1);
+      expect(payload.tasks).toHaveLength(2);
       expect(payload.tasks[0]).toMatchObject({
-        id: "task-report-1",
-        workflow_pack_key: "report",
+        id: "task-dev-2",
+        workflow_pack_key: "development",
       });
     } finally {
       db.close();
@@ -251,7 +251,7 @@ describe("task CRUD workflow pack filter", () => {
           INSERT INTO projects (id, name, core_goal, project_path, default_pack_key)
           VALUES (?, ?, ?, ?, ?)
         `,
-      ).run("project-novel", "Novel Project", "goal", "/tmp/novel-project", "novel");
+      ).run("project-dev", "Dev Project", "goal", "/tmp/dev-project", "development");
 
       const handler = routes.get("POST /api/tasks") as RouteHandler | undefined;
       expect(handler).toBeTypeOf("function");
@@ -261,7 +261,7 @@ describe("task CRUD workflow pack filter", () => {
         {
           body: {
             title: "Project-default pack task",
-            project_id: "project-novel",
+            project_id: "project-dev",
           },
         },
         res,
@@ -269,9 +269,9 @@ describe("task CRUD workflow pack filter", () => {
 
       expect(res.statusCode).toBe(200);
       const payload = res.payload as { task: { workflow_pack_key: string; project_id: string; project_path: string } };
-      expect(payload.task.workflow_pack_key).toBe("novel");
-      expect(payload.task.project_id).toBe("project-novel");
-      expect(payload.task.project_path).toBe("/tmp/novel-project");
+      expect(payload.task.workflow_pack_key).toBe("development");
+      expect(payload.task.project_id).toBe("project-dev");
+      expect(payload.task.project_path).toBe("/tmp/dev-project");
     } finally {
       db.close();
     }

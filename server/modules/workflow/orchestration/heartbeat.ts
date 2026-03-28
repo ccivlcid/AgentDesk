@@ -73,7 +73,7 @@ export function startHeartbeatEngine(deps: HeartbeatDeps): {
   function getEnabledConfigs(): Array<HeartbeatConfig & { agent_name: string; agent_name_ko: string }> {
     return db
       .prepare(
-        `SELECT hc.*, a.name AS agent_name, COALESCE(a.name_ko, '') AS agent_name_ko
+        `SELECT hc.*, a.name AS agent_name, a.name AS agent_name_ko
          FROM heartbeat_configs hc
          JOIN agents a ON a.id = hc.agent_id
          WHERE hc.enabled = 1`,

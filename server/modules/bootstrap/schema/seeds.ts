@@ -50,10 +50,10 @@ export function applyDefaultSeeds(db: DbLike): void {
 
   if (agentCount === 0) {
     const insertAgent = db.prepare(
-      `INSERT INTO agents (id, name, name_ko, department_id, role, cli_provider, avatar_emoji)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO agents (id, name, department_id, role, cli_provider, avatar_emoji)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     );
-    // [name, name_ko, dept, role, provider, emoji, persona_text]
+    // [name, name_ko (unused, kept for data), dept, role, provider, emoji, persona_text]
     const seedAgents: [string, string, string, string, string, string, string][] = [
       // ── Development (4) ───────────────────────────────────────────────────────
       ["Ada Lovelace", "에이다 러브레이스", "dev", "team_leader", "claude", "👩‍💻",
@@ -86,7 +86,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "이것은 NP-하드 문제입니다", "튜링 완전한 방식으로 생각해보면…", "사과를 먹으며 생각해봤는데…"라는 말을 종종 한다. 사무실에 혼자 있을 때 체스 말을 움직이며 알고리즘을 시뮬레이션하는 습관이 있다.`],
 
-      ["Nikola Tesla", "니콜라 테슬라", "dev", "junior", "copilot", "⚡",
+      ["Nikola Tesla", "니콜라 테슬라", "dev", "junior", "cursor", "⚡",
         `나는 니콜라 테슬라, 교류 전기로 세상을 바꾼 발명가이자 열정 넘치는 주니어 개발자다.
 
 【성격과 철학】
@@ -320,7 +320,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     for (const [name, nameKo, dept, role, provider, emoji, persona] of seedAgents) {
       try {
         const id = randomUUID();
-        insertAgent.run(id, name, nameKo, dept, role, provider, emoji);
+        insertAgent.run(id, nameKo || name, dept, role, provider, emoji);
         writeAgentPersonaFile(id, persona);
       } catch (err) {
         logger.warn({ err, name, dept }, `[AgentDesk] Failed to seed agent "${name}" (dept: ${dept})`);
@@ -498,8 +498,8 @@ export function applyDefaultSeeds(db: DbLike): void {
     }
 
     const insertAgentIfMissing = db.prepare(
-      `INSERT OR IGNORE INTO agents (id, name, name_ko, department_id, role, cli_provider, avatar_emoji)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO agents (id, name, department_id, role, cli_provider, avatar_emoji)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     );
 
     // Check which agents exist by name to avoid duplicates
@@ -667,14 +667,15 @@ export function applyDefaultSeeds(db: DbLike): void {
 
     let added = 0;
     for (const [name, nameKo, dept, role, provider, emoji, persona] of newAgents) {
-      if (!existingNames.has(name)) {
+      const displayName = nameKo || name;
+      if (!existingNames.has(displayName) && !existingNames.has(name)) {
         if (!existingDeptIds.has(dept)) {
-          logger.warn(`[AgentDesk] Skip adding agent "${name}": missing department "${dept}"`);
+          logger.warn(`[AgentDesk] Skip adding agent "${displayName}": missing department "${dept}"`);
           continue;
         }
         try {
           const id = randomUUID();
-          insertAgentIfMissing.run(id, name, nameKo, dept, role, provider, emoji);
+          insertAgentIfMissing.run(id, displayName, dept, role, provider, emoji);
           writeAgentPersonaFile(id, persona);
           added++;
         } catch (err) {

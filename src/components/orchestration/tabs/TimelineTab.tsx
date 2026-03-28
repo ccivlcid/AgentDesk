@@ -7,17 +7,20 @@ import type { TaskReportDetail } from "../../../api/providers-reports-github";
 import { getTaskDiff } from "../../../api/workflow-skills-subtasks";
 import type { TaskDiffResult } from "../../../api/workflow-skills-subtasks";
 import { useUiStore } from "../../../store/uiStore";
+import { useWebSocket } from "../../../hooks/useWebSocket";
 
 const mono = "var(--th-font-mono)";
 
 interface TimelineTabProps {
   tasks: Task[];
   agents: Agent[];
+  focusTaskId?: string | null;
+  onFocusConsumed?: () => void;
 }
 
-export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
+export default function TimelineTab({ tasks, agents, focusTaskId, onFocusConsumed }: TimelineTabProps) {
   const kickoffStage = useUiStore((s) => s.kickoffStage);
-  const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned", "done"].includes(t.status));
+  const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned", "done", "failed", "pending"].includes(t.status));
 
   // Group tasks by assigned agent
   const agentLanes = new Map<string, { agent: Agent; tasks: Task[] }>();
@@ -43,6 +46,19 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
     : "var(--th-text-secondary)";
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  // Auto-expand focused task (e.g. from FAILED badge click)
+  useEffect(() => {
+    if (!focusTaskId) return;
+    setSelectedTaskId(focusTaskId);
+    onFocusConsumed?.();
+  }, [focusTaskId, onFocusConsumed]);
+
+  const plannedCount = tasks.filter((t) => t.status === "planned" || t.status === "inbox").length;
+  const runningCount = tasks.filter((t) => t.status === "in_progress").length;
+  const reviewCount = tasks.filter((t) => t.status === "review").length;
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const failedCount = tasks.filter((t) => t.status === "failed" || t.execution_state === "failed").length;
 
   if (agentLanes.size === 0) {
     const isKickoffActive = kickoffStage && kickoffStage !== "idle";
@@ -116,6 +132,17 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
         </span>
       </div>
 
+      {/* Status count bar */}
+      {tasks.length > 0 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+          {plannedCount > 0 && <StatusPill label="계획" count={plannedCount} color="var(--th-text-muted)" bg="var(--th-bg-surface)" border="var(--th-border)" />}
+          {runningCount > 0 && <StatusPill label="실행 중" count={runningCount} color="var(--th-accent)" bg="var(--th-accent-glow)" border="var(--th-accent-border)" />}
+          {reviewCount > 0 && <StatusPill label="검토 중" count={reviewCount} color="var(--th-review)" bg="var(--th-review-bg)" border="var(--th-review-bg)" />}
+          {doneCount > 0 && <StatusPill label="완료" count={doneCount} color="var(--th-success)" bg="var(--th-success-bg)" border="var(--th-success-border)" />}
+          {failedCount > 0 && <StatusPill label="실패" count={failedCount} color="var(--th-danger-text)" bg="var(--th-danger-bg)" border="var(--th-danger-border)" />}
+        </div>
+      )}
+
       {[...agentLanes.values()].map(({ agent, tasks: agentTasks }) => (
         <AgentLane key={agent.id} agent={agent} tasks={agentTasks} selectedTaskId={selectedTaskId} onSelectTask={setSelectedTaskId} />
       ))}
@@ -129,8 +156,8 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
   selectedTaskId: string | null;
   onSelectTask: (id: string | null) => void;
 }) {
-  const currentTask = tasks.find((t) => t.status === "in_progress") ?? tasks[0];
-  const nextTask = tasks.find((t) => t.status === "planned");
+  const statusOrder: Record<string, number> = { in_progress: 0, failed: 1, pending: 2, review: 3, planned: 4, done: 5 };
+  const sortedTasks = [...tasks].sort((a, b) => (statusOrder[a.status] ?? 6) - (statusOrder[b.status] ?? 6));
 
   const isWorking = agent.status === "working";
   const statusLabel = isWorking ? "실행 중" : agent.status === "idle" ? "대기" : agent.status;
@@ -192,45 +219,26 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
         </span>
       </div>
 
-      {/* Current task */}
-      {currentTask && (
-        <TaskCard
-          task={currentTask}
-          label="현재 태스크"
-          isSelected={selectedTaskId === currentTask.id}
-          onClick={() => handleTaskClick(currentTask.id)}
-        />
-      )}
-
-      {/* Selected task inspector */}
-      {currentTask && selectedTaskId === currentTask.id && (
-        <TaskInspector taskId={currentTask.id} />
-      )}
-
-      {/* Next task */}
-      {nextTask && (
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: 11,
-            color: "var(--th-text-muted)",
-            paddingLeft: 14,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            marginTop: 4,
-          }}
-          onClick={() => handleTaskClick(nextTask.id)}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, flexShrink: 0 }}><polyline points="9 10 4 15 9 20" /><path d="M20 4v7a4 4 0 0 1-4 4H4" /></svg>
-          다음: {nextTask.title}
-        </div>
-      )}
-
-      {/* Inspector for next task */}
-      {nextTask && selectedTaskId === nextTask.id && (
-        <TaskInspector taskId={nextTask.id} />
-      )}
+      {sortedTasks.map((task) => {
+        const isTaskFailed = task.status === "failed" || task.execution_state === "failed";
+        const taskLabel = isTaskFailed ? "실패"
+          : task.status === "pending" ? "일시정지"
+          : task.status === "in_progress" ? "실행 중"
+          : task.status === "review" ? "검토 중"
+          : task.status === "planned" ? "대기"
+          : "완료";
+        return (
+          <div key={task.id}>
+            <TaskCard
+              task={task}
+              label={taskLabel}
+              isSelected={selectedTaskId === task.id}
+              onClick={() => handleTaskClick(task.id)}
+            />
+            {selectedTaskId === task.id && <TaskInspector taskId={task.id} />}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -242,13 +250,45 @@ function TaskCard({ task, label, isSelected, onClick }: {
   onClick: () => void;
 }) {
   const progress = getTaskProgress(task);
-  const statusLabel = task.status === "in_progress" ? "실행 중" : task.status === "done" ? "완료" : task.status === "review" ? "검토 중" : task.status === "planned" ? "대기" : task.status;
+  const isFailed = task.status === "failed" || task.execution_state === "failed";
+  const isPaused = task.status === "pending";
+  const statusLabel = isFailed ? "실패"
+    : isPaused ? "일시정지"
+    : task.status === "in_progress" ? "실행 중"
+    : task.status === "done" ? "완료"
+    : task.status === "review" ? "검토 중"
+    : task.status === "planned" ? "대기"
+    : task.status;
+
+  const badgeColor = statusLabel === "실행 중" ? "var(--th-success)"
+    : statusLabel === "완료" ? "var(--th-success)"
+    : statusLabel === "검토 중" ? "var(--th-review)"
+    : statusLabel === "실패" ? "var(--th-danger-text)"
+    : statusLabel === "일시정지" ? "var(--th-warning)"
+    : "var(--th-text-secondary)";
+
+  const badgeBg = statusLabel === "실행 중" ? "var(--th-success-bg)"
+    : statusLabel === "완료" ? "var(--th-success-bg)"
+    : statusLabel === "검토 중" ? "var(--th-review-bg)"
+    : statusLabel === "실패" ? "var(--th-danger-bg)"
+    : statusLabel === "일시정지" ? "var(--th-warning-bg)"
+    : "var(--th-bg-primary)";
+
+  const cardBg = isSelected ? "var(--th-info-bg)"
+    : isFailed ? "var(--th-danger-bg)"
+    : isPaused ? "var(--th-warning-bg)"
+    : "var(--th-bg-surface)";
+
+  const cardBorder = isSelected ? "var(--th-accent-border)"
+    : isFailed ? "var(--th-danger-border)"
+    : isPaused ? "var(--th-warning-border)"
+    : "var(--th-border)";
 
   return (
     <div
       style={{
-        background: isSelected ? "var(--th-info-bg)" : "var(--th-bg-surface)",
-        border: `1px solid ${isSelected ? "var(--th-accent-border)" : "var(--th-border)"}`,
+        background: cardBg,
+        border: `1px solid ${cardBorder}`,
         borderRadius: 14,
         padding: "12px 16px",
         marginBottom: 8,
@@ -258,7 +298,7 @@ function TaskCard({ task, label, isSelected, onClick }: {
       onClick={onClick}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-accent)", fontWeight: 800, letterSpacing: "0.05em" }}>
+        <span style={{ fontFamily: mono, fontSize: 10, color: isFailed ? "var(--th-danger-text)" : "var(--th-accent)", fontWeight: 800, letterSpacing: "0.05em" }}>
           {label} #{task.id.substring(0, 4)}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -267,26 +307,25 @@ function TaskCard({ task, label, isSelected, onClick }: {
               <polyline points="6 9 12 15 18 9" />
             </svg>
           )}
-          <span style={{
-            fontFamily: mono, fontSize: 10, fontWeight: 700,
-            color: statusLabel === "실행 중" ? "var(--th-success)" : statusLabel === "완료" ? "var(--th-success)" : statusLabel === "검토 중" ? "var(--th-review)" : "var(--th-text-secondary)",
-            background: statusLabel === "실행 중" ? "var(--th-success-bg)" : statusLabel === "완료" ? "var(--th-success-bg)" : statusLabel === "검토 중" ? "var(--th-review-bg)" : "var(--th-bg-primary)",
-            borderRadius: 6,
-            padding: "1px 6px",
-          }}>
+          <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, color: badgeColor, background: badgeBg, borderRadius: 6, padding: "1px 6px" }}>
             {statusLabel}
           </span>
         </div>
       </div>
-      <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", fontWeight: 600, marginBottom: 10 }}>
+      <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", fontWeight: 600, marginBottom: isFailed && task.execution_error_summary ? 4 : 10 }}>
         {task.title}
       </div>
+      {isFailed && task.execution_error_summary && (
+        <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-danger-text)", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {task.execution_error_summary.length > 90 ? `${task.execution_error_summary.slice(0, 87)}...` : task.execution_error_summary}
+        </div>
+      )}
       {/* Progress bar */}
       <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
         <div style={{
           height: 4,
-          background: progress >= 100 ? "var(--th-success)" : "var(--th-accent)",
-          width: `${progress}%`,
+          background: isFailed ? "var(--th-danger-text)" : progress >= 100 ? "var(--th-success)" : "var(--th-accent)",
+          width: `${isFailed ? 100 : progress}%`,
           transition: "width 0.3s",
           borderRadius: 2,
         }} />
@@ -302,7 +341,6 @@ function TaskInspector({ taskId }: { taskId: string }) {
   const [taskLogs, setTaskLogs] = useState<TaskLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<"files" | "cli" | "logic" | "events">("files");
-  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initial load
   useEffect(() => {
@@ -327,21 +365,6 @@ function TaskInspector({ taskId }: { taskId: string }) {
 
     return () => { cancelled = true; };
   }, [taskId]);
-
-  // Live refresh for CLI tab — poll every 3s while the CLI tab is active
-  useEffect(() => {
-    if (activeSection !== "cli") {
-      if (refreshTimerRef.current) { clearInterval(refreshTimerRef.current); refreshTimerRef.current = null; }
-      return;
-    }
-    const refresh = () => {
-      getTask(taskId)
-        .then((res) => { setTaskLogs(res.logs ?? []); })
-        .catch(() => { /* polling failure is non-critical */ });
-    };
-    refreshTimerRef.current = setInterval(refresh, 3_000);
-    return () => { if (refreshTimerRef.current) clearInterval(refreshTimerRef.current); };
-  }, [taskId, activeSection]);
 
   if (loading) {
     return (
@@ -429,7 +452,7 @@ function TaskInspector({ taskId }: { taskId: string }) {
           <FilesChangedSection files={fileChanges} />
         )}
         {activeSection === "cli" && (
-          <CliHistorySection logs={cliLogs} />
+          <LiveCliSection taskId={taskId} historicalLogs={cliLogs} />
         )}
         {activeSection === "logic" && (
           <OrchestrationLogicSection logs={orchestrationLogs} planningContent={planningContent} />
@@ -505,36 +528,68 @@ function FilesChangedSection({ files }: { files: DiffFileStat[] }) {
   );
 }
 
-/* -- CLI HISTORY section -- */
+/* -- LIVE CLI STREAM section -- */
 
-function CliHistorySection({ logs }: { logs: TaskLog[] }) {
-  if (logs.length === 0) {
-    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>CLI 출력 없음</div>;
+function stripAnsi(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/\x1B\[[0-9;]*[mGKHFJABCDsu]/g, "").replace(/\r/g, "");
+}
+
+let _liveSeq = 0;
+
+interface LiveLine { id: number; text: string }
+
+function LiveCliSection({ taskId, historicalLogs }: { taskId: string; historicalLogs: TaskLog[] }) {
+  const [liveLines, setLiveLines] = useState<LiveLine[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const { send, on } = useWebSocket();
+
+  useEffect(() => {
+    send({ type: "subscribe_task", taskId });
+    return () => { send({ type: "unsubscribe_task", taskId }); };
+  }, [taskId, send]);
+
+  useEffect(() => {
+    return on("cli_output", (payload) => {
+      const p = payload as { task_id?: string; data?: string; text?: string; line?: string };
+      if (!p.task_id || p.task_id !== taskId) return;
+      const raw = p.data ?? p.text ?? p.line ?? "";
+      if (!raw) return;
+      const newLines = stripAnsi(raw).split("\n").filter(Boolean).map((text) => ({ id: ++_liveSeq, text }));
+      setLiveLines((prev) => {
+        const next = [...prev, ...newLines];
+        return next.length > 500 ? next.slice(next.length - 500) : next;
+      });
+    });
+  }, [on, taskId]);
+
+  useEffect(() => { setLiveLines([]); }, [taskId]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [liveLines]);
+
+  const isLive = liveLines.length > 0;
+  const displayLines: LiveLine[] = isLive
+    ? liveLines
+    : historicalLogs.map((l, i) => ({ id: i, text: l.message }));
+
+  if (displayLines.length === 0) {
+    return <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>CLI 출력 대기 중...</div>;
   }
 
   return (
     <div>
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-        CLI 히스토리
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: mono, fontSize: 10, fontWeight: 800, color: "var(--th-text-primary)", letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+        CLI 스트림
+        {isLive && (
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--th-success)", boxShadow: "0 0 6px var(--th-green-glow)", display: "inline-block" }} />
+        )}
       </div>
-      {logs.map((log) => {
-        const ts = new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        const isCmd = log.message.startsWith("$") || log.message.startsWith(">");
-        return (
-          <div key={log.id} style={{ padding: "3px 0", fontFamily: mono, fontSize: 11, display: "flex", gap: 8 }}>
-            <span style={{ color: "var(--th-text-muted)", flexShrink: 0, width: 56 }}>{ts}</span>
-            <span style={{
-              color: isCmd ? "var(--th-accent)" : "var(--th-text-secondary)",
-              fontWeight: isCmd ? 700 : 400,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-              flex: 1,
-            }}>
-              {log.message.length > 200 ? `${log.message.slice(0, 197)}...` : log.message}
-            </span>
-          </div>
-        );
-      })}
+      {displayLines.map((line) => (
+        <div key={line.id} style={{ padding: "2px 0", fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+          {line.text}
+        </div>
+      ))}
+      <div ref={bottomRef} />
     </div>
   );
 }
@@ -691,6 +746,24 @@ function CheckItem({ label, pass }: { label: string; pass: boolean }) {
         }
       </svg>
       <span style={{ color: pass ? "var(--th-success)" : "var(--th-danger-text)" }}>{label}</span>
+    </span>
+  );
+}
+
+function StatusPill({ label, count, color, bg, border }: { label: string; count: number; color: string; bg: string; border: string }) {
+  return (
+    <span style={{
+      fontFamily: mono,
+      fontSize: 10,
+      fontWeight: 700,
+      color,
+      background: bg,
+      border: `1px solid ${border}`,
+      borderRadius: 8,
+      padding: "3px 10px",
+      letterSpacing: "0.05em",
+    }}>
+      {label} {count}
     </span>
   );
 }

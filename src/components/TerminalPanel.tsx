@@ -28,7 +28,7 @@ export default function TerminalPanel({
   const { theme } = useTheme();
   const isLight = theme === "light";
   const isKorean = locale.startsWith("ko");
-  const agentName = agent ? (isKorean ? agent.name_ko || agent.name : agent.name || agent.name_ko) : null;
+  const agentName = agent ? agent.name : null;
 
   const data = useTerminalPanelData({ taskId, task, initialTab, onClose });
   const {

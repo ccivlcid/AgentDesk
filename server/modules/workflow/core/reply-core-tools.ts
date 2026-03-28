@@ -56,12 +56,10 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     return Math.floor(minMs + Math.random() * Math.max(0, maxMs - minMs));
   }
 
-  function getAgentDisplayName(agent: unknown, lang: string): string {
+  function getAgentDisplayName(agent: unknown, _lang: string): string {
     if (!agent || typeof agent !== "object") return "";
     const rec = agent as Record<string, unknown>;
-    const name = typeof rec.name === "string" ? rec.name : "";
-    const nameKo = typeof rec.name_ko === "string" ? rec.name_ko : "";
-    return lang === "ko" ? nameKo || name : name;
+    return typeof rec.name === "string" ? rec.name : "";
   }
 
   function localeInstruction(lang: string): string {

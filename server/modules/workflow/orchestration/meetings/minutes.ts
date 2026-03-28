@@ -4,7 +4,6 @@ import { randomUUID } from "node:crypto";
 interface AgentRow {
   id: string;
   name: string;
-  name_ko: string;
   role: string;
   status: string;
   department_id: string | null;

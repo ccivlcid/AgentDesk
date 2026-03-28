@@ -83,8 +83,8 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
 
   const preferKo = locale === "ko";
   const agentName = agent
-    ? preferKo ? agent.name_ko || agent.name : agent.name || agent.name_ko
-    : report.agent_name_ko || report.agent_name || "-";
+    ? agent.name
+    : report.agent_name || "-";
   const deptName = preferKo ? report.dept_name_ko || report.dept_name : report.dept_name || report.dept_name_ko;
 
   const isDone = report.status === "done";

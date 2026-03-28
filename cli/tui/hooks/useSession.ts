@@ -31,8 +31,8 @@ export function useSession(): SessionState {
       const session = await api.post<{ id: string }>("/api/tui/sessions", { mode: "build" });
 
       // Get agent count
-      const agents = await api.get<{ rows: unknown[] }>("/api/agents");
-      const agentCount = agents.rows?.length ?? 0;
+      const agents = await api.get<{ agents: unknown[] }>("/api/agents");
+      const agentCount = agents.agents?.length ?? 0;
 
       setState((prev) => ({
         ...prev,

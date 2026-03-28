@@ -46,11 +46,10 @@ export function useAgentDetailPlanningLead(
           error.code === "planning_leader_exists"
         ) {
           const details = (error.details ?? {}) as {
-            existing_leader?: { name?: string | null; name_ko?: string | null };
+            existing_leader?: { name?: string | null };
           };
           const existingLeaderName = String(
-            details.existing_leader?.name_ko ||
-              details.existing_leader?.name ||
+            details.existing_leader?.name ||
               t({ ko: "기존 리더", en: "current leader", ja: "現在のリーダー", zh: "当前负责人" }),
           ).trim();
           const confirmed = await confirm({

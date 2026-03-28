@@ -23,8 +23,8 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
       const cls = classifyStatus(task.status);
       counts[cls] = (counts[cls] ?? 0) + 1;
 
-      if (task.assigned_agent_id && (task.assigned_agent_name || task.assigned_agent_name_ko)) {
-        const agentName = task.assigned_agent_name_ko || task.assigned_agent_name;
+      if (task.assigned_agent_id && task.assigned_agent_name) {
+        const agentName = task.assigned_agent_name;
         const existing = agentMap.get(task.assigned_agent_id);
         if (!existing) {
           agentMap.set(task.assigned_agent_id, { name: agentName!, done: cls === "done" ? 1 : 0, total: 1 });

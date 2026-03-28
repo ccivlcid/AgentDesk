@@ -23,7 +23,6 @@ const AGENTS: Agent[] = [
   {
     id: "agent-1",
     name: "Atlas",
-    name_ko: "아틀라스",
     department_id: "planning",
     role: "team_leader",
     cli_provider: "claude",

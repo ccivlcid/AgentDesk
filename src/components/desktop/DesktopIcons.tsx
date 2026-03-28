@@ -90,16 +90,6 @@ export function IconCliCost({ color }: IconProps) {
   );
 }
 
-export function IconFileTree({ color }: IconProps) {
-  return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <path d="M5 6h6M5 6v16M5 14h8M5 22h6" />
-      <rect x="11" y="4" width="10" height="5" rx="1.5" />
-      <rect x="13" y="11.5" width="10" height="5" rx="1.5" />
-      <rect x="11" y="19" width="10" height="5" rx="1.5" />
-    </svg>
-  );
-}
 
 export function IconMarkdownDoc({ color }: IconProps) {
   return (

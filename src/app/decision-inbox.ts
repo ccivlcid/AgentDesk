@@ -14,7 +14,6 @@ function baseWorkflowDecisionItem(item: DecisionInboxRouteItem): Omit<DecisionIn
         ? item.project_name || item.project_id || "Planning Lead"
         : item.task_title || item.task_id || "Task"),
     agentNameKo:
-      item.agent_name_ko ||
       item.agent_name ||
       (item.kind === "project_review_ready"
         ? item.project_name || item.project_id || "PM"

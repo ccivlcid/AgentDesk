@@ -33,7 +33,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
       .prepare(
         `SELECT hc.agent_id, hc.enabled, hc.interval_minutes, hc.check_items_json,
                 hc.created_at, hc.updated_at,
-                a.name AS agent_name, COALESCE(a.name_ko, '') AS agent_name_ko,
+                a.name AS agent_name, a.name AS agent_name_ko,
                 COALESCE(a.avatar_emoji, '') AS agent_avatar
          FROM heartbeat_configs hc
          JOIN agents a ON a.id = hc.agent_id
@@ -53,7 +53,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
       .prepare(
         `SELECT hc.agent_id, hc.enabled, hc.interval_minutes, hc.check_items_json,
                 hc.created_at, hc.updated_at,
-                a.name AS agent_name, COALESCE(a.name_ko, '') AS agent_name_ko,
+                a.name AS agent_name, a.name AS agent_name_ko,
                 COALESCE(a.avatar_emoji, '') AS agent_avatar
          FROM heartbeat_configs hc
          JOIN agents a ON a.id = hc.agent_id
@@ -63,8 +63,8 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
 
     if (!row) {
       // Return default config (not yet saved)
-      const agent = db.prepare("SELECT name, name_ko, avatar_emoji FROM agents WHERE id = ?").get(agentId) as
-        | { name: string; name_ko: string; avatar_emoji: string }
+      const agent = db.prepare("SELECT name, avatar_emoji FROM agents WHERE id = ?").get(agentId) as
+        | { name: string; avatar_emoji: string }
         | undefined;
       if (!agent) return res.status(404).json({ ok: false, error: "agent_not_found" });
 
@@ -76,7 +76,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
           interval_minutes: 30,
           check_items_json: JSON.stringify(ALL_CHECK_ITEMS),
           agent_name: agent.name,
-          agent_name_ko: agent.name_ko,
+          agent_name_ko: agent.name,
           agent_avatar: agent.avatar_emoji,
         },
       });
@@ -136,7 +136,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
     const limit = Math.min(Number(req.query.limit) || 50, 200);
     const statusFilter = req.query.status as string | undefined;
 
-    let query = `SELECT hl.*, a.name AS agent_name, COALESCE(a.name_ko, '') AS agent_name_ko,
+    let query = `SELECT hl.*, a.name AS agent_name, a.name AS agent_name_ko,
                         COALESCE(a.avatar_emoji, '') AS agent_avatar
                  FROM heartbeat_logs hl
                  JOIN agents a ON a.id = hl.agent_id`;

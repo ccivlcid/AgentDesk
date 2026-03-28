@@ -64,7 +64,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         <AgentAvatar agent={agent} size={28} rounded="xl" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium truncate">{localName(agent.name, agent.name_ko)}</span>
+            <span className="text-xs font-medium truncate">{agent.name}</span>
             {roleBadge(agent.role)}
           </div>
           <div className="text-[10px] truncate mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>

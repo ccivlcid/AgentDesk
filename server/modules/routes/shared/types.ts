@@ -4,7 +4,6 @@ type MessengerChannel = string;
 export interface AgentRow {
   id: string;
   name: string;
-  name_ko: string;
   role: string;
   status: string;
   department_id: string | null;

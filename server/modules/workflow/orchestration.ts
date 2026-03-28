@@ -460,7 +460,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
       insertNotification({
         type: "task_started",
         title: taskRow?.title ?? taskId,
-        body: `${execAgent.name_ko || execAgent.name} 작업 시작`,
+        body: `${execAgent.name} 작업 시작`,
         task_id: taskId,
         agent_id: execAgent.id,
       });

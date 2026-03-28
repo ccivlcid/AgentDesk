@@ -87,7 +87,6 @@ export default function HookLearningModal({
       list = list.filter(
         (a) =>
           a.name.toLowerCase().includes(q) ||
-          (a.name_ko && a.name_ko.toLowerCase().includes(q)) ||
           (a.cli_provider && a.cli_provider.toLowerCase().includes(q)),
       );
     }
@@ -166,9 +165,7 @@ export default function HookLearningModal({
               const unlearnEffect = unlearnEffects[row.provider];
               const isHitAnimating = !!unlearnEffect;
               const displayName = row.agent
-                ? preferKoreanName
-                  ? row.agent.name_ko || row.agent.name
-                  : row.agent.name || row.agent.name_ko
+                ? row.agent.name
                 : t({ ko: "\uBC30\uCE58\uB41C \uC778\uC6D0 \uC5C6\uC74C", en: "No assigned member", ja: "\u62C5\u5F53\u30E1\u30F3\u30D0\u30FC\u306A\u3057", zh: "\u6682\u65E0\u6210\u5458" });
 
               return (
@@ -286,9 +283,7 @@ export default function HookLearningModal({
                 const agentProvider = agent.cli_provider as HookLearnProvider | undefined;
                 const isProviderSelected = agentProvider ? selectedProviders.includes(agentProvider) : false;
                 const isAnimating = learnInProgress && isProviderSelected;
-                const displayName = preferKoreanName
-                  ? agent.name_ko || agent.name
-                  : agent.name || agent.name_ko;
+                const displayName = agent.name;
 
                 return (
                   <div
@@ -395,9 +390,7 @@ export default function HookLearningModal({
                     </div>
                   ) : (
                     availableAgents.map((agent) => {
-                      const displayName = preferKoreanName
-                        ? agent.name_ko || agent.name
-                        : agent.name || agent.name_ko;
+                      const displayName = agent.name;
                       return (
                         <button
                           key={agent.id}

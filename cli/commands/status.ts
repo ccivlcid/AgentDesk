@@ -21,14 +21,14 @@ type AgentRow = Pick<Agent, "id" | "name" | "status">;
 export async function statusCommand(): Promise<void> {
   // Fetch projects, active tasks, agents in parallel
   const [projectsData, tasksData, agentsData] = await Promise.all([
-    api.get<{ rows: Project[] }>("/api/projects"),
-    api.get<{ rows: TaskRow[] }>("/api/tasks?status=in_progress"),
-    api.get<{ rows: AgentRow[] }>("/api/agents"),
+    api.get<{ projects: Project[] }>("/api/projects"),
+    api.get<{ tasks: TaskRow[] }>("/api/tasks?status=in_progress"),
+    api.get<{ agents: AgentRow[] }>("/api/agents"),
   ]);
 
-  const projects = projectsData.rows ?? [];
-  const activeTasks = tasksData.rows ?? [];
-  const agents = agentsData.rows ?? [];
+  const projects = projectsData.projects ?? [];
+  const activeTasks = tasksData.tasks ?? [];
+  const agents = agentsData.agents ?? [];
 
   // Server info
   console.log(header("AgentDesk Status"));

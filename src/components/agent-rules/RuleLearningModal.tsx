@@ -87,7 +87,6 @@ export default function RuleLearningModal({
       list = list.filter(
         (a) =>
           a.name.toLowerCase().includes(q) ||
-          (a.name_ko && a.name_ko.toLowerCase().includes(q)) ||
           (a.cli_provider && a.cli_provider.toLowerCase().includes(q)),
       );
     }
@@ -171,9 +170,7 @@ export default function RuleLearningModal({
               const unlearnEffect = unlearnEffects[row.provider];
               const isHitAnimating = !!unlearnEffect;
               const displayName = row.agent
-                ? localeTag.startsWith("ko")
-                  ? row.agent.name_ko || row.agent.name
-                  : row.agent.name || row.agent.name_ko
+                ? row.agent.name
                 : t({ ko: "배치된 인원 없음", en: "No assigned member", ja: "担当メンバーなし", zh: "暂无成员" });
 
               return (
@@ -297,9 +294,7 @@ export default function RuleLearningModal({
                 const agentProvider = agent.cli_provider as RuleLearnProvider | undefined;
                 const isProviderSelected = agentProvider ? selectedProviders.includes(agentProvider) : false;
                 const isAnimating = learnInProgress && isProviderSelected;
-                const displayName = localeTag.startsWith("ko")
-                  ? agent.name_ko || agent.name
-                  : agent.name || agent.name_ko;
+                const displayName = agent.name;
 
                 return (
                   <div
@@ -408,9 +403,7 @@ export default function RuleLearningModal({
                     </div>
                   ) : (
                     availableAgents.map((agent) => {
-                      const displayName = preferKoreanName
-                        ? agent.name_ko || agent.name
-                        : agent.name || agent.name_ko;
+                      const displayName = agent.name;
                       return (
                         <button
                           key={agent.id}

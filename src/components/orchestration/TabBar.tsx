@@ -9,10 +9,10 @@ interface TabBarProps {
 }
 
 const TABS: Array<{ id: OrchestraTab; label: string; sigil: string; icon: (c: string) => React.ReactNode }> = [
-  { id: "timeline", label: "TIMELINE", sigil: "//", icon: timelineIcon },
-  { id: "logs", label: "LOGS", sigil: "$", icon: logsIcon },
-  { id: "agents", label: "AGENTS", sigil: "@", icon: agentsIcon },
-  { id: "room", label: "ROOM", sigil: "#", icon: roomIcon },
+  { id: "timeline", label: "타임라인", sigil: "//", icon: timelineIcon },
+  { id: "logs", label: "로그", sigil: "$", icon: logsIcon },
+  { id: "agents", label: "에이전트", sigil: "@", icon: agentsIcon },
+  { id: "room", label: "룸", sigil: "#", icon: roomIcon },
 ];
 
 export default function TabBar({ activeTab, onTabChange }: TabBarProps) {

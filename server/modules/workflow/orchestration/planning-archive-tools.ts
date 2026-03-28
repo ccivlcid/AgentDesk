@@ -178,7 +178,7 @@ export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps)
           `
     SELECT t.id, t.title, t.status, t.department_id, t.assigned_agent_id, t.result, t.completed_at,
            COALESCE(a.name, '') AS agent_name,
-           COALESCE(a.name_ko, '') AS agent_name_ko,
+           COALESCE(a.name, '') AS agent_name_ko,
            COALESCE(d.name, '') AS dept_name,
            COALESCE(d.name_ko, '') AS dept_name_ko
     FROM tasks t

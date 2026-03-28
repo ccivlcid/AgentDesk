@@ -30,7 +30,7 @@ export function registerTaskReportDetailGet(
              t.status, t.project_id, t.project_path, t.result, t.source_task_id,
              t.created_at, t.started_at, t.completed_at,
              COALESCE(a.name, '') AS agent_name,
-             COALESCE(a.name_ko, '') AS agent_name_ko,
+             COALESCE(a.name, '') AS agent_name_ko,
              COALESCE(a.role, '') AS agent_role,
              COALESCE(d.name, '') AS dept_name,
              COALESCE(d.name_ko, '') AS dept_name_ko,
@@ -55,7 +55,7 @@ export function registerTaskReportDetailGet(
              t.status, t.project_id, t.project_path, t.result, t.source_task_id,
              t.created_at, t.started_at, t.completed_at,
              COALESCE(a.name, '') AS agent_name,
-             COALESCE(a.name_ko, '') AS agent_name_ko,
+             COALESCE(a.name, '') AS agent_name_ko,
              COALESCE(a.role, '') AS agent_role,
              COALESCE(d.name, '') AS dept_name,
              COALESCE(d.name_ko, '') AS dept_name_ko,
@@ -79,7 +79,7 @@ export function registerTaskReportDetailGet(
              t.status, t.project_id, t.project_path, t.result, t.source_task_id,
              t.created_at, t.started_at, t.completed_at,
              COALESCE(a.name, '') AS agent_name,
-             COALESCE(a.name_ko, '') AS agent_name_ko,
+             COALESCE(a.name, '') AS agent_name_ko,
              COALESCE(a.role, '') AS agent_role,
              COALESCE(d.name, '') AS dept_name,
              COALESCE(d.name_ko, '') AS dept_name_ko,
@@ -100,7 +100,7 @@ export function registerTaskReportDetailGet(
         .prepare(
           `
       SELECT s.id, s.title, s.status, s.assigned_agent_id, s.target_department_id, s.delegated_task_id, s.completed_at,
-             COALESCE(a.name, '') AS agent_name, COALESCE(a.name_ko, '') AS agent_name_ko,
+             COALESCE(a.name, '') AS agent_name, COALESCE(a.name, '') AS agent_name_ko,
              COALESCE(d.name, '') AS target_dept_name, COALESCE(d.name_ko, '') AS target_dept_name_ko
       FROM subtasks s
       LEFT JOIN agents a ON a.id = s.assigned_agent_id
@@ -148,7 +148,7 @@ export function registerTaskReportDetailGet(
           `
       SELECT a.summary_markdown, a.updated_at, a.created_at, a.generated_by_agent_id,
              COALESCE(ag.name, '') AS agent_name,
-             COALESCE(ag.name_ko, '') AS agent_name_ko
+             COALESCE(ag.name, '') AS agent_name_ko
       FROM task_report_archives a
       LEFT JOIN agents ag ON ag.id = a.generated_by_agent_id
       WHERE a.root_task_id = ?

@@ -117,14 +117,11 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
   const taskDeptFromMap = currentReport.task.department_id
     ? departmentById.get(currentReport.task.department_id)
     : undefined;
-  const taskAgentName =
-    uiLanguage === "ko"
-      ? currentReport.task.agent_name_ko || currentReport.task.agent_name
-      : currentReport.task.agent_name;
+  const taskAgentName = currentReport.task.agent_name;
   const taskDeptName =
     uiLanguage === "ko"
       ? taskDeptFromMap?.name_ko || currentReport.task.dept_name_ko || currentReport.task.dept_name
-      : taskDeptFromMap?.name || currentReport.task.dept_name || currentReport.task.dept_name_ko;
+      : taskDeptFromMap?.name || currentReport.task.dept_name;
 
   const selectedTeam = useMemo(() => {
     if (activeTab === "planning") return null;
@@ -282,7 +279,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
       uiLanguage === "ko"
         ? teamDeptFromMap?.name_ko || team.department_name_ko || team.department_name
         : teamDeptFromMap?.name || team.department_name || team.department_name_ko;
-    const teamAgent = uiLanguage === "ko" ? team.agent_name_ko || team.agent_name : team.agent_name;
+    const teamAgent = team.agent_name;
     const logs = team.logs ?? [];
     const keyLogs = logs.filter((lg) => lg.kind === "system" || lg.message.includes("Status")).slice(-20);
 

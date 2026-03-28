@@ -24,8 +24,8 @@ export async function tasksCommand(opts: TasksOptions): Promise<void> {
 
   const qs = params.toString();
   const path = `/api/tasks${qs ? `?${qs}` : ""}`;
-  const data = (await api.get(path)) as { rows: TaskRow[] };
-  const tasks = data.rows ?? [];
+  const data = (await api.get(path)) as { tasks: TaskRow[] };
+  const tasks = data.tasks ?? [];
 
   if (tasks.length === 0) {
     console.log(dim("No tasks found."));

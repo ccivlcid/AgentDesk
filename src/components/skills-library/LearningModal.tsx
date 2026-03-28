@@ -123,9 +123,7 @@ export default function LearningModal({
               const isUnlearning = provider ? unlearningProviders.includes(provider) : false;
               const unlearnEffect = provider ? unlearnEffects[provider] : undefined;
               const isHitAnimating = !!unlearnEffect;
-              const displayName = preferKoreanName
-                ? agent.name_ko || agent.name
-                : agent.name || agent.name_ko;
+              const displayName = agent.name;
 
               return (
                 <div

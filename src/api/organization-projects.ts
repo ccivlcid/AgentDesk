@@ -119,9 +119,6 @@ export async function updateAgent(
     Pick<
       Agent,
       | "name"
-      | "name_ko"
-      | "name_ja"
-      | "name_zh"
       | "status"
       | "current_task_id"
       | "department_id"
@@ -152,9 +149,6 @@ export async function updateAgent(
 
 export async function createAgent(data: {
   name: string;
-  name_ko: string;
-  name_ja?: string;
-  name_zh?: string;
   department_id: string | null;
   role: string;
   cli_provider: string;

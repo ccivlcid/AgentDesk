@@ -12,7 +12,6 @@ function createAgent(overrides: Partial<AgentRow> = {}): AgentRow {
   return {
     id: "agent-1",
     name: "DORO",
-    name_ko: "도로롱",
     role: "junior",
     status: "idle",
     department_id: "design",
@@ -85,7 +84,7 @@ describe("buildMeetingPrompt", () => {
       getDeptRoleConstraint: () => "",
       getRoleLabel: () => "팀장",
       getRecentConversationContext: () => "",
-      getAgentDisplayName: (agent) => agent.name_ko,
+      getAgentDisplayName: (agent) => agent.name,
       formatMeetingTranscript: () => "",
       compactTaskDescriptionForMeeting: () => "",
       normalizeMeetingLang: () => "ko",

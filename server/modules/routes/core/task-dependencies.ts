@@ -18,7 +18,7 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
       .prepare(
         `SELECT t.id, t.title, t.status, t.priority, t.task_type,
                 COALESCE(a.name, '') AS assigned_agent_name,
-                COALESCE(a.name_ko, '') AS assigned_agent_name_ko,
+                COALESCE(a.name, '') AS assigned_agent_name_ko,
                 td.created_at AS dep_created_at
          FROM task_dependencies td
          JOIN tasks t ON t.id = td.depends_on_task_id
@@ -42,7 +42,7 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
       .prepare(
         `SELECT t.id, t.title, t.status, t.priority, t.task_type,
                 COALESCE(a.name, '') AS assigned_agent_name,
-                COALESCE(a.name_ko, '') AS assigned_agent_name_ko,
+                COALESCE(a.name, '') AS assigned_agent_name_ko,
                 td.created_at AS dep_created_at
          FROM task_dependencies td
          JOIN tasks t ON t.id = td.task_id

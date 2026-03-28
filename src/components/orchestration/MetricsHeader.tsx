@@ -10,9 +10,10 @@ interface MetricsHeaderProps {
   tasks: Task[];
   agents: Agent[];
   project: Project | null;
+  onFailedClick?: () => void;
 }
 
-export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderProps) {
+export default function MetricsHeader({ tasks, agents, project, onFailedClick }: MetricsHeaderProps) {
   const [cost, setCost] = useState<ProjectCostSummary | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runtimeStatuses = useUiStore((s) => s.runtimeStatuses);
@@ -81,12 +82,26 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
           </svg>
         </div>
         <span style={{ color: "var(--th-text-primary)", fontWeight: 800, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
-          Orchestrator
+          워크플로우
         </span>
       </div>
 
       <MetricBadge label="토큰" value={totalTokens > 0 ? fmtTokens(totalTokens) : "--"} color={totalTokens > 0 ? "var(--th-text-primary)" : "var(--th-text-muted)"} />
       <MetricBadge label="비용" value={totalUsd > 0 ? fmtUsd(totalUsd) : "--"} color={totalUsd > 0 ? "var(--th-accent)" : "var(--th-text-muted)"} />
+      {totalUsd >= 1.0 && (
+        <span style={{
+          fontSize: 9,
+          fontWeight: 800,
+          color: totalUsd >= 5.0 ? "var(--th-danger-text)" : "var(--th-warning)",
+          background: totalUsd >= 5.0 ? "var(--th-danger-bg)" : "var(--th-warning-bg)",
+          border: `1px solid ${totalUsd >= 5.0 ? "var(--th-danger-border)" : "var(--th-warning-border)"}`,
+          borderRadius: 6,
+          padding: "2px 7px",
+          letterSpacing: "0.05em",
+        }}>
+          {totalUsd >= 5.0 ? "COST HIGH" : "COST"}
+        </span>
+      )}
       <MetricBadge
         label="에이전트"
         value={`활성 ${workingCount} / 대기 ${idleCount}`}
@@ -100,17 +115,41 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
 
       <div style={{ flex: 1 }} />
 
-      {failedCount > 0 && (
+      {project?.core_goal && (
         <span style={{
+          fontFamily: mono,
           fontSize: 10,
-          fontWeight: 800,
-          color: "var(--th-danger-text)",
-          background: "var(--th-danger-bg)",
-          border: "1px solid var(--th-danger-border)",
-          borderRadius: 8,
-          padding: "3px 10px",
-          letterSpacing: "0.05em",
-        }}>
+          color: "var(--th-text-muted)",
+          fontWeight: 500,
+          maxWidth: 320,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          borderLeft: "2px solid var(--th-border)",
+          paddingLeft: 12,
+        }}
+          title={project.core_goal}
+        >
+          {project.core_goal}
+        </span>
+      )}
+
+      {failedCount > 0 && (
+        <span
+          onClick={onFailedClick}
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            color: "var(--th-danger-text)",
+            background: "var(--th-danger-bg)",
+            border: "1px solid var(--th-danger-border)",
+            borderRadius: 8,
+            padding: "3px 10px",
+            letterSpacing: "0.05em",
+            cursor: onFailedClick ? "pointer" : "default",
+            userSelect: "none",
+          }}
+        >
           {failedCount} FAILED
         </span>
       )}

@@ -33,7 +33,7 @@ export function registerTeamBoardRoutes(deps: ProjectRoutesDeps): void {
           const meetingLabel = mtg.meeting_type === "kickoff" ? "Kickoff Meeting" : `Add-Tasks Meeting (Round ${mtg.round})`;
           dbEntries.push({
             timestamp: mtgDate,
-            sender: "SYSTEM",
+            sender: "AgentDesk",
             target: "All",
             subject: `[${meetingLabel}] ${mtg.title ?? ""}`.trim(),
             body: "",

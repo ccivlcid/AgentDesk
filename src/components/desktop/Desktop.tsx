@@ -67,7 +67,7 @@ export default function Desktop({
   const { projects, categories, currentProjectId, projectAgentIds, setCurrentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const { agents } = useAgentStore();
-  const { tasks, decisionInboxItems } = useTaskStore();
+  const { tasks } = useTaskStore();
   const runningAgentCount = agents.filter((a) => a.status === "working").length;
   const projectAgentCount = projectAgentIds.size;
   const handleToggleYoloMode = useCallback(() => {
@@ -183,8 +183,6 @@ export default function Desktop({
     openSettings,
     openCli,
     toggleWindow,
-    onOpenDecisionInbox,
-    decisionInboxItems,
   });
   const { sortByName, sortByDefault, snapToGrid, sortByLastUsed } = useDesktopSortSnap(icons, projects);
   const { onDesktopMouseDown, onDesktopMouseMove, onDesktopMouseUp, onDesktopClick } = useDesktopJiggle({

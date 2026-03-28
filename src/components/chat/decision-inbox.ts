@@ -61,7 +61,7 @@ export function buildDecisionInboxItems(messages: Message[], agents: Agent[]): D
       kind: "agent_request",
       agentId: msg.sender_id,
       agentName: matchedAgent?.name || senderName || msg.sender_id,
-      agentNameKo: matchedAgent?.name_ko || matchedAgent?.name || senderName || msg.sender_id,
+      agentNameKo: matchedAgent?.name || senderName || msg.sender_id,
       agentAvatar: matchedAgent?.avatar_emoji || senderAvatar,
       requestContent: msg.content,
       options: parsed.options,

@@ -273,7 +273,7 @@ export function createTaskReportHelpers(deps: HelperDeps) {
         `
     SELECT m.id, m.content, m.created_at, m.sender_id,
            COALESCE(a.name, '') AS sender_name,
-           COALESCE(a.name_ko, '') AS sender_name_ko,
+           COALESCE(a.name, '') AS sender_name_ko,
            COALESCE(a.department_id, '') AS sender_department_id,
            COALESCE(d.name, '') AS sender_department_name,
            COALESCE(d.name_ko, '') AS sender_department_name_ko

@@ -83,9 +83,6 @@ export default function RuleHistoryPanel({
   }, [agentFilters, agents]);
 
   function agentDisplayName(agent: Agent): string {
-    if (localeTag.startsWith("ko")) return agent.name_ko || agent.name;
-    if (localeTag.startsWith("ja")) return (agent as Agent & { name_ja?: string | null }).name_ja || agent.name;
-    if (localeTag.startsWith("zh")) return (agent as Agent & { name_zh?: string | null }).name_zh || agent.name;
     return agent.name;
   }
 

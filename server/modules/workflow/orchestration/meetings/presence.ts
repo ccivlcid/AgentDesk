@@ -3,7 +3,6 @@ import type { Lang } from "../../../../types/lang.ts";
 interface AgentRow {
   id: string;
   name: string;
-  name_ko: string;
   role: string;
   status: string;
   department_id: string | null;

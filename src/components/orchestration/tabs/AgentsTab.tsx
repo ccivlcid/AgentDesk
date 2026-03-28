@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Task, Agent, Department } from "../../../types";
 import { getTaskProgress } from "../task-progress";
-import { getAgentsPerformance, stopTask, assignTask, type AgentPerformanceEntry } from "../../../api/organization-projects";
+import { getAgentsPerformance, stopTask, pauseTask, resumeTask, assignTask, type AgentPerformanceEntry } from "../../../api/organization-projects";
+import { useUiStore } from "../../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
 const PERF_REFRESH_DEBOUNCE_MS = 3_000;
@@ -45,6 +46,20 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
 
   const activeCount = agents.filter((a) => a.status === "working").length;
 
+  // Per-agent live token totals from runtimeStatuses
+  const runtimeStatuses = useUiStore((s) => s.runtimeStatuses);
+  const agentTokenMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [, info] of runtimeStatuses) {
+      if (!info.agentId) continue;
+      const tokens = (info.inputTokens ?? 0) + (info.outputTokens ?? 0);
+      map.set(info.agentId, (map.get(info.agentId) ?? 0) + tokens);
+    }
+    return map;
+  }, [runtimeStatuses]);
+
+  const fmtTokens = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
+
   // Compute metrics
   const totalDone = [...perfMap.values()].reduce((s, e) => s + (e.done ?? 0), 0);
   const totalTasks = [...perfMap.values()].reduce((s, e) => s + (e.total ?? 0), 0);
@@ -55,7 +70,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
     else { setSortKey(key); setSortAsc(true); }
   }, [sortKey]);
 
-  const sortedAgents = [...agents].sort((a, b) => {
+  const sortedAgents = [...agents].filter((a) => a.role !== "team_leader").sort((a, b) => {
     const dir = sortAsc ? 1 : -1;
     if (sortKey === "name") return dir * a.name.localeCompare(b.name);
     if (sortKey === "role") {
@@ -87,13 +102,32 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
 
   const handleStopAgent = useCallback(async (agentId: string) => {
     const agentTasks = tasks.filter((t) => t.assigned_agent_id === agentId && t.status === "in_progress");
-    if (agentTasks.length === 0) {
-      setActionMenuAgentId(null);
-      return;
-    }
+    if (agentTasks.length === 0) { setActionMenuAgentId(null); return; }
     setBusyAction(`stop:${agentId}`);
     try {
       await Promise.all(agentTasks.map((t) => stopTask(t.id)));
+    } catch { /* best effort */ }
+    setBusyAction(null);
+    setActionMenuAgentId(null);
+  }, [tasks]);
+
+  const handlePauseAgent = useCallback(async (agentId: string) => {
+    const agentTasks = tasks.filter((t) => t.assigned_agent_id === agentId && t.status === "in_progress");
+    if (agentTasks.length === 0) { setActionMenuAgentId(null); return; }
+    setBusyAction(`pause:${agentId}`);
+    try {
+      await Promise.all(agentTasks.map((t) => pauseTask(t.id)));
+    } catch { /* best effort */ }
+    setBusyAction(null);
+    setActionMenuAgentId(null);
+  }, [tasks]);
+
+  const handleResumeAgent = useCallback(async (agentId: string) => {
+    const agentTasks = tasks.filter((t) => t.assigned_agent_id === agentId && t.status === "pending");
+    if (agentTasks.length === 0) { setActionMenuAgentId(null); return; }
+    setBusyAction(`resume:${agentId}`);
+    try {
+      await Promise.all(agentTasks.map((t) => resumeTask(t.id)));
     } catch { /* best effort */ }
     setBusyAction(null);
     setActionMenuAgentId(null);
@@ -175,7 +209,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
       {/* Table header */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
+        gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 80px 40px",
         gap: 8,
         padding: "10px 16px",
         background: "var(--th-bg-surface)",
@@ -193,6 +227,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
         <SortableHeader label="상태" sortKey_="status" currentKey={sortKey} asc={sortAsc} onClick={handleSortToggle} />
         <span>진행 태스크</span>
         <SortableHeader label="성과" sortKey_="fitness" currentKey={sortKey} asc={sortAsc} onClick={handleSortToggle} />
+        <span>토큰</span>
         <span></span>
       </div>
 
@@ -217,7 +252,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
         return (
           <div key={agent.id} style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 40px",
+            gridTemplateColumns: "2fr 1fr 100px 2fr 1.5fr 80px 40px",
             gap: 8,
             padding: "14px 16px",
             borderBottom: "1px solid var(--th-bg-primary)",
@@ -315,6 +350,17 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
               )}
             </div>
 
+            {/* Token usage */}
+            <div style={{ fontSize: 11 }}>
+              {agentTokenMap.has(agent.id) ? (
+                <span style={{ color: "var(--th-accent)", fontWeight: 700 }}>
+                  {fmtTokens(agentTokenMap.get(agent.id)!)}
+                </span>
+              ) : (
+                <span style={{ color: "var(--th-text-muted)" }}>--</span>
+              )}
+            </div>
+
             {/* Action menu */}
             <div style={{ position: "relative" }}>
               <button
@@ -341,10 +387,13 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
                   agentName={agent.name}
                   hasActiveTask={!!currentTask}
                   hasPendingTasks={agentTasks.some((t) => t.status === "planned")}
+                  hasPausedTasks={agentTasks.some((t) => t.status === "pending")}
                   busyAction={busyAction}
                   showReassign={reassignAgentId === agent.id}
                   reassignTargets={getReassignTargets(agent.id)}
                   onViewLogs={() => handleViewLogs(agent.id)}
+                  onPause={() => void handlePauseAgent(agent.id)}
+                  onResume={() => void handleResumeAgent(agent.id)}
                   onStop={() => void handleStopAgent(agent.id)}
                   onReassignStart={() => handleReassignStart(agent.id)}
                   onReassignTo={(toId) => void handleReassignTo(agent.id, toId)}
@@ -373,10 +422,13 @@ interface ActionMenuProps {
   agentName: string;
   hasActiveTask: boolean;
   hasPendingTasks: boolean;
+  hasPausedTasks: boolean;
   busyAction: string | null;
   showReassign: boolean;
   reassignTargets: Agent[];
   onViewLogs: () => void;
+  onPause: () => void;
+  onResume: () => void;
   onStop: () => void;
   onReassignStart: () => void;
   onReassignTo: (toAgentId: string) => void;
@@ -384,11 +436,14 @@ interface ActionMenuProps {
 }
 
 function ActionMenu({
-  agentId, agentName, hasActiveTask, hasPendingTasks, busyAction,
-  showReassign, reassignTargets, onViewLogs, onStop, onReassignStart, onReassignTo, onClose,
+  agentId, agentName, hasActiveTask, hasPendingTasks, hasPausedTasks, busyAction,
+  showReassign, reassignTargets, onViewLogs, onPause, onResume, onStop, onReassignStart, onReassignTo, onClose,
 }: ActionMenuProps) {
-  const isBusy = busyAction?.startsWith("stop:") || busyAction?.startsWith("reassign:");
+  const isBusy = busyAction?.startsWith("stop:") || busyAction?.startsWith("reassign:")
+    || busyAction?.startsWith("pause:") || busyAction?.startsWith("resume:");
   const canStop = hasActiveTask && !isBusy;
+  const canPause = hasActiveTask && !isBusy;
+  const canResume = hasPausedTasks && !isBusy;
   const canReassign = (hasActiveTask || hasPendingTasks) && !isBusy;
 
   return (
@@ -417,11 +472,20 @@ function ActionMenu({
 
       {!showReassign ? (
         <>
+          <ActionMenuItem icon="log" label="로그 보기" onClick={onViewLogs} />
           <ActionMenuItem
-            icon="log"
-            label="로그 보기"
-            onClick={onViewLogs}
+            icon="pause"
+            label={busyAction === `pause:${agentId}` ? "일시정지 중..." : "일시정지"}
+            disabled={!canPause}
+            onClick={onPause}
           />
+          {canResume && (
+            <ActionMenuItem
+              icon="resume"
+              label={busyAction === `resume:${agentId}` ? "재개 중..." : "재개"}
+              onClick={onResume}
+            />
+          )}
           <ActionMenuItem
             icon="reassign"
             label="태스크 재배정"
@@ -523,6 +587,12 @@ function ActionMenuItem({ icon, label, danger, disabled, onClick }: {
       )}
       {icon === "stop" && (
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><rect x="9" y="9" width="6" height="6" /></svg>
+      )}
+      {icon === "pause" && (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+      )}
+      {icon === "resume" && (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
       )}
       {label}
     </button>

@@ -237,7 +237,7 @@ export default function AgentDetailPanel() {
                 userSelect: "none",
               }}>
                 {agent
-                  ? `${agent.avatar_emoji ?? "🤖"} ${agent.name_ko || agent.name}`
+                  ? `${agent.avatar_emoji ?? "🤖"} ${agent.name}`
                   : t({ ko: "에이전트 상세", en: "Agent Detail", ja: "エージェント詳細", zh: "代理详情" })}
               </span>
 

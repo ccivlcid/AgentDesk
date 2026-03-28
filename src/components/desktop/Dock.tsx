@@ -2,10 +2,10 @@ import { useRef, useState } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useTaskStore } from "../../store/taskStore";
-import { IconDecisions ,
+import { IconDecisions,
   IconDockLibrary, IconDockSettings, IconRepoStore,
   IconAgents,
-  IconFileTree, IconRepl,
+  IconRepl,
 } from "./DesktopIcons";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
@@ -15,7 +15,6 @@ import DockBadge from "./DockBadge";
 const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.ReactNode; label: string; accent: string }>> = {
   "agent-manager":  { icon: (c) => <IconAgents color={c} />,       label: "Agents",       accent: "#a78bfa" },
   cli:              { icon: (c) => <IconRepl color={c} />,          label: "CLI",          accent: "#34d399" },
-  "file-tree":      { icon: (c) => <IconFileTree color={c} />,      label: "Files",        accent: "#4ade80" },
   "decision-inbox": { icon: (c) => <IconDecisions color={c} />,     label: "Decisions",    accent: "#ff453a" },
 };
 
@@ -50,7 +49,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
       ),
-      label: t({ ko: "Orchestration", en: "Orchestration", ja: "Orchestration", zh: "Orchestration" }),
+      label: t({ ko: "워크플로우", en: "Workflow", ja: "ワークフロー", zh: "工作流" }),
       accentColor: "#ff9f0a",
       gradient: "linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)",
       badge: tasksBadgeCount || undefined,

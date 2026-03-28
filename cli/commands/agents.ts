@@ -11,8 +11,8 @@ type AgentRow = Pick<Agent, "id" | "name" | "role" | "cli_provider" | "status"> 
 };
 
 export async function agentsCommand(): Promise<void> {
-  const data = (await api.get("/api/agents")) as { rows: AgentRow[] };
-  const agents = data.rows ?? [];
+  const data = (await api.get("/api/agents")) as { agents: AgentRow[] };
+  const agents = data.agents ?? [];
 
   if (agents.length === 0) {
     console.log(dim("No agents registered."));

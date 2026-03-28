@@ -41,7 +41,7 @@ export function createTaskReviewDecisionItems(deps: TaskReviewItemDeps) {
         .prepare(
           `SELECT t.id, t.title, t.assigned_agent_id, t.project_id, t.updated_at,
                 COALESCE(a.name, '') AS agent_name,
-                COALESCE(a.name_ko, '') AS agent_name_ko,
+                COALESCE(a.name, '') AS agent_name_ko,
                 COALESCE(a.avatar_emoji, '') AS agent_avatar,
                 COALESCE(p.name, '') AS project_name
          FROM tasks t

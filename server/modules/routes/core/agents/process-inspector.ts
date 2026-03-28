@@ -183,7 +183,7 @@ export function registerAgentProcessInspectorRoutes(ctx: RuntimeContext): void {
       const workingAgents = db
         .prepare(
           `
-      SELECT a.id, a.name, a.name_ko, a.avatar_emoji, a.role, a.status, a.current_task_id,
+      SELECT a.id, a.name, a.name AS name_ko, a.avatar_emoji, a.role, a.status, a.current_task_id,
              a.department_id, a.cli_provider,
              COALESCE(d.name, '') AS dept_name,
              COALESCE(d.name_ko, '') AS dept_name_ko,
@@ -259,7 +259,7 @@ export function registerAgentProcessInspectorRoutes(ctx: RuntimeContext): void {
           t.status AS task_status,
           a.id AS agent_id,
           a.name AS agent_name,
-          a.name_ko AS agent_name_ko,
+          a.name AS agent_name_ko,
           a.status AS agent_status,
           a.current_task_id AS agent_current_task_id
         FROM tasks t

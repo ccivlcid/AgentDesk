@@ -15,9 +15,6 @@ export interface AgentManagerProps {
 
 export interface FormData {
   name: string;
-  name_ko: string;
-  name_ja: string;
-  name_zh: string;
   department_id: string;
   role: AgentRole;
   cli_provider: CliProvider;

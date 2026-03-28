@@ -37,9 +37,6 @@ CREATE TABLE IF NOT EXISTS office_pack_departments (
 CREATE TABLE IF NOT EXISTS agents (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  name_ko TEXT NOT NULL DEFAULT '',
-  name_ja TEXT NOT NULL DEFAULT '',
-  name_zh TEXT NOT NULL DEFAULT '',
   department_id TEXT REFERENCES departments(id),
   workflow_pack_key TEXT NOT NULL DEFAULT 'development',
   role TEXT NOT NULL CHECK(role IN ('team_leader','senior','junior','intern')),

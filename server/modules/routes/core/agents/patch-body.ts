@@ -168,9 +168,6 @@ export function prepareAgentPatchBody(
 
   const allowedFields = [
     "name",
-    "name_ko",
-    "name_ja",
-    "name_zh",
     "department_id",
     ...(hasAgentWorkflowPackColumn ? (["workflow_pack_key"] as const) : []),
     "role",
@@ -209,7 +206,7 @@ export function prepareAgentPatchBody(
           return db
             .prepare(
               `
-                SELECT id, name, name_ko
+                SELECT id, name
                 FROM agents
                 WHERE id IN (${placeholders})
                   AND role = 'team_leader'
@@ -220,13 +217,13 @@ export function prepareAgentPatchBody(
               `,
             )
             .get(...([...scopedAgentIds, id] as SQLInputValue[])) as
-            | { id?: unknown; name?: unknown; name_ko?: unknown }
+            | { id?: unknown; name?: unknown }
             | undefined;
         }
         return db
           .prepare(
             `
-              SELECT id, name, name_ko
+              SELECT id, name
               FROM agents
               WHERE role = 'team_leader'
                 AND COALESCE(acts_as_planning_leader, 0) = 1
@@ -235,7 +232,7 @@ export function prepareAgentPatchBody(
               LIMIT 1
             `,
           )
-          .get(id) as { id?: unknown; name?: unknown; name_ko?: unknown } | undefined;
+          .get(id) as { id?: unknown; name?: unknown } | undefined;
       })();
 
       if (conflictLeader && !forcePlanningLeadOverride) {
@@ -248,7 +245,6 @@ export function prepareAgentPatchBody(
             existing_leader: {
               id: normalizeText(conflictLeader.id),
               name: normalizeText(conflictLeader.name),
-              name_ko: normalizeText(conflictLeader.name_ko),
             },
           },
         };

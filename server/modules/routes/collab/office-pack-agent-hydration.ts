@@ -60,9 +60,6 @@ function hasAgentWorkflowPackColumn(db: DbLike): boolean {
 type OfficePackProfileAgent = {
   id: string;
   name: string;
-  name_ko: string;
-  name_ja: string;
-  name_zh: string;
   department_id: string | null;
   role: string;
   acts_as_planning_leader: number;
@@ -99,12 +96,12 @@ function normalizeOfficePackProfileAgent(raw: unknown, nowMs: number): OfficePac
   const roleRaw = normalizeText(obj.role).toLowerCase();
   const cliProviderRaw = normalizeText(obj.cli_provider).toLowerCase();
 
+  // Use name_ko as fallback for name if name is empty (preserve legacy data)
+  const nameFromKo = normalizeText(obj.name_ko);
+  const resolvedName = name || nameFromKo || id;
   return {
     id,
-    name,
-    name_ko: normalizeText(obj.name_ko) || name,
-    name_ja: normalizeText(obj.name_ja),
-    name_zh: normalizeText(obj.name_zh),
+    name: resolvedName,
     department_id: normalizeOptionalText(obj.department_id),
     role: VALID_AGENT_ROLES.has(roleRaw) ? roleRaw : "senior",
     acts_as_planning_leader:
@@ -244,19 +241,16 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
       db.prepare(
         `
         INSERT OR IGNORE INTO agents (
-          id, name, name_ko, name_ja, name_zh, department_id, role,
+          id, name, department_id, role,
           workflow_pack_key,
           acts_as_planning_leader,
           cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
       `,
       ).run(
         found.agent.id,
         found.agent.name,
-        found.agent.name_ko,
-        found.agent.name_ja,
-        found.agent.name_zh,
         deptId,
         found.agent.role,
         found.packKey,
@@ -272,18 +266,15 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
       db.prepare(
         `
         INSERT OR IGNORE INTO agents (
-          id, name, name_ko, name_ja, name_zh, department_id, role,
+          id, name, department_id, role,
           acts_as_planning_leader,
           cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
       `,
       ).run(
         found.agent.id,
         found.agent.name,
-        found.agent.name_ko,
-        found.agent.name_ja,
-        found.agent.name_zh,
         deptId,
         found.agent.role,
         found.agent.acts_as_planning_leader,
@@ -318,17 +309,14 @@ function upsertOfficePackProfileAgent(
           .prepare(
             `
         INSERT INTO agents (
-          id, name, name_ko, name_ja, name_zh, department_id, role,
+          id, name, department_id, role,
           workflow_pack_key,
           acts_as_planning_leader,
           cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
-          name_ko = excluded.name_ko,
-          name_ja = excluded.name_ja,
-          name_zh = excluded.name_zh,
           department_id = excluded.department_id,
           workflow_pack_key = excluded.workflow_pack_key,
           role = excluded.role,
@@ -343,9 +331,6 @@ function upsertOfficePackProfileAgent(
           .run(
             agent.id,
             agent.name,
-            agent.name_ko,
-            agent.name_ja,
-            agent.name_zh,
             deptId,
             agent.role,
             packKey,
@@ -361,16 +346,13 @@ function upsertOfficePackProfileAgent(
           .prepare(
             `
         INSERT INTO agents (
-          id, name, name_ko, name_ja, name_zh, department_id, role,
+          id, name, department_id, role,
           acts_as_planning_leader,
           cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
-          name_ko = excluded.name_ko,
-          name_ja = excluded.name_ja,
-          name_zh = excluded.name_zh,
           department_id = excluded.department_id,
           role = excluded.role,
           acts_as_planning_leader = excluded.acts_as_planning_leader,
@@ -384,9 +366,6 @@ function upsertOfficePackProfileAgent(
           .run(
             agent.id,
             agent.name,
-            agent.name_ko,
-            agent.name_ja,
-            agent.name_zh,
             deptId,
             agent.role,
             agent.acts_as_planning_leader,

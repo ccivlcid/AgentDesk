@@ -45,9 +45,6 @@ function createHarness(): { db: DatabaseSync; routes: Map<string, RouteHandler> 
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      name_ko TEXT NOT NULL DEFAULT '',
-      name_ja TEXT NOT NULL DEFAULT '',
-      name_zh TEXT NOT NULL DEFAULT '',
       department_id TEXT,
       role TEXT NOT NULL,
       acts_as_planning_leader INTEGER NOT NULL DEFAULT 0,
@@ -162,32 +159,32 @@ describe("agent CRUD seed filter", () => {
   it("PATCH /api/agents/:id 는 팩 내 기존 Lead가 있으면 409를 반환한다", () => {
     const { db, routes } = createHarness();
     try {
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("officeWorkflowPack", "video_preprod");
+      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("officeWorkflowPack", "development");
       db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
         "officePackProfiles",
         JSON.stringify({
-          video_preprod: {
+          development: {
             departments: [{ id: "planning" }],
-            agents: [{ id: "video_preprod-seed-1" }, { id: "video_preprod-seed-2" }],
+            agents: [{ id: "dev-seed-1" }, { id: "dev-seed-2" }],
           },
         }),
       );
       db.prepare(
         "INSERT INTO agents (id, name, role, acts_as_planning_leader, created_at) VALUES (?, ?, 'team_leader', ?, ?)",
-      ).run("video_preprod-seed-1", "Lead A", 1, 1);
+      ).run("dev-seed-1", "Lead A", 1, 1);
       db.prepare(
         "INSERT INTO agents (id, name, role, acts_as_planning_leader, created_at) VALUES (?, ?, 'team_leader', ?, ?)",
-      ).run("video_preprod-seed-2", "Lead B", 0, 2);
+      ).run("dev-seed-2", "Lead B", 0, 2);
 
       const handler = routes.get("PATCH /api/agents/:id");
       expect(handler).toBeTypeOf("function");
       const res = createFakeResponse();
       handler?.(
         {
-          params: { id: "video_preprod-seed-2" },
+          params: { id: "dev-seed-2" },
           body: {
             acts_as_planning_leader: 1,
-            workflow_pack_key: "video_preprod",
+            workflow_pack_key: "development",
           },
         },
         res,
@@ -203,32 +200,23 @@ describe("agent CRUD seed filter", () => {
   it("PATCH /api/agents/:id force override 로 팩 리더를 교체한다", () => {
     const { db, routes } = createHarness();
     try {
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("officeWorkflowPack", "video_preprod");
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          video_preprod: {
-            departments: [{ id: "planning" }],
-            agents: [{ id: "video_preprod-seed-1" }, { id: "video_preprod-seed-2" }],
-          },
-        }),
-      );
+      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("officeWorkflowPack", "development");
       db.prepare(
         "INSERT INTO agents (id, name, role, acts_as_planning_leader, created_at) VALUES (?, ?, 'team_leader', ?, ?)",
-      ).run("video_preprod-seed-1", "Lead A", 1, 1);
+      ).run("agent-lead-a", "Lead A", 1, 1);
       db.prepare(
         "INSERT INTO agents (id, name, role, acts_as_planning_leader, created_at) VALUES (?, ?, 'team_leader', ?, ?)",
-      ).run("video_preprod-seed-2", "Lead B", 0, 2);
+      ).run("agent-lead-b", "Lead B", 0, 2);
 
       const handler = routes.get("PATCH /api/agents/:id");
       expect(handler).toBeTypeOf("function");
       const res = createFakeResponse();
       handler?.(
         {
-          params: { id: "video_preprod-seed-2" },
+          params: { id: "agent-lead-b" },
           body: {
             acts_as_planning_leader: 1,
-            workflow_pack_key: "video_preprod",
+            workflow_pack_key: "development",
             force_planning_leader_override: true,
           },
         },
@@ -238,25 +226,12 @@ describe("agent CRUD seed filter", () => {
       expect(res.statusCode).toBe(200);
       const before = db
         .prepare("SELECT acts_as_planning_leader FROM agents WHERE id = ?")
-        .get("video_preprod-seed-1") as { acts_as_planning_leader: number } | undefined;
+        .get("agent-lead-a") as { acts_as_planning_leader: number } | undefined;
       const after = db
         .prepare("SELECT acts_as_planning_leader FROM agents WHERE id = ?")
-        .get("video_preprod-seed-2") as { acts_as_planning_leader: number } | undefined;
+        .get("agent-lead-b") as { acts_as_planning_leader: number } | undefined;
       expect(before?.acts_as_planning_leader).toBe(0);
       expect(after?.acts_as_planning_leader).toBe(1);
-
-      const profileRow = db.prepare("SELECT value FROM settings WHERE key = 'officePackProfiles'").get() as
-        | { value?: string }
-        | undefined;
-      const parsed = profileRow?.value ? (JSON.parse(profileRow.value) as any) : null;
-      const leadFlags = (parsed?.video_preprod?.agents ?? []).map((agent: any) => ({
-        id: agent.id,
-        acts: agent.acts_as_planning_leader ?? 0,
-      }));
-      expect(leadFlags).toEqual([
-        { id: "video_preprod-seed-1", acts: 0 },
-        { id: "video_preprod-seed-2", acts: 1 },
-      ]);
     } finally {
       db.close();
     }

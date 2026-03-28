@@ -169,7 +169,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       return;
     }
 
-    const execName = execAgent.name_ko || execAgent.name;
+    const execName = execAgent.name;
     const t = nowMs();
     db.prepare(
       "UPDATE tasks SET status = 'in_progress', assigned_agent_id = ?, started_at = ?, updated_at = ? WHERE id = ?",

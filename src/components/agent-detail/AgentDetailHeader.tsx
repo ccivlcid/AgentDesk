@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const ROLE_LABEL: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
-  team_leader: { ko: "팀장",   en: "Lead",   ja: "リーダー", zh: "组长" },
+  team_leader: { ko: "PM",     en: "PM",     ja: "PM",       zh: "PM" },
   senior:      { ko: "시니어", en: "Senior",  ja: "シニア",   zh: "高级" },
   junior:      { ko: "주니어", en: "Junior",  ja: "ジュニア", zh: "初级" },
   intern:      { ko: "인턴",   en: "Intern",  ja: "インターン",zh: "实习" },
@@ -90,7 +90,7 @@ export default function AgentDetailHeader({ agent, department, isLight }: Props)
             whiteSpace: "nowrap",
             letterSpacing: "-0.01em",
           }}>
-            {agent.name_ko || agent.name}
+            {agent.name}
           </div>
 
           {/* 역할 + 상태 뱃지 */}

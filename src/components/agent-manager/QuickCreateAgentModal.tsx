@@ -32,9 +32,6 @@ export default function QuickCreateAgentModal({ onClose, onCreated }: Props) {
       const departmentId = form.department_id.trim();
       const payload = {
         name: form.name.trim(),
-        name_ko: form.name_ko.trim(),
-        name_ja: form.name_ja.trim(),
-        name_zh: form.name_zh.trim(),
         role: form.role,
         cli_provider: form.cli_provider,
         api_provider_id: form.api_provider_id || null,

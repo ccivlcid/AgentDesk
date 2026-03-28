@@ -171,7 +171,7 @@ export default function ManualAssignmentSelector({
                         />
                         <AgentAvatar agent={agent} size={24} />
                         <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
-                          {language === "ko" ? agent.name_ko || agent.name : agent.name}
+                          {agent.name}
                         </span>
                         {dept && (
                           <span
@@ -224,7 +224,7 @@ export default function ManualAssignmentSelector({
                   style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
                 >
                   <AgentAvatar agent={agent} size={16} />
-                  {language === "ko" ? agent.name_ko || agent.name : agent.name}
+                  {agent.name}
                 </span>
               ))}
             </div>

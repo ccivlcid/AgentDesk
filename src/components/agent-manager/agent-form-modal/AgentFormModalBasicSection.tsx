@@ -213,7 +213,7 @@ export function AgentFormModalBasicSection({
         <div className="flex-1 min-w-0 space-y-3">
           <div>
             <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-              {t({ ko: "영문 이름", en: "Name", ja: "英語名", zh: "英文名" })} <span style={{ color: "var(--th-danger-text)" }}>*</span>
+              {t({ ko: "이름", en: "Name", ja: "名前", zh: "名称" })} <span style={{ color: "var(--th-danger-text)" }}>*</span>
             </label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="DORO" />
           </div>
@@ -226,42 +226,6 @@ export function AgentFormModalBasicSection({
         </div>
       </div>
 
-      {locale.startsWith("ko") && (
-        <div className="mb-3">
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "한글 이름", en: "Korean Name", ja: "韓国語名", zh: "韩语名" })}
-          </label>
-          <Input
-            value={form.name_ko}
-            onChange={(e) => setForm({ ...form, name_ko: e.target.value })}
-            placeholder="도로롱"
-          />
-        </div>
-      )}
-      {locale.startsWith("ja") && (
-        <div className="mb-3">
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
-          </label>
-          <Input
-            value={form.name_ja}
-            onChange={(e) => setForm({ ...form, name_ja: e.target.value })}
-            placeholder="ドロロン"
-          />
-        </div>
-      )}
-      {locale.startsWith("zh") && (
-        <div className="mb-3">
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
-          </label>
-          <Input
-            value={form.name_zh}
-            onChange={(e) => setForm({ ...form, name_zh: e.target.value })}
-            placeholder="多罗隆"
-          />
-        </div>
-      )}
 
       <div className="mb-3">
         <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>

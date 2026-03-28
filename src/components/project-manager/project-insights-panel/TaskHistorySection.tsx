@@ -37,7 +37,7 @@ export function TaskHistorySection({ t, selectedProject, groupedTaskCards, handl
               </p>
               <p className="mt-1 break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "담당", en: "Owner", ja: "担当", zh: "负责人" })}:{" "}
-                {group.root.assigned_agent_name_ko || group.root.assigned_agent_name || "-"}
+                {group.root.assigned_agent_name || "-"}
               </p>
               <p className="mt-1 text-[11px] text-[#93c5fd]">
                 {t({ ko: "하위 작업", en: "Sub tasks", ja: "サブタスク", zh: "子任务" })}: {group.children.length}

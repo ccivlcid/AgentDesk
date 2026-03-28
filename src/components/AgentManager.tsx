@@ -80,9 +80,6 @@ export default function AgentManager({
         const query = search.toLowerCase().trim();
         return (
           agent.name.toLowerCase().includes(query) ||
-          agent.name_ko.toLowerCase().includes(query) ||
-          (agent.name_ja || "").toLowerCase().includes(query) ||
-          (agent.name_zh || "").toLowerCase().includes(query) ||
           (agent.role || "").toLowerCase().includes(query) ||
           (agent.cli_provider || "").toLowerCase().includes(query)
         );
@@ -120,9 +117,6 @@ export default function AgentManager({
       } catch { /* ignore */ }
       setForm({
         name: agent.name,
-        name_ko: agent.name_ko,
-        name_ja: agent.name_ja || "",
-        name_zh: agent.name_zh || "",
         department_id: agent.department_id || "",
         role: agent.role,
         cli_provider: agent.cli_provider,
@@ -164,9 +158,6 @@ export default function AgentManager({
       const departmentId = form.department_id.trim();
       const basePayload = {
         name: form.name.trim(),
-        name_ko: form.name_ko.trim(),
-        name_ja: form.name_ja.trim(),
-        name_zh: form.name_zh.trim(),
         role: form.role,
         cli_provider: form.cli_provider,
         api_provider_id: form.api_provider_id || null,

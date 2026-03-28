@@ -27,9 +27,6 @@ export function registerAgentWriteRoutes(
     try {
       const body = (req.body ?? {}) as Record<string, unknown>;
       const name = typeof body.name === "string" ? body.name.trim() : "";
-      const name_ko = typeof body.name_ko === "string" ? body.name_ko.trim() : "";
-      const name_ja = typeof body.name_ja === "string" ? body.name_ja.trim() : "";
-      const name_zh = typeof body.name_zh === "string" ? body.name_zh.trim() : "";
       if (!name) return res.status(400).json({ error: "name_required" });
       const requestedPackKey = parseWorkflowPackKey(body.workflow_pack_key);
       if (body.workflow_pack_key !== undefined && body.workflow_pack_key !== null && !requestedPackKey) {
@@ -76,14 +73,11 @@ export function registerAgentWriteRoutes(
       try {
         if (hasAgentWorkflowPackColumn) {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
-            name_ko,
-            name_ja,
-            name_zh,
             department_id,
             workflowPackKey,
             role,
@@ -97,14 +91,11 @@ export function registerAgentWriteRoutes(
           );
         } else {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, department_id, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
-            name_ko,
-            name_ja,
-            name_zh,
             department_id,
             role,
             cli_provider,

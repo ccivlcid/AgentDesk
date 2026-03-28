@@ -90,7 +90,7 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
     // 1. Detect orphaned agents (working status but no active process)
     const workingAgents = db
       .prepare(
-        `SELECT a.id, a.name, a.name_ko, a.current_task_id, t.started_at, t.title AS task_title
+        `SELECT a.id, a.name, a.current_task_id, t.started_at, t.title AS task_title
          FROM agents a
          LEFT JOIN tasks t ON t.id = a.current_task_id
          WHERE a.status = 'working' AND a.current_task_id IS NOT NULL`,
@@ -98,7 +98,6 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
       .all() as Array<{
         id: string;
         name: string;
-        name_ko: string;
         current_task_id: string;
         started_at: number | null;
         task_title: string | null;
@@ -129,7 +128,7 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
     // 2. Detect consecutive failures
     const recentFailureAgents = db
       .prepare(
-        `SELECT u.agent_id, a.name, a.name_ko,
+        `SELECT u.agent_id, a.name,
                 COUNT(*) AS consecutive_fails
          FROM (
            SELECT agent_id, exit_code,
@@ -146,7 +145,7 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
         now - 6 * 60 * 60_000, // last 6 hours
         CONSECUTIVE_FAILURE_THRESHOLD,
         CONSECUTIVE_FAILURE_THRESHOLD,
-      ) as Array<{ agent_id: string; name: string; name_ko: string; consecutive_fails: number }>;
+      ) as Array<{ agent_id: string; name: string; consecutive_fails: number }>;
 
     for (const row of recentFailureAgents) {
       const alertKey = `failures:${row.agent_id}:${row.consecutive_fails}`;
@@ -171,7 +170,7 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
 
     const staleAgents = db
       .prepare(
-        `SELECT a.id, a.name, a.name_ko, a.current_task_id,
+        `SELECT a.id, a.name, a.current_task_id,
                 t.started_at, t.title AS task_title
          FROM agents a
          LEFT JOIN tasks t ON t.id = a.current_task_id
@@ -183,7 +182,6 @@ export function startAgentAnomalyMonitor(deps: AnomalyMonitorDeps): { stop: () =
       .all(now, dynamicThresholdMs) as Array<{
         id: string;
         name: string;
-        name_ko: string;
         current_task_id: string;
         started_at: number;
         task_title: string | null;

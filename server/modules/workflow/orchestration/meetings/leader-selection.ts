@@ -3,7 +3,6 @@ import { resolveConstrainedAgentScopeForTask } from "../../../routes/core/tasks/
 interface AgentRow {
   id: string;
   name: string;
-  name_ko: string;
   role: string;
   status: string;
   department_id: string | null;

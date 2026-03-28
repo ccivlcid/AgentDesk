@@ -114,7 +114,7 @@ const DEFAULT_MEMORIES: MemorySeed[] = [
     content:
       "Use the `t({ ko, en, ja, zh })` function from useI18n() for all user-visible strings. " +
       "Never hardcode English-only text in UI components. " +
-      "Agent display names should use agentDisplayName(agent, localeTag) to pick name_ko/name_ja/name_zh/name based on locale.",
+      "Agent display names use the single `name` field (agents no longer have name_ko/name_ja/name_zh columns).",
     category: "convention",
     scope_type: "global",
     priority: 78,

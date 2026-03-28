@@ -60,11 +60,8 @@ export default function MemoryHistoryPanel({
 
   const agentDisplayName = useCallback((agent: Agent | null): string => {
     if (!agent) return "";
-    if (localeTag.startsWith("ko") && agent.name_ko) return agent.name_ko;
-    if (localeTag.startsWith("ja") && agent.name_ja) return agent.name_ja;
-    if (localeTag.startsWith("zh") && agent.name_zh) return agent.name_zh;
     return agent.name;
-  }, [localeTag]);
+  }, []);
 
   // map provider → all matching agents
   const agentsByProvider = useMemo(() => {

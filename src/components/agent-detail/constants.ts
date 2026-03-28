@@ -7,7 +7,7 @@ export type TFunction = (messages: Record<Locale, string>) => string;
 export function roleLabel(role: string, t: TFunction) {
   switch (role) {
     case "team_leader":
-      return t({ ko: "팀장", en: "Team Leader", ja: "チームリーダー", zh: "组长" });
+      return t({ ko: "PM", en: "PM", ja: "PM", zh: "PM" });
     case "senior":
       return t({ ko: "시니어", en: "Senior", ja: "シニア", zh: "高级" });
     case "junior":

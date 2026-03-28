@@ -12,7 +12,6 @@ export type WindowType =
   | "create-department"
   | "library-guide"
   | "user-guide"
-  | "file-tree"
   | "cli-usage"
   | "repo-store"
   | "project-create"

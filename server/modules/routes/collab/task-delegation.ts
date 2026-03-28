@@ -129,7 +129,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
     options: DelegationOptions = {},
   ): void {
     const lang = resolveLang(ceoMessage);
-    const leaderName = lang === "ko" ? teamLeader.name_ko || teamLeader.name : teamLeader.name;
+    const leaderName = teamLeader.name;
     const leaderDeptId = teamLeader.department_id!;
     const leaderDeptName = getDeptName(leaderDeptId);
     const skipPlannedMeeting = !!options.skipPlannedMeeting;
@@ -401,7 +401,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       };
 
       if (subordinate) {
-        const subName = lang === "ko" ? subordinate.name_ko || subordinate.name : subordinate.name;
+        const subName = subordinate.name;
         const subRole = getRoleLabel(subordinate.role, lang);
 
         const ackMsg = buildLeaderAckMessage({

@@ -25,9 +25,6 @@ function setupDb(): DatabaseSync {
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      name_ko TEXT NOT NULL DEFAULT '',
-      name_ja TEXT NOT NULL DEFAULT '',
-      name_zh TEXT NOT NULL DEFAULT '',
       department_id TEXT,
       role TEXT NOT NULL,
       cli_provider TEXT,
@@ -93,51 +90,20 @@ function insertAgent(
 }
 
 describe("selectAutoAssignableAgentForTask", () => {
-  it("오피스팩별 우선 부서가 다르게 적용된다", () => {
-    const db = setupDb();
-    try {
-      insertAgent(db, { id: "agent-plan", name: "Planner", department_id: "planning", created_at: 1 });
-      insertAgent(db, { id: "agent-dev", name: "Dev", department_id: "dev", created_at: 2 });
-      insertAgent(db, { id: "agent-design", name: "Designer", department_id: "design", created_at: 3 });
-
-      const reportSelected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "report",
-        department_id: null,
-        project_id: null,
-      });
-      const researchSelected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "web_research_report",
-        department_id: null,
-        project_id: null,
-      });
-      const novelSelected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "novel",
-        department_id: null,
-        project_id: null,
-      });
-
-      expect(reportSelected?.agent.department_id).toBe("planning");
-      expect(researchSelected?.agent.department_id).toBe("dev");
-      expect(novelSelected?.agent.department_id).toBe("design");
-    } finally {
-      db.close();
-    }
-  });
-
-  it("팩 우선 부서 순서로 자동 배정 대상을 고른다", () => {
+  it("development 팩 우선 부서 순서로 자동 배정 대상을 고른다", () => {
     const db = setupDb();
     try {
       insertAgent(db, { id: "agent-dev", name: "Dev", department_id: "dev", created_at: 1 });
       insertAgent(db, { id: "agent-plan", name: "Planner", department_id: "planning", created_at: 2 });
 
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: null,
       });
 
-      expect(selected?.packKey).toBe("report");
-      expect(selected?.agent.id).toBe("agent-plan");
+      expect(selected?.packKey).toBe("development");
+      expect(selected?.agent.id).toBe("agent-dev");
     } finally {
       db.close();
     }
@@ -152,7 +118,7 @@ describe("selectAutoAssignableAgentForTask", () => {
       db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("project-1", "agent-sec");
 
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: "project-1",
       });
@@ -183,7 +149,7 @@ describe("selectAutoAssignableAgentForTask", () => {
       });
 
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "roleplay",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: null,
       });
@@ -194,141 +160,21 @@ describe("selectAutoAssignableAgentForTask", () => {
     }
   });
 
-  it("워크팩 프로필 에이전트가 있으면 런타임 후보를 해당 프로필로 제한한다", () => {
+  it("manual 프로젝트면 project_agents 범위로만 배정한다", () => {
     const db = setupDb();
     try {
-      insertAgent(db, { id: "novel-pack-agent", name: "Novel Pack Agent", department_id: "design", created_at: 0 });
-      insertAgent(db, { id: "agent-global-design", name: "Global Designer", department_id: "design", created_at: 1 });
-      insertAgent(db, { id: "agent-global-dev", name: "Global Dev", department_id: "dev", created_at: 2 });
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          novel: {
-            departments: [
-              {
-                id: "design",
-                name: "Design",
-                name_ko: "디자인팀",
-                name_ja: "デザインチーム",
-                name_zh: "设计组",
-                icon: "🎨",
-                color: "#8b5cf6",
-                sort_order: 3,
-                created_at: 1,
-              },
-            ],
-            agents: [
-              {
-                id: "novel-pack-agent",
-                name: "Novel Pack Agent",
-                name_ko: "소설팩 에이전트",
-                name_ja: "小説パックエージェント",
-                name_zh: "小说包代理",
-                department_id: "design",
-                role: "senior",
-                cli_provider: "codex",
-                avatar_emoji: "🧪",
-                created_at: 5,
-              },
-            ],
-          },
-        }),
-      );
-
-      const scope = resolveConstrainedAgentScopeForTask(db, {
-        workflow_pack_key: "novel",
-        department_id: null,
-        project_id: null,
-      });
-      const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "novel",
-        department_id: null,
-        project_id: null,
-      });
-
-      expect(scope).toEqual(["novel-pack-agent"]);
-      expect(selected?.agent.id).toBe("novel-pack-agent");
-    } finally {
-      db.close();
-    }
-  });
-
-  it("없는 프로필 에이전트는 전역 agents 테이블에 자동 생성하지 않는다", () => {
-    const db = setupDb();
-    try {
-      insertAgent(db, { id: "agent-global-design", name: "Global Designer", department_id: "design", created_at: 1 });
-      insertAgent(db, { id: "agent-global-dev", name: "Global Dev", department_id: "dev", created_at: 2 });
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          novel: {
-            departments: [],
-            agents: [
-              {
-                id: "missing-pack-agent",
-                name: "Missing Pack Agent",
-                name_ko: "미싱 팩 에이전트",
-                name_ja: "未登録パックエージェント",
-                name_zh: "缺失包代理",
-                department_id: "design",
-                role: "senior",
-                cli_provider: "codex",
-                avatar_emoji: "🧪",
-                created_at: 5,
-              },
-            ],
-          },
-        }),
-      );
-
-      const beforeCount = (db.prepare("SELECT COUNT(*) AS c FROM agents").get() as { c: number }).c;
-      const scope = resolveConstrainedAgentScopeForTask(db, {
-        workflow_pack_key: "novel",
-        department_id: null,
-        project_id: null,
-      });
-      const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "novel",
-        department_id: null,
-        project_id: null,
-      });
-      const afterCount = (db.prepare("SELECT COUNT(*) AS c FROM agents").get() as { c: number }).c;
-
-      expect(scope).toEqual(["agent-global-design"]);
-      expect(afterCount).toBe(beforeCount);
-      expect(selected?.agent.id).toBe("agent-global-design");
-    } finally {
-      db.close();
-    }
-  });
-
-  it("manual 프로젝트면 워크팩 프로필과 manual 범위를 교집합으로 제한한다", () => {
-    const db = setupDb();
-    try {
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run(
-        "officePackProfiles",
-        JSON.stringify({
-          report: {
-            departments: [],
-            agents: [
-              { id: "pack-a", name: "Pack A", department_id: "planning", role: "senior", cli_provider: "codex" },
-              { id: "pack-b", name: "Pack B", department_id: "planning", role: "senior", cli_provider: "codex" },
-            ],
-          },
-        }),
-      );
       insertAgent(db, { id: "pack-a", name: "Pack A", department_id: "planning", created_at: 1 });
       insertAgent(db, { id: "pack-b", name: "Pack B", department_id: "planning", created_at: 2 });
       db.prepare("INSERT INTO projects (id, assignment_mode) VALUES (?, ?)").run("project-1", "manual");
       db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run("project-1", "pack-b");
 
       const scope = resolveConstrainedAgentScopeForTask(db, {
-        workflow_pack_key: "report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: "project-1",
       });
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: "project-1",
       });
@@ -359,7 +205,7 @@ describe("selectAutoAssignableAgentForTask", () => {
       });
 
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "web_research_report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: null,
       });
@@ -396,7 +242,7 @@ describe("selectAutoAssignableAgentForTask", () => {
       });
 
       const selected = selectAutoAssignableAgentForTask(db, {
-        workflow_pack_key: "web_research_report",
+        workflow_pack_key: "development",
         department_id: null,
         project_id: null,
       });

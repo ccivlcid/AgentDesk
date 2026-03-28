@@ -12,7 +12,6 @@ import MarkdownEditorModal from "./MarkdownEditorModal";
 import QuickLook from "./QuickLook";
 import ProjectFolderWindow from "./ProjectFolderWindow";
 import MissionControl from "./MissionControl";
-import FileTreeWindow from "../windows/FileTreeWindow";
 import CliCostWindow from "../windows/CliCostWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import LibraryGuideWindow from "../windows/LibraryGuideWindow";
@@ -107,7 +106,6 @@ export function DesktopWindowStack({
   return (
     <>
       {openWindows.has("tasks") && <OrchestrationWindow />}
-      {openWindows.has("file-tree") && <FileTreeWindow />}
       {openWindows.has("cli-usage") && <CliCostWindow />}
       {openWindows.has("library") && <LibraryWindow />}
       {openWindows.has("library-guide") && <LibraryGuideWindow />}

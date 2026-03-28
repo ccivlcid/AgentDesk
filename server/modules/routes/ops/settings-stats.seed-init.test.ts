@@ -52,9 +52,6 @@ function setupDb(): DatabaseSync {
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL DEFAULT '',
-      name_ko TEXT NOT NULL DEFAULT '',
-      name_ja TEXT NOT NULL DEFAULT '',
-      name_zh TEXT NOT NULL DEFAULT '',
       department_id TEXT,
       role TEXT NOT NULL DEFAULT 'senior',
       acts_as_planning_leader INTEGER NOT NULL DEFAULT 0,

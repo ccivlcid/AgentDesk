@@ -45,7 +45,7 @@ export function registerAgentUsageRoutes(ctx: RuntimeContext): {
         `SELECT
            u.agent_id,
            a.name AS agent_name,
-           a.name_ko AS agent_name_ko,
+           a.name AS agent_name_ko,
            a.avatar_emoji,
            u.provider,
            COUNT(*) AS run_count,

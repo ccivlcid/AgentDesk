@@ -36,7 +36,7 @@ export function registerNotificationRoutes(ctx: RuntimeContext): void {
         `
         SELECT n.id, n.type, n.title, n.body, n.task_id, n.agent_id, n.read, n.created_at,
                COALESCE(a.name, '') AS agent_name,
-               COALESCE(a.name_ko, '') AS agent_name_ko,
+               COALESCE(a.name, '') AS agent_name_ko,
                COALESCE(a.avatar_emoji, '') AS agent_avatar
         FROM notifications n
         LEFT JOIN agents a ON a.id = n.agent_id
@@ -110,7 +110,7 @@ export function createNotificationHelper(ctx: { db: import("node:sqlite").Databa
     const row = db.prepare(
       `SELECT n.id, n.type, n.title, n.body, n.task_id, n.agent_id, n.read, n.created_at,
               COALESCE(a.name, '') AS agent_name,
-              COALESCE(a.name_ko, '') AS agent_name_ko,
+              COALESCE(a.name, '') AS agent_name_ko,
               COALESCE(a.avatar_emoji, '') AS agent_avatar
        FROM notifications n LEFT JOIN agents a ON a.id = n.agent_id WHERE n.id = ?`,
     ).get(id);

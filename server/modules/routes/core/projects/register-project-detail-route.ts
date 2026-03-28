@@ -16,7 +16,7 @@ export function registerProjectDetailRoute(deps: ProjectRoutesDeps): void {
            t.assigned_agent_id,
            t.department_id,
            COALESCE(a.name, '') AS assigned_agent_name,
-           COALESCE(a.name_ko, '') AS assigned_agent_name_ko,
+           COALESCE(a.name, '') AS assigned_agent_name_ko,
            COALESCE(d.name, '') AS department_name,
            COALESCE(d.name_ko, '') AS department_name_ko
     FROM tasks t
@@ -34,7 +34,7 @@ export function registerProjectDetailRoute(deps: ProjectRoutesDeps): void {
         `
     SELECT t.id, t.title, t.completed_at, t.created_at, t.assigned_agent_id,
            COALESCE(a.name, '') AS agent_name,
-           COALESCE(a.name_ko, '') AS agent_name_ko,
+           COALESCE(a.name, '') AS agent_name_ko,
            COALESCE(d.name, '') AS dept_name,
            COALESCE(d.name_ko, '') AS dept_name_ko
     FROM tasks t
