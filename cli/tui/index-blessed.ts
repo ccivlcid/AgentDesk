@@ -60,7 +60,7 @@ export async function startTui(): Promise<void> {
   });
   screen.append(chatWidget.element);
 
-  const termWidget = new TerminalWidget(screen, {
+  const termWidget = await TerminalWidget.create(screen, {
     bottom: STATUSBAR_HEIGHT + INPUT_HEIGHT,
     left: 0,
     width: `100%-${SIDEBAR_WIDTH}`,

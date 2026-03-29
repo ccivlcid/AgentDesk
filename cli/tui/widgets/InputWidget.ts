@@ -120,7 +120,8 @@ export class InputWidget {
       label: " Files ",
     });
 
-    // Submit handler
+    // Submit handler — blessed textbox exits input mode after submit,
+    // so we must call readInput() again to re-enter input mode.
     this.element.on("submit", (value: string) => {
       if (value.trim()) {
         this.onSubmit?.(value.trim());
@@ -128,7 +129,19 @@ export class InputWidget {
       this.element.clearValue();
       this.hidePalette();
       this.hideFileSearch();
-      this.element.focus();
+      // Re-enter input mode after submit
+      process.nextTick(() => {
+        this.element.readInput();
+      });
+    });
+
+    // Cancel handler — also re-enter input mode
+    this.element.on("cancel", () => {
+      this.hidePalette();
+      this.hideFileSearch();
+      process.nextTick(() => {
+        this.element.readInput();
+      });
     });
 
     // Key value change — update palette
@@ -159,6 +172,10 @@ export class InputWidget {
 
   focus(): void {
     this.element.focus();
+    // blessed textbox requires readInput() to accept keyboard input
+    process.nextTick(() => {
+      this.element.readInput();
+    });
   }
 
   /** Show pending action confirmation */

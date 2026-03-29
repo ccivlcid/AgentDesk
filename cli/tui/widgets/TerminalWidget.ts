@@ -4,23 +4,29 @@
  */
 import blessed from "neo-blessed";
 
-// blessed-xterm is optional — graceful fallback if not available
-let XTerm: typeof import("blessed-xterm") | null = null;
-try {
-  XTerm = (await import("blessed-xterm")).default ?? (await import("blessed-xterm"));
-} catch {
-  // blessed-xterm or node-pty not available
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type XTermConstructor = new (options: any) => any;
+
+async function loadXTerm(): Promise<XTermConstructor | null> {
+  try {
+    const mod = await import("blessed-xterm");
+    return (mod.default ?? mod) as XTermConstructor;
+  } catch {
+    return null;
+  }
 }
 
 export class TerminalWidget {
   element: blessed.Widgets.BoxElement;
-  private xterm: InstanceType<NonNullable<typeof XTerm>> | null = null;
-  private available: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private xterm: any = null;
+  private available = false;
   visible = true;
 
-  constructor(
+  private constructor(
     parent: blessed.Widgets.Screen,
     options: blessed.Widgets.BoxOptions,
+    XTerm: XTermConstructor | null,
   ) {
     this.available = XTerm !== null;
 
@@ -45,7 +51,7 @@ export class TerminalWidget {
         },
         label: " Terminal ",
       });
-      this.element = this.xterm as unknown as blessed.Widgets.BoxElement;
+      this.element = this.xterm as blessed.Widgets.BoxElement;
     } else {
       // Fallback: plain box with message
       this.element = blessed.box({
@@ -62,6 +68,14 @@ export class TerminalWidget {
         label: " Terminal ",
       });
     }
+  }
+
+  static async create(
+    parent: blessed.Widgets.Screen,
+    options: blessed.Widgets.BoxOptions,
+  ): Promise<TerminalWidget> {
+    const XTerm = await loadXTerm();
+    return new TerminalWidget(parent, options, XTerm);
   }
 
   get isAvailable(): boolean {
