@@ -112,18 +112,18 @@ export function App(): React.ReactElement {
     },
   });
 
-  // Tab: mode toggle, PageUp/PageDown: scroll
+  // Tab: mode toggle, Ctrl+Up/Down & PageUp/Down: scroll chat
   useInput((_input, key) => {
     if (key.tab) {
       setMode((prev) => (prev === "plan" ? "build" : "plan"));
       return;
     }
-    if (key.pageUp) {
-      setScrollOffset((prev) => Math.min(prev + 10, Math.max(0, messages.length - 5)));
+    if (key.pageUp || (key.ctrl && key.upArrow) || (key.shift && key.upArrow)) {
+      setScrollOffset((prev) => Math.min(prev + 5, Math.max(0, messages.length - 5)));
       return;
     }
-    if (key.pageDown) {
-      setScrollOffset((prev) => Math.max(0, prev - 10));
+    if (key.pageDown || (key.ctrl && key.downArrow) || (key.shift && key.downArrow)) {
+      setScrollOffset((prev) => Math.max(0, prev - 5));
     }
   });
 

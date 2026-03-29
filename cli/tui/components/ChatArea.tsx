@@ -28,12 +28,12 @@ function Spinner({ label }: { label: string }): React.ReactElement {
   );
 }
 
-export function ChatArea({ messages, showDetails = false, scrollOffset = 0, totalMessages = 0, isProcessing = false }: Props): React.ReactElement {
+export const ChatArea = React.memo(function ChatArea({ messages, showDetails = false, scrollOffset = 0, totalMessages = 0, isProcessing = false }: Props): React.ReactElement {
   const isScrolled = scrollOffset > 0;
   return (
     <Box flexDirection="column" flexGrow={1} overflowY="hidden" paddingX={1}>
       {isScrolled && (
-        <Text dimColor>↑ {scrollOffset} older  (Ctrl+X d: down)</Text>
+        <Text dimColor>↑ {scrollOffset} older  (Shift+↓ or Ctrl+↓: scroll down)</Text>
       )}
       {messages.length === 0 ? (
         <Box paddingY={1}>
@@ -48,8 +48,8 @@ export function ChatArea({ messages, showDetails = false, scrollOffset = 0, tota
         </Box>
       )}
       {isScrolled && (
-        <Text dimColor>── {totalMessages - scrollOffset}/{totalMessages}  Ctrl+X u↑  Ctrl+X d↓ ──</Text>
+        <Text dimColor>── {totalMessages - scrollOffset}/{totalMessages}  Shift/Ctrl+↑↓ scroll ──</Text>
       )}
     </Box>
   );
-}
+});

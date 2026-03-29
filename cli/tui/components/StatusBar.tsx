@@ -14,7 +14,7 @@ interface Props {
   showHints?: boolean;
 }
 
-export function StatusBar(props: Props): React.ReactElement {
+export const StatusBar = React.memo(function StatusBar(props: Props): React.ReactElement {
   const {
     projectName,
     sessionMinutes,
@@ -67,4 +67,4 @@ export function StatusBar(props: Props): React.ReactElement {
       )}
     </Box>
   );
-}
+});

@@ -29,20 +29,20 @@ export function InputBar({ onSend, mode, projectId = null, pendingAction = null,
     }
   };
 
-  // y/n single key handler for pending confirmation + history navigation
-  useInput((input, key) => {
+  // y/n confirmation + history navigation
+  useInput((_input, key) => {
     if (pendingAction && onConfirm) {
-      if (input === "y" || input === "Y") onConfirm(true);
-      else if (input === "n" || input === "N") onConfirm(false);
+      if (_input === "y" || _input === "Y") onConfirm(true);
+      else if (_input === "n" || _input === "N") onConfirm(false);
       return;
     }
-    // History navigation: only when input is empty or already browsing history
-    if (key.upArrow && history.length > 0 && (value === "" || historyIdx >= 0)) {
+    // History: only when input empty or already browsing (skip ctrl/shift for scroll)
+    if (key.upArrow && !key.ctrl && !key.shift && history.length > 0 && (value === "" || historyIdx >= 0)) {
       const nextIdx = Math.min(historyIdx + 1, history.length - 1);
       setHistoryIdx(nextIdx);
       setValue(history[nextIdx]);
     }
-    if (key.downArrow && historyIdx >= 0) {
+    if (key.downArrow && !key.ctrl && !key.shift && historyIdx >= 0) {
       const nextIdx = historyIdx - 1;
       setHistoryIdx(nextIdx);
       setValue(nextIdx >= 0 ? history[nextIdx] : "");

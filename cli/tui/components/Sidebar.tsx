@@ -32,7 +32,7 @@ const AGENT_INDICATOR: Record<string, string> = {
 // Pipeline stages
 const PIPELINE_STAGES = ["Meeting", "Planning", "Assigning", "Executing", "Review"];
 
-export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, readyCli = new Set() }: SidebarProps): React.ReactElement {
+export const Sidebar = React.memo(function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, readyCli = new Set() }: SidebarProps): React.ReactElement {
   const currentStageIdx = PIPELINE_STAGES.findIndex(
     (s) => s.toLowerCase() === pipelineStage?.toLowerCase()
   );
@@ -131,4 +131,4 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, r
       <Text dimColor>  {formatTokens(tokens)} tok  ${cost.toFixed(2)}</Text>
     </Box>
   );
-}
+});
