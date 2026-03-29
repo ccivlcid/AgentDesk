@@ -16,6 +16,7 @@ const LEADER_BINDINGS: Record<string, string> = {
   h: "/help",
   u: "/__scroll_up",
   d: "/__scroll_down",
+  "?": "/__toggle_hints",
 };
 
 interface UseLeaderKeyParams {

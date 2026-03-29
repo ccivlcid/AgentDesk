@@ -61,7 +61,7 @@ export function StatusBar(props: Props): React.ReactElement {
           {leaderMode ? (
             <Text color="yellow" bold>[Ctrl+X ...] waiting for key</Text>
           ) : (
-            <Text dimColor>Tab: mode  esc: interrupt  Ctrl+X: leader  ?: toggle hints</Text>
+            <Text dimColor>Tab: mode  esc: interrupt  Ctrl+X: leader  Ctrl+X ?: hints</Text>
           )}
         </Box>
       )}

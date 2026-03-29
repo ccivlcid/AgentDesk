@@ -36,8 +36,8 @@ export function InputBar({ onSend, mode, projectId = null, pendingAction = null,
       else if (input === "n" || input === "N") onConfirm(false);
       return;
     }
-    // History navigation with up/down arrows (only when input is empty or browsing history)
-    if (key.upArrow && history.length > 0) {
+    // History navigation: only when input is empty or already browsing history
+    if (key.upArrow && history.length > 0 && (value === "" || historyIdx >= 0)) {
       const nextIdx = Math.min(historyIdx + 1, history.length - 1);
       setHistoryIdx(nextIdx);
       setValue(history[nextIdx]);

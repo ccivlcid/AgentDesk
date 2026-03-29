@@ -112,8 +112,8 @@ export function App(): React.ReactElement {
     },
   });
 
-  // Tab: mode toggle, PageUp/PageDown: scroll, ?: hints toggle
-  useInput((input, key) => {
+  // Tab: mode toggle, PageUp/PageDown: scroll
+  useInput((_input, key) => {
     if (key.tab) {
       setMode((prev) => (prev === "plan" ? "build" : "plan"));
       return;
@@ -124,10 +124,6 @@ export function App(): React.ReactElement {
     }
     if (key.pageDown) {
       setScrollOffset((prev) => Math.max(0, prev - 10));
-      return;
-    }
-    if (input === "?") {
-      setShowHints((prev) => !prev);
     }
   });
 
@@ -230,6 +226,7 @@ export function App(): React.ReactElement {
             const project = await api.post<{ id: string; name: string }>("/api/projects", {
               name: goal.slice(0, 60),
               core_goal: goal,
+              project_path: process.cwd(),
             });
             addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
             await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
@@ -328,6 +325,10 @@ export function App(): React.ReactElement {
       }
       if (cmd === "/__scroll_down") {
         setScrollOffset((prev) => Math.max(0, prev - 10));
+        return;
+      }
+      if (cmd === "/__toggle_hints") {
+        setShowHints((prev) => !prev);
         return;
       }
       void handleSend(cmd);
