@@ -128,8 +128,8 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
   app.get("/api/projects/:id/agents", (req, res) => {
     const id = String(req.params.id);
     const rows = db
-      .prepare("SELECT agent_id AS id FROM project_agents WHERE project_id = ?")
-      .all(id) as Array<{ id: string }>;
+      .prepare("SELECT agent_id AS id, project_role FROM project_agents WHERE project_id = ?")
+      .all(id) as Array<{ id: string; project_role: string | null }>;
     res.json({ agents: rows });
   });
 

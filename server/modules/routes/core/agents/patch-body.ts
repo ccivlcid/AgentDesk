@@ -185,7 +185,6 @@ export function prepareAgentPatchBody(
     "current_task_id",
     "acts_as_planning_leader",
     "enable_planning_phase",
-    "kb_default_sources",
     "specialty",
     "autonomy_level",
     "max_concurrent_tasks",

@@ -82,7 +82,7 @@ export default function App() {
     categories, projects, currentProjectId, projectAgentIds, projectAgentsLoaded,
     showProjectCreate, projectCreateBusy,
     setCategories, setProjects, setCurrentProjectId, setProjectAgentIds,
-    setProjectAgentsLoaded, setShowProjectCreate, setProjectCreateBusy,
+    setProjectAgentsLoaded, setProjectPmAgentId, setShowProjectCreate, setProjectCreateBusy,
   } = useProjectStore();
 
   // ── UI store ─────────────────────────────────────────────────────────────
@@ -126,6 +126,7 @@ export default function App() {
   useEffect(() => {
     if (!currentProjectId) {
       setProjectAgentIds(new Set());
+      setProjectPmAgentId(null);
       setProjectAgentsLoaded(false);
       return;
     }
@@ -133,12 +134,14 @@ export default function App() {
     import("./api/categories-dashboard").then(({ fetchProjectAgents }) =>
       fetchProjectAgents(currentProjectId)
         .then((list) => {
-          setProjectAgentIds(new Set(list.map((a: { id: string }) => a.id)));
+          setProjectAgentIds(new Set(list.map((a: { id: string; project_role: string | null }) => a.id)));
+          const pm = list.find((a: { id: string; project_role: string | null }) => a.project_role === "pm");
+          setProjectPmAgentId(pm?.id ?? null);
           setProjectAgentsLoaded(true);
         })
         .catch(() => { setProjectAgentsLoaded(true); }),
     );
-  }, [currentProjectId, setProjectAgentIds, setProjectAgentsLoaded]);
+  }, [currentProjectId, setProjectAgentIds, setProjectAgentsLoaded, setProjectPmAgentId]);
 
   // ── Refs for WebSocket callbacks ─────────────────────────────────────────
   // WebSocket 이벤트 핸들러는 마운트 시 한 번만 등록되므로, 최신 state를

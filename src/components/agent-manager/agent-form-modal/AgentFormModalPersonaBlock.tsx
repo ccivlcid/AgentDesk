@@ -2,7 +2,6 @@ import { getPersonaById } from "../../../data/personas";
 import { PersonaCatalog } from "../../agent-persona/PersonaCatalog";
 import { Button, Textarea } from "../../ui";
 import type { FormData } from "../types";
-import { KbSourcesSection } from "./KbSourcesSection";
 
 export function AgentFormModalPersonaBlock({
   tr,
@@ -125,11 +124,6 @@ export function AgentFormModalPersonaBlock({
         )}
       </div>
 
-      <KbSourcesSection
-        sources={form.kb_default_sources ?? []}
-        onChange={(sources) => setForm({ ...form, kb_default_sources: sources })}
-        tr={tr}
-      />
     </>
   );
 }

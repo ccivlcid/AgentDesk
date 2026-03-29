@@ -21,11 +21,12 @@ export default function OrchestrationWindow() {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<OrchestraTab>("timeline");
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
+  const [logsInitialAgentId, setLogsInitialAgentId] = useState<string | null>(null);
   const prevStageRef = useRef<string | null>(null);
 
   const { tasks } = useTaskStore();
   const { agents, departments } = useAgentStore();
-  const { currentProjectId, projects, projectAgentIds } = useProjectStore();
+  const { currentProjectId, projects, projectAgentIds, projectPmAgentId } = useProjectStore();
   const pendingClarification = useProjectStore((s) => s.pendingClarification) as PendingClarification | null;
   const { kickoffStage } = useUiStore();
 
@@ -46,6 +47,9 @@ export default function OrchestrationWindow() {
     if (allIds.size > 0) return agents.filter((a) => allIds.has(a.id));
     return [];
   }, [agents, projectTasks, projectAgentIds]);
+
+  // Resolve PM: prefer project_role="pm", fall back to global team_leader role
+  const pmAgentId = projectPmAgentId ?? projectAgents.find((a) => a.role === "team_leader")?.id ?? null;
 
   // Auto-switch tabs based on kickoff stage
   useEffect(() => {
@@ -88,13 +92,14 @@ export default function OrchestrationWindow() {
       defaultWidth={1120}
       defaultHeight={720}
     >
-      <div style={{
+      <div data-orch-window tabIndex={-1} style={{
         display: "flex",
         flexDirection: "column",
         height: "100%",
         background: "var(--th-bg-primary)",
         fontFamily: mono,
         overflow: "hidden",
+        outline: "none",
       }}>
         {/* Metrics Header */}
         <MetricsHeader
@@ -114,7 +119,7 @@ export default function OrchestrationWindow() {
         {/* Main content: Stage Rail + Tab Content */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {/* Stage Rail (left sidebar) */}
-          <StageRail stage={kickoffStage ?? "idle"} />
+          <StageRail stage={kickoffStage ?? "idle"} tasks={projectTasks} />
 
           {/* Tab Content */}
           <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -150,6 +155,8 @@ export default function OrchestrationWindow() {
                   tasks={projectTasks}
                   agents={projectAgents}
                   projectId={currentProjectId ?? undefined}
+                  initialAgentId={logsInitialAgentId ?? undefined}
+                  pmAgentId={pmAgentId ?? undefined}
                 />
               )}
               {activeTab === "agents" && (
@@ -158,7 +165,8 @@ export default function OrchestrationWindow() {
                   tasks={projectTasks}
                   departments={departments}
                   projectId={currentProjectId ?? undefined}
-                  onSwitchToLogs={() => { setActiveTab("logs"); }}
+                  pmAgentId={pmAgentId ?? undefined}
+                  onSwitchToLogs={(agentId) => { setLogsInitialAgentId(agentId); setActiveTab("logs"); }}
                 />
               )}
               {activeTab === "room" && (
@@ -167,6 +175,7 @@ export default function OrchestrationWindow() {
                   agents={projectAgents}
                   project={currentProject}
                   projectId={currentProjectId ?? undefined}
+                  pmAgentId={pmAgentId ?? undefined}
                 />
               )}
               </div>

@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-29-005-tui-sessions`
+- **Last applied ID**: `2026-03-29-011-agent-llm-distribution`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -524,7 +524,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-29-005-tui-sessions` → next: `2026-03-29-006-*`
+3. **Last known ID**: `2026-03-29-011-agent-llm-distribution` → next: `2026-03-29-012-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

@@ -12,10 +12,11 @@ interface AgentsTabProps {
   tasks: Task[];
   departments: Department[];
   projectId?: string;
+  pmAgentId?: string;
   onSwitchToLogs?: (agentId: string) => void;
 }
 
-export default function AgentsTab({ agents, tasks, departments, projectId, onSwitchToLogs }: AgentsTabProps) {
+export default function AgentsTab({ agents, tasks, departments, projectId, pmAgentId, onSwitchToLogs }: AgentsTabProps) {
   const [perfMap, setPerfMap] = useState<Map<string, AgentPerformanceEntry>>(new Map());
   const [actionMenuAgentId, setActionMenuAgentId] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
   const [sortKey, setSortKey] = useState<"name" | "role" | "status" | "fitness">("name");
   const [sortAsc, setSortAsc] = useState(true);
   const perfDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addToast = useUiStore((s) => s.addToast);
 
   // Count done/failed tasks as a change signal
   const doneCount = tasks.filter((t) => t.status === "done" || t.execution_state === "failed").length;
@@ -106,10 +108,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
     setBusyAction(`stop:${agentId}`);
     try {
       await Promise.all(agentTasks.map((t) => stopTask(t.id)));
-    } catch { /* best effort */ }
+    } catch {
+      addToast({ type: "error", title: "Failed to stop agent tasks" });
+    }
     setBusyAction(null);
     setActionMenuAgentId(null);
-  }, [tasks]);
+  }, [tasks, addToast]);
 
   const handlePauseAgent = useCallback(async (agentId: string) => {
     const agentTasks = tasks.filter((t) => t.assigned_agent_id === agentId && t.status === "in_progress");
@@ -117,10 +121,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
     setBusyAction(`pause:${agentId}`);
     try {
       await Promise.all(agentTasks.map((t) => pauseTask(t.id)));
-    } catch { /* best effort */ }
+    } catch {
+      addToast({ type: "error", title: "Failed to pause agent tasks" });
+    }
     setBusyAction(null);
     setActionMenuAgentId(null);
-  }, [tasks]);
+  }, [tasks, addToast]);
 
   const handleResumeAgent = useCallback(async (agentId: string) => {
     const agentTasks = tasks.filter((t) => t.assigned_agent_id === agentId && t.status === "pending");
@@ -128,10 +134,12 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
     setBusyAction(`resume:${agentId}`);
     try {
       await Promise.all(agentTasks.map((t) => resumeTask(t.id)));
-    } catch { /* best effort */ }
+    } catch {
+      addToast({ type: "error", title: "Failed to resume agent tasks" });
+    }
     setBusyAction(null);
     setActionMenuAgentId(null);
-  }, [tasks]);
+  }, [tasks, addToast]);
 
   const handleReassignStart = useCallback((agentId: string) => {
     setReassignAgentId(agentId);
@@ -152,11 +160,13 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
         if (t.status === "in_progress") await stopTask(t.id);
         await assignTask(t.id, toAgentId);
       }
-    } catch { /* best effort */ }
+    } catch {
+      addToast({ type: "error", title: "Failed to reassign tasks" });
+    }
     setBusyAction(null);
     setActionMenuAgentId(null);
     setReassignAgentId(null);
-  }, [tasks]);
+  }, [tasks, addToast]);
 
   // Other agents for reassignment (exclude PM and self)
   const getReassignTargets = useCallback((excludeAgentId: string) => {
@@ -204,7 +214,7 @@ export default function AgentsTab({ agents, tasks, departments, projectId, onSwi
       </div>
 
       {/* PM Agent Card */}
-      <PmAgentCard agents={agents} tasks={tasks} perfMap={perfMap} />
+      <PmAgentCard agents={agents} tasks={tasks} perfMap={perfMap} pmAgentId={pmAgentId} onSwitchToLogs={onSwitchToLogs} />
 
       {/* Table header */}
       <div style={{
@@ -439,6 +449,23 @@ function ActionMenu({
   agentId, agentName, hasActiveTask, hasPendingTasks, hasPausedTasks, busyAction,
   showReassign, reassignTargets, onViewLogs, onPause, onResume, onStop, onReassignStart, onReassignTo, onClose,
 }: ActionMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   const isBusy = busyAction?.startsWith("stop:") || busyAction?.startsWith("reassign:")
     || busyAction?.startsWith("pause:") || busyAction?.startsWith("resume:");
   const canStop = hasActiveTask && !isBusy;
@@ -448,6 +475,7 @@ function ActionMenu({
 
   return (
     <div
+      ref={menuRef}
       style={{
         position: "absolute",
         right: 0,
@@ -460,7 +488,6 @@ function ActionMenu({
         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
         overflow: "hidden",
       }}
-      onMouseLeave={onClose}
     >
       <div style={{
         fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", fontWeight: 800,
@@ -601,10 +628,12 @@ function ActionMenuItem({ icon, label, danger, disabled, onClick }: {
 
 /* -- PM Agent Card -- */
 
-function PmAgentCard({ agents, tasks, perfMap }: {
+function PmAgentCard({ agents, tasks, perfMap, pmAgentId, onSwitchToLogs }: {
   agents: Agent[];
   tasks: Task[];
   perfMap: Map<string, AgentPerformanceEntry>;
+  pmAgentId?: string;
+  onSwitchToLogs?: (agentId: string) => void;
 }) {
   const pmAgent = agents.find((a) => a.role === "team_leader");
   if (!pmAgent) return null;
@@ -685,6 +714,35 @@ function PmAgentCard({ agents, tasks, perfMap }: {
           </div>
         )}
       </div>
+      {pmAgent && onSwitchToLogs && (
+        <div style={{ marginTop: 10, borderTop: "1px solid var(--th-border)", paddingTop: 10 }}>
+          <button
+            type="button"
+            onClick={() => onSwitchToLogs(pmAgent.id)}
+            style={{
+              fontFamily: mono, fontSize: 10, fontWeight: 700,
+              background: "transparent",
+              border: "1px solid var(--th-border)",
+              borderRadius: 8,
+              color: "var(--th-text-secondary)",
+              padding: "4px 12px",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.borderColor = "var(--th-accent-border)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-secondary)"; e.currentTarget.style.borderColor = "var(--th-border)"; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            로그 보기
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -50,11 +50,9 @@ export default function MetricsHeader({ tasks, agents, project, onFailedClick }:
   }, [tasks, runtimeStatuses]);
 
   const fmtTokens = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
-  const fmtUsd = (n: number) => `$${n.toFixed(2)}`;
 
   // Combine API cost data + live CLI tokens
   const totalTokens = (cost?.totalTokens ?? 0) + liveTokens.total;
-  const totalUsd = cost?.totalUsd ?? 0;
 
   const workingCount = agents.filter((a) => a.status === "working").length;
   const idleCount = agents.filter((a) => a.status !== "working").length;
@@ -87,21 +85,6 @@ export default function MetricsHeader({ tasks, agents, project, onFailedClick }:
       </div>
 
       <MetricBadge label="토큰" value={totalTokens > 0 ? fmtTokens(totalTokens) : "--"} color={totalTokens > 0 ? "var(--th-text-primary)" : "var(--th-text-muted)"} />
-      <MetricBadge label="비용" value={totalUsd > 0 ? fmtUsd(totalUsd) : "--"} color={totalUsd > 0 ? "var(--th-accent)" : "var(--th-text-muted)"} />
-      {totalUsd >= 1.0 && (
-        <span style={{
-          fontSize: 9,
-          fontWeight: 800,
-          color: totalUsd >= 5.0 ? "var(--th-danger-text)" : "var(--th-warning)",
-          background: totalUsd >= 5.0 ? "var(--th-danger-bg)" : "var(--th-warning-bg)",
-          border: `1px solid ${totalUsd >= 5.0 ? "var(--th-danger-border)" : "var(--th-warning-border)"}`,
-          borderRadius: 6,
-          padding: "2px 7px",
-          letterSpacing: "0.05em",
-        }}>
-          {totalUsd >= 5.0 ? "COST HIGH" : "COST"}
-        </span>
-      )}
       <MetricBadge
         label="에이전트"
         value={`활성 ${workingCount} / 대기 ${idleCount}`}

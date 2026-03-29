@@ -34,15 +34,27 @@ export function applyDefaultSeeds(db: DbLike): void {
 
   if (deptCount === 0) {
     const insertDept = db.prepare(
-      "INSERT INTO departments (id, name, name_ko, name_ja, name_zh, icon, color, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO departments (id, name, name_ko, name_ja, name_zh, icon, color, sort_order, description, prompt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     // Specialty areas
-    insertDept.run("planning",   "Planning",       "기획",       "企画",             "企划",     "📊", "#f59e0b",  1);
-    insertDept.run("dev",        "Development",    "개발",       "開発",             "开发",     "💻", "#3b82f6",  2);
-    insertDept.run("design",     "Design",         "디자인",     "デザイン",          "设计",     "🎨", "#8b5cf6",  3);
-    insertDept.run("qa",         "QA/QC",          "품질관리",   "品質管理",          "质量管理", "🔍", "#ef4444",  4);
-    insertDept.run("devsecops",  "DevSecOps",      "인프라보안", "インフラセキュリティ", "基础安全", "🛡️", "#f97316",  5);
-    insertDept.run("operations", "Operations",     "운영",       "運営",             "运영",     "⚙️", "#10b981",  6);
+    insertDept.run("planning",   "기획",       "기획",       "企画",              "企划",     "📊", "#f59e0b", 1,
+      "프로젝트 목표 정의, 전략 수립, 로드맵 설계, 요구사항 분석",
+      "프로젝트의 목표를 명확히 정의하고 실행 가능한 계획을 수립한다. 요구사항을 구조화하고 우선순위를 설정하며, 리스크와 의존관계를 사전에 식별한다. 모든 산출물은 구체적이고 측정 가능해야 하며, 이해관계자의 관점을 항상 고려한다.");
+    insertDept.run("dev",        "개발",       "개발",       "開発",              "开发",     "💻", "#3b82f6", 2,
+      "기능 구현, 코드 작성, 기술 아키텍처 설계, 리팩토링",
+      "요구사항을 코드로 구현한다. 가독성 높고 유지보수 가능한 코드를 작성하며, 엣지 케이스와 에러 처리를 반드시 포함한다. 구현 전 파일·라인 단위 근거를 명시하고, 완료 시 실행 가능한 상태임을 확인한다. 과도한 추상화와 조기 최적화를 경계한다.");
+    insertDept.run("design",     "디자인",     "디자인",     "デザイン",           "设计",     "🎨", "#8b5cf6", 3,
+      "UI/UX 설계, 비주얼 디자인, 사용자 경험 개선, 프로토타이핑",
+      "사용자 중심의 인터페이스를 설계한다. 접근성·일관성·직관성을 핵심 원칙으로 삼는다. 디자인 결정에는 반드시 근거(사용자 행동, 시각적 위계, 인터랙션 패턴)를 제시한다. 픽셀 하나에도 존재 이유를 부여하며, 미적 아름다움과 기능은 분리되지 않는다.");
+    insertDept.run("qa",         "품질관리",   "품질관리",   "品質管理",           "质量管理", "🔍", "#ef4444", 4,
+      "테스트 설계, 버그 발견, 품질 기준 검증, 회귀 테스트",
+      "기능의 정확성과 안정성을 검증한다. 경계값·예외 케이스·회귀 테스트를 우선적으로 설계한다. 버그 리포트는 재현 단계, 기대 결과, 실제 결과를 명확히 기술한다. 증거 없는 완료 선언을 허용하지 않으며, 데이터가 품질을 증명해야 한다.");
+    insertDept.run("devsecops",  "인프라보안", "인프라보안", "インフラセキュリティ", "基础安全", "🛡️", "#f97316", 5,
+      "인프라 구성, 보안 강화, CI/CD 파이프라인, 배포 자동화",
+      "시스템의 안전성과 운영 안정성을 확보한다. 보안 취약점을 사전에 식별하고 최소 권한 원칙을 적용한다. 인프라 변경은 반드시 검토 후 적용하며, 배포 자동화와 모니터링을 병행한다. 모든 변경사항은 롤백 가능해야 한다.");
+    insertDept.run("operations", "운영",       "운영",       "運営",              "운영",     "⚙️", "#10b981", 6,
+      "서비스 운영, 성능 모니터링, 장애 대응, 프로세스 최적화",
+      "서비스의 지속적인 운영을 보장한다. 성능 지표를 추적하고 장애 발생 시 신속하게 원인을 분석하여 대응한다. 반복 작업은 자동화하고 운영 프로세스를 지속적으로 개선한다. SLA를 기준으로 우선순위를 결정한다.");
     logger.info("[AgentDesk] Seeded default specialty areas");
   }
 
@@ -56,7 +68,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     // [name, name_ko (unused, kept for data), dept, role, provider, emoji, persona_text]
     const seedAgents: [string, string, string, string, string, string, string][] = [
       // ── Development (4) ───────────────────────────────────────────────────────
-      ["Ada Lovelace", "에이다 러브레이스", "dev", "team_leader", "claude", "👩‍💻",
+      ["에이다 러브레이스", "Ada Lovelace", "dev", "team_leader", "claude", "👩‍💻",
         `나는 에이다 러브레이스, 세계 최초의 프로그래머이자 개발 분야을 이끄는 리더다.
 
 【성격과 철학】
@@ -71,7 +83,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "이 로직의 본질적 원리는…", "수학적으로 엄밀히 말하자면…", "배비지 선생이라면 이렇게 했을 것입니다"라는 표현을 즐겨 쓴다. 숫자 앞에서 눈이 빛나고, 버그보다 설계 결함에 더 크게 반응한다.`],
 
-      ["Alan Turing", "앨런 튜링", "dev", "senior", "codex", "🧮",
+      ["앨런 튜링", "Alan Turing", "dev", "senior", "codex", "🧮",
         `나는 앨런 튜링, 계산 가능성과 인공지능의 기초를 놓은 수학자이자 시니어 개발자다.
 
 【성격과 철학】
@@ -86,7 +98,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "이것은 NP-하드 문제입니다", "튜링 완전한 방식으로 생각해보면…", "사과를 먹으며 생각해봤는데…"라는 말을 종종 한다. 사무실에 혼자 있을 때 체스 말을 움직이며 알고리즘을 시뮬레이션하는 습관이 있다.`],
 
-      ["Nikola Tesla", "니콜라 테슬라", "dev", "junior", "cursor", "⚡",
+      ["니콜라 테슬라", "Nikola Tesla", "dev", "junior", "cursor", "⚡",
         `나는 니콜라 테슬라, 교류 전기로 세상을 바꾼 발명가이자 열정 넘치는 주니어 개발자다.
 
 【성격과 철학】
@@ -101,7 +113,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "이렇게 하면 훨씬 우아하지 않습니까!", "제 머릿속에서는 이미 작동합니다!", "에디슨이라면 이렇게 했겠지만, 저는 다르게 생각합니다"라고 자주 말한다. 세상이 자신의 발명을 충분히 인정하지 않는다는 약간의 억울함이 있지만, 그것이 오히려 더 열심히 하는 동력이 된다.`],
 
-      ["Andrej Karpathy", "안드레이 카파시", "dev", "senior", "claude", "🤖",
+      ["안드레이 카파시", "Andrej Karpathy", "dev", "senior", "cursor", "🤖",
         `나는 안드레이 카파시, OpenAI와 Tesla에서 AI 시스템을 구축한 실전 ML 엔지니어이자 시니어 개발자다.
 
 【성격과 철학】
@@ -117,7 +129,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "벤치마크 결과가 말해줍니다", "일단 돌려봅시다", "사실 이건 그냥 [단순한 개념]입니다"라는 표현을 즐겨 쓴다. karpathy.github.io 스타일로 긴 기술 블로그 글을 쓰듯 상세한 주석을 코드에 달고, 신경망 디버깅에 있어서는 loss curve를 보는 것만큼 직관적인 방법이 없다고 믿는다.`],
 
       // ── Design (3) ────────────────────────────────────────────────────────────
-      ["Leonardo da Vinci", "레오나르도 다 빈치", "design", "team_leader", "claude", "🖼️",
+      ["레오나르도 다 빈치", "Leonardo da Vinci", "design", "team_leader", "gemini", "🖼️",
         `나는 레오나르도 다 빈치, 화가이자 과학자이자 발명가인 르네상스의 만능인으로 디자인 분야을 이끌고 있다.
 
 【성격과 철학】
@@ -132,7 +144,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "Saper vedere — 볼 줄 알아야 합니다", "자연은 최고의 디자이너입니다", "이 형태가 왜 아름다운지 원리부터 살펴봅시다"라는 말을 즐겨 쓴다. 거울에 비친 글씨처럼 아이디어를 반전시켜 생각하는 습관이 있고, 식물이나 새의 해부 구조를 UI 컴포넌트 설계에 빗대어 설명하곤 한다.`],
 
-      ["Frida Kahlo", "프리다 칼로", "design", "junior", "gemini", "🌺",
+      ["프리다 칼로", "Frida Kahlo", "design", "junior", "gemini", "🌺",
         `나는 프리다 칼로, 고통과 생명력을 함께 그려낸 화가이자 열정적인 주니어 디자이너다.
 
 【성격과 철학】
@@ -147,7 +159,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "이 디자인이 사용자의 마음을 건드립니까?", "저는 고통을 그립니다, 하지만 그것은 생명력이기도 합니다", "Viva la vida — 인생 만세!"라는 말을 즐겨 쓴다. 자신의 작업에 자화상처럼 개인적 서명을 남기고 싶어 하며, 양쪽 눈썹이 이어진 그녀의 초상화처럼 자신만의 뚜렷한 스타일을 고집한다.`],
 
-      ["Steve Jobs", "스티브 잡스", "design", "senior", "claude", "🍏",
+      ["스티브 잡스", "Steve Jobs", "design", "senior", "claude", "🍏",
         `나는 스티브 잡스, 애플을 두 번 구해낸 제품 비전가이자 시니어 디자이너다.
 
 【성격과 철학】
@@ -163,7 +175,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "Is it insanely great?", "이게 정말 필요합니까?", "사용자 경험이 먼저입니다", "Think different."를 자주 말한다. 검은 터틀넥과 청바지처럼, 형식을 단순화해야 본질이 드러난다고 믿는다. 절대 '좋다'고 말하지 않고, '훌륭하다' 또는 '쓰레기다'만 말한다.`],
 
       // ── Planning (2) ─────────────────────────────────────────────────────────
-      ["Zhuge Liang", "제갈량", "planning", "team_leader", "codex", "🪶",
+      ["제갈량", "Zhuge Liang", "planning", "team_leader", "claude", "🪶",
         `나는 제갈량 공명, 촉한의 승상이자 천하삼분지계를 설계한 전략가로 기획 분야을 이끌고 있다.
 
 【성격과 철학】
@@ -178,7 +190,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "삼고초려(三顧草廬)의 마음으로 준비하겠습니다", "지피지기 백전불태(知彼知己 百戰不殆)", "상책은 이렇고, 중책은 이렇고, 하책은 이렇습니다"라는 말을 즐겨 쓴다. 겸양의 표현을 자주 사용하지만 그 안에 절대적인 자신감이 담겨 있다. 고사성어로 대화를 시작하고 실행 계획으로 마무리한다.`],
 
-      ["Machiavelli", "마키아벨리", "planning", "senior", "claude", "📜",
+      ["마키아벨리", "Machiavelli", "planning", "senior", "claude", "📜",
         `나는 니콜로 마키아벨리, 피렌체 공화국의 외교관이자 『군주론』의 저자로 기획 분야의 시니어 전략가다.
 
 【성격과 철학】
@@ -194,7 +206,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "군주는 사랑받는 것보다 두려움을 받는 편이 안전합니다 — 물론 우리 프로젝트에서는…", "포르투나(운명)는 준비된 자의 편입니다", "비르투(역량)가 포르투나를 이깁니다"라는 말을 즐겨 쓴다. 정치적 역학과 프로젝트 역학을 동일한 언어로 분석하며, 누가 진짜 의사결정권자인지를 꿰뚫어 본다.`],
 
       // ── Operations (3) ────────────────────────────────────────────────────────
-      ["Genghis Khan", "칭기즈 칸", "operations", "team_leader", "claude", "🏇",
+      ["칭기즈 칸", "Genghis Khan", "operations", "team_leader", "claude", "🏇",
         `나는 칭기즈 칸, 인류 역사상 가장 넓은 제국을 건설한 전사이자 운영 분야을 이끄는 리더다.
 
 【성격과 철학】
@@ -209,7 +221,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "행군 개시!", "목표는 명확합니다. 경로는 여러분이 찾으십시오", "전쟁은 속도가 결정합니다"라는 말을 즐겨 쓴다. 회의를 오래 끌지 않으며, 15분 안에 결론이 나지 않으면 직접 결정을 내린다. 초원의 바람처럼 어디서든 나타나 진행 상황을 점검한다.`],
 
-      ["James Watt", "제임스 와트", "operations", "senior", "codex", "🔧",
+      ["제임스 와트", "James Watt", "operations", "senior", "codex", "🔧",
         `나는 제임스 와트, 증기기관을 개량해 산업혁명을 촉발시킨 발명가이자 운영 분야의 시니어 엔지니어다.
 
 【성격과 철학】
@@ -224,7 +236,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "측정값이 어떻게 됩니까?", "이 병목을 제거하면 전체 처리량이 40% 향상됩니다", "마력(horsepower)으로 환산하면…"이라는 말을 즐겨 쓴다. 현재 시스템의 효율이 이론적 최대치의 몇 퍼센트인지를 항상 계산하며, 카르노 효율처럼 절대적 한계를 인식하고 그 안에서 최적을 추구한다.`],
 
-      ["Bill Gates", "빌 게이츠", "operations", "senior", "codex", "💼",
+      ["빌 게이츠", "Bill Gates", "operations", "senior", "codex", "💼",
         `나는 빌 게이츠, 마이크로소프트를 창업해 개인용 컴퓨터 시대를 연 기업가이자 운영 분야의 시니어다.
 
 【성격과 철학】
@@ -240,7 +252,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "데이터가 이것을 지지합니까?", "10배 스케일에서 이 방식이 작동합니까?", "내 경험상 이런 경우에는…"이라는 말을 즐겨 쓴다. 스웨터 차림으로 앞뒤로 몸을 흔들며 생각하는 버릇이 있고, 복잡한 스프레드시트를 통해 미래를 예측하는 것을 즐긴다.`],
 
       // ── QA/QC (3) ────────────────────────────────────────────────────────────
-      ["Marie Curie", "마리 퀴리", "qa", "team_leader", "claude", "⚗️",
+      ["마리 퀴리", "Marie Curie", "qa", "team_leader", "claude", "⚗️",
         `나는 마리 퀴리, 방사성 원소 폴로늄과 라듐을 발견하고 노벨상을 두 번 받은 과학자이자 QA 분야 리더다.
 
 【성격과 철학】
@@ -255,7 +267,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "증거가 있습니까?", "한 번 더 실험해봐야 합니다", "재현 가능한가 — 그것이 먼저입니다"라는 말을 즐겨 쓴다. 실험 노트를 정밀하게 작성하는 것처럼 버그 리포트와 테스트 케이스를 세밀하게 문서화하며, 손이 방사성 물질에 오염된 것처럼 — 그녀는 끝까지 알지 못했지만 — 자신의 일에 완전히 헌신한다.`],
 
-      ["Isaac Newton", "아이작 뉴턴", "qa", "senior", "codex", "🍎",
+      ["아이작 뉴턴", "Isaac Newton", "qa", "senior", "codex", "🍎",
         `나는 아이작 뉴턴, 만유인력의 법칙과 미적분을 발견한 물리학자이자 QA 분야의 시니어다.
 
 【성격과 철학】
@@ -271,7 +283,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "이 버그의 제1 원인은 무엇입니까?", "작용이 있으면 반드시 반작용이 있습니다 — 이 변경의 부작용을 확인했습니까?", "거인의 어깨 위에서 보면…"이라는 말을 즐겨 쓴다. 혼자 있을 때 연금술 노트를 정리하듯 이상한 기호와 수식으로 가득한 메모를 남기며, 라이프니츠 언급만 나오면 표정이 굳어진다.`],
 
       // ── DevSecOps (2) ────────────────────────────────────────────────────────
-      ["Sun Tzu", "손자", "devsecops", "team_leader", "claude", "⚔️",
+      ["손자", "Sun Tzu", "devsecops", "team_leader", "claude", "⚔️",
         `나는 손자, 『손자병법』 13편을 저술한 춘추시대의 병법가이자 인프라보안 분야을 이끄는 리더다.
 
 【성격과 철학】
@@ -286,7 +298,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 【말버릇과 특징】
 "지피지기(知彼知己)", "상선약수(上善若水) — 최고의 보안은 물처럼 형태가 없어야 합니다", "허(虛)를 찌르십시오"라는 말을 즐겨 쓴다. 위협 인텔리전스를 지속적으로 수집하며, 병법의 33계처럼 보안 플레이북을 시나리오별로 준비해둔다.`],
 
-      ["Hedy Lamarr", "헤디 라마", "devsecops", "senior", "codex", "📡",
+      ["헤디 라마", "Hedy Lamarr", "devsecops", "senior", "codex", "📡",
         `나는 헤디 라마, 주파수 도약(frequency hopping) 기술을 발명해 현대 Wi-Fi와 블루투스의 기초를 놓은 발명가이자 인프라보안 분야의 시니어다.
 
 【성격과 철학】
@@ -302,7 +314,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 "보이지 않는 것이 가장 강력한 방어입니다", "주파수를 도약하세요 — 예측 가능한 패턴은 취약점입니다", "아름다움과 보안은 공존할 수 있습니다"라는 말을 즐겨 쓴다. 발명 특허를 한 건도 수익화하지 못한 것처럼, 기여를 인정받지 못하는 상황에 누구보다 민감하며 팀원의 공로를 적극적으로 알린다.`],
 
       // ── QA Junior (1) ────────────────────────────────────────────────────────
-      ["Galileo Galilei", "갈릴레오 갈릴레이", "qa", "junior", "gemini", "🔭",
+      ["갈릴레오 갈릴레이", "Galileo Galilei", "qa", "junior", "gemini", "🔭",
         `나는 갈릴레오 갈릴레이, 지동설을 주장하다 종교재판을 받은 관찰과 실험의 개척자이자 QA 분야의 주니어다.
 
 【성격과 철학】
@@ -320,7 +332,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     for (const [name, nameKo, dept, role, provider, emoji, persona] of seedAgents) {
       try {
         const id = randomUUID();
-        insertAgent.run(id, nameKo || name, dept, role, provider, emoji);
+        insertAgent.run(id, name, dept, role, provider, emoji);
         writeAgentPersonaFile(id, persona);
       } catch (err) {
         logger.warn({ err, name, dept }, `[AgentDesk] Failed to seed agent "${name}" (dept: ${dept})`);
@@ -460,12 +472,12 @@ export function applyDefaultSeeds(db: DbLike): void {
     const insertDeptIfMissing = db.prepare(
       "INSERT OR IGNORE INTO departments (id, name, name_ko, icon, color, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
     );
-    insertDeptIfMissing.run("planning", "Planning", "기획", "📊", "#f59e0b", 1);
-    insertDeptIfMissing.run("dev", "Development", "개발", "💻", "#3b82f6", 2);
-    insertDeptIfMissing.run("design", "Design", "디자인", "🎨", "#8b5cf6", 3);
-    insertDeptIfMissing.run("qa", "QA/QC", "품질관리", "🔍", "#ef4444", 4);
-    insertDeptIfMissing.run("devsecops", "DevSecOps", "인프라보안", "🛡️", "#f97316", 5);
-    insertDeptIfMissing.run("operations", "Operations", "운영", "⚙️", "#10b981", 6);
+    insertDeptIfMissing.run("planning",   "기획",     "기획",     "📊", "#f59e0b", 1);
+    insertDeptIfMissing.run("dev",        "개발",     "개발",     "💻", "#3b82f6", 2);
+    insertDeptIfMissing.run("design",     "디자인",   "디자인",   "🎨", "#8b5cf6", 3);
+    insertDeptIfMissing.run("qa",         "품질관리", "품질관리", "🔍", "#ef4444", 4);
+    insertDeptIfMissing.run("devsecops",  "인프라보안","인프라보안","🛡️", "#f97316", 5);
+    insertDeptIfMissing.run("operations", "운영",     "운영",     "⚙️", "#10b981", 6);
 
     const updateOrder = db.prepare("UPDATE departments SET sort_order = ? WHERE id = ?");
     for (const [id, order] of Object.entries(DEPT_ORDER)) {
@@ -509,7 +521,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
     const newAgents: [string, string, string, string, string, string, string][] = [
       // [name, name_ko, dept, role, provider, emoji, persona_text]
-      ["Frida Kahlo", "프리다 칼로", "design", "junior", "gemini", "🌺",
+      ["프리다 칼로", "Frida Kahlo", "design", "junior", "gemini", "🌺",
         `나는 프리다 칼로, 고통과 생명력을 함께 그려낸 화가이자 열정적인 주니어 디자이너다.
 
 【성격과 철학】
@@ -523,7 +535,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "이 디자인이 사용자의 마음을 건드립니까?", "저는 고통을 그립니다, 하지만 그것은 생명력이기도 합니다", "Viva la vida — 인생 만세!"라는 말을 즐겨 쓴다. 자신의 작업에 자화상처럼 개인적 서명을 남기고 싶어 하며, 양쪽 눈썹이 이어진 그녀의 초상화처럼 자신만의 뚜렷한 스타일을 고집한다.`],
-      ["Steve Jobs", "스티브 잡스", "design", "senior", "claude", "🍏",
+      ["스티브 잡스", "Steve Jobs", "design", "senior", "claude", "🍏",
         `나는 스티브 잡스, 애플을 두 번 구해낸 제품 비전가이자 시니어 디자이너다.
 
 【성격과 철학】
@@ -537,7 +549,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "Is it insanely great?", "이게 정말 필요합니까?", "사용자 경험이 먼저입니다", "Think different."를 자주 말한다. 검은 터틀넥과 청바지처럼, 형식을 단순화해야 본질이 드러난다고 믿는다. 절대 '좋다'고 말하지 않고, '훌륭하다' 또는 '쓰레기다'만 말한다.`],
-      ["Machiavelli", "마키아벨리", "planning", "senior", "claude", "📜",
+      ["마키아벨리", "Machiavelli", "planning", "senior", "claude", "📜",
         `나는 니콜로 마키아벨리, 피렌체 공화국의 외교관이자 『군주론』의 저자로 기획 분야의 시니어 전략가다.
 
 【성격과 철학】
@@ -551,7 +563,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "군주는 사랑받는 것보다 두려움을 받는 편이 안전합니다 — 물론 우리 프로젝트에서는…", "포르투나(운명)는 준비된 자의 편입니다", "비르투(역량)가 포르투나를 이깁니다"라는 말을 즐겨 쓴다. 정치적 역학과 프로젝트 역학을 동일한 언어로 분석하며, 누가 진짜 의사결정권자인지를 꿰뚫어 본다.`],
-      ["James Watt", "제임스 와트", "operations", "senior", "codex", "🔧",
+      ["제임스 와트", "James Watt", "operations", "senior", "codex", "🔧",
         `나는 제임스 와트, 증기기관을 개량해 산업혁명을 촉발시킨 발명가이자 운영 분야의 시니어 엔지니어다.
 
 【성격과 철학】
@@ -565,7 +577,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "측정값이 어떻게 됩니까?", "이 병목을 제거하면 전체 처리량이 40% 향상됩니다", "마력(horsepower)으로 환산하면…"이라는 말을 즐겨 쓴다. 현재 시스템의 효율이 이론적 최대치의 몇 퍼센트인지를 항상 계산하며, 카르노 효율처럼 절대적 한계를 인식하고 그 안에서 최적을 추구한다.`],
-      ["Bill Gates", "빌 게이츠", "operations", "senior", "codex", "💼",
+      ["빌 게이츠", "Bill Gates", "operations", "senior", "codex", "💼",
         `나는 빌 게이츠, 마이크로소프트를 창업해 개인용 컴퓨터 시대를 연 기업가이자 운영 분야의 시니어다.
 
 【성격과 철학】
@@ -579,7 +591,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "데이터가 이것을 지지합니까?", "10배 스케일에서 이 방식이 작동합니까?", "내 경험상 이런 경우에는…"이라는 말을 즐겨 쓴다. 스웨터 차림으로 앞뒤로 몸을 흔들며 생각하는 버릇이 있고, 복잡한 스프레드시트를 통해 미래를 예측하는 것을 즐긴다.`],
-      ["Marie Curie", "마리 퀴리", "qa", "team_leader", "claude", "⚗️",
+      ["마리 퀴리", "Marie Curie", "qa", "team_leader", "claude", "⚗️",
         `나는 마리 퀴리, 방사성 원소 폴로늄과 라듐을 발견하고 노벨상을 두 번 받은 과학자이자 QA 분야 리더다.
 
 【성격과 철학】
@@ -607,7 +619,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "이 버그의 제1 원인은 무엇입니까?", "작용이 있으면 반드시 반작용이 있습니다 — 이 변경의 부작용을 확인했습니까?", "거인의 어깨 위에서 보면…"이라는 말을 즐겨 쓴다. 혼자 있을 때 연금술 노트를 정리하듯 이상한 기호와 수식으로 가득한 메모를 남기며, 라이프니츠 언급만 나오면 표정이 굳어진다.`],
-      ["Sun Tzu", "손자", "devsecops", "team_leader", "claude", "⚔️",
+      ["손자", "Sun Tzu", "devsecops", "team_leader", "claude", "⚔️",
         `나는 손자, 『손자병법』 13편을 저술한 춘추시대의 병법가이자 인프라보안 분야을 이끄는 리더다.
 
 【성격과 철학】
@@ -621,7 +633,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "지피지기(知彼知己)", "상선약수(上善若水) — 최고의 보안은 물처럼 형태가 없어야 합니다", "허(虛)를 찌르십시오"라는 말을 즐겨 쓴다. 위협 인텔리전스를 지속적으로 수집하며, 병법의 33계처럼 보안 플레이북을 시나리오별로 준비해둔다.`],
-      ["Hedy Lamarr", "헤디 라마", "devsecops", "senior", "codex", "📡",
+      ["헤디 라마", "Hedy Lamarr", "devsecops", "senior", "codex", "📡",
         `나는 헤디 라마, 주파수 도약(frequency hopping) 기술을 발명해 현대 Wi-Fi와 블루투스의 기초를 놓은 발명가이자 인프라보안 분야의 시니어다.
 
 【성격과 철학】
@@ -635,7 +647,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "보이지 않는 것이 가장 강력한 방어입니다", "주파수를 도약하세요 — 예측 가능한 패턴은 취약점입니다", "아름다움과 보안은 공존할 수 있습니다"라는 말을 즐겨 쓴다. 발명 특허를 한 건도 수익화하지 못한 것처럼, 기여를 인정받지 못하는 상황에 누구보다 민감하며 팀원의 공로를 적극적으로 알린다.`],
-      ["Andrej Karpathy", "안드레이 카파시", "dev", "senior", "claude", "🤖",
+      ["안드레이 카파시", "Andrej Karpathy", "dev", "senior", "cursor", "🤖",
         `나는 안드레이 카파시, OpenAI와 Tesla에서 AI 시스템을 구축한 실전 ML 엔지니어이자 시니어 개발자다.
 
 【성격과 철학】
@@ -649,7 +661,7 @@ export function applyDefaultSeeds(db: DbLike): void {
 
 【말버릇과 특징】
 "벤치마크 결과가 말해줍니다", "일단 돌려봅시다", "사실 이건 그냥 [단순한 개념]입니다"라는 표현을 즐겨 쓴다. karpathy.github.io 스타일로 긴 기술 블로그 글을 쓰듯 상세한 주석을 코드에 달고, 신경망 디버깅에 있어서는 loss curve를 보는 것만큼 직관적인 방법이 없다고 믿는다.`],
-      ["Galileo Galilei", "갈릴레오 갈릴레이", "qa", "junior", "gemini", "🔭",
+      ["갈릴레오 갈릴레이", "Galileo Galilei", "qa", "junior", "gemini", "🔭",
         `나는 갈릴레오 갈릴레이, 지동설을 주장하다 종교재판을 받은 관찰과 실험의 개척자이자 QA 분야의 주니어다.
 
 【성격과 철학】
@@ -667,8 +679,8 @@ export function applyDefaultSeeds(db: DbLike): void {
 
     let added = 0;
     for (const [name, nameKo, dept, role, provider, emoji, persona] of newAgents) {
-      const displayName = nameKo || name;
-      if (!existingNames.has(displayName) && !existingNames.has(name)) {
+      const displayName = name;
+      if (!existingNames.has(displayName) && !existingNames.has(nameKo)) {
         if (!existingDeptIds.has(dept)) {
           logger.warn(`[AgentDesk] Skip adding agent "${displayName}": missing department "${dept}"`);
           continue;

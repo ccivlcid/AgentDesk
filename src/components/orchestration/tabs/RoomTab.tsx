@@ -13,6 +13,7 @@ interface RoomTabProps {
   agents: Agent[];
   project: Project | null;
   projectId?: string;
+  pmAgentId?: string;
 }
 
 type PmEventWithTask = TaskExecutionEvent & { _taskId: string };
@@ -30,7 +31,7 @@ interface ChatItem {
   eventType?: string;
 }
 
-export default function RoomTab({ tasks, agents, project, projectId }: RoomTabProps) {
+export default function RoomTab({ tasks, agents, project, projectId, pmAgentId }: RoomTabProps) {
   const activeTasks = tasks.filter((t) => ["in_progress", "review", "planned"].includes(t.status));
   const doneTasks = tasks.filter((t) => t.status === "done");
 
@@ -48,7 +49,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   const showClarification = pendingClarification && pendingClarification.projectId === projectId;
   const taskReviewSignal = tasks.filter((t) => t.status === "done" || t.status === "review").length;
 
-  const pmAgent = agents.find((a) => a.role === "team_leader");
+  const pmAgent = pmAgentId ? agents.find((a) => a.id === pmAgentId) : agents.find((a) => a.role === "team_leader");
 
   useEffect(() => {
     if (!projectId) { setBoardEntries([]); return; }
@@ -60,23 +61,25 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
   useEffect(() => {
     if (tasks.length === 0) { setPmEvents([]); return; }
     const fetchPmEvents = async () => {
-      const allEvents: PmEventWithTask[] = [];
-      for (const task of tasks) {
-        try {
-          const res = await getTaskExecutionEvents(task.id, 20);
-          const pm = res.events.filter((e) =>
-            e.event_type === "pm_approved" || e.event_type === "pm_revision_requested"
-            || e.event_type === "pm_escalated" || e.event_type === "pm_retry"
-            || e.event_type === "pm_reassigned" || e.event_type === "pm_parse_failed"
-          ).map((e) => ({ ...e, _taskId: task.id }));
-          allEvents.push(...pm);
-        } catch { /* non-critical */ }
-      }
-      allEvents.sort((a, b) => a.created_at - b.created_at);
+      const results = await Promise.allSettled(
+        tasks.map((task) =>
+          getTaskExecutionEvents(task.id, 20).then((res) =>
+            res.events.filter((e) =>
+              e.event_type === "pm_approved" || e.event_type === "pm_revision_requested"
+              || e.event_type === "pm_escalated" || e.event_type === "pm_retry"
+              || e.event_type === "pm_reassigned" || e.event_type === "pm_parse_failed"
+            ).map((e) => ({ ...e, _taskId: task.id }))
+          )
+        )
+      );
+      const allEvents = results
+        .filter((r): r is PromiseFulfilledResult<PmEventWithTask[]> => r.status === "fulfilled")
+        .flatMap((r) => r.value)
+        .sort((a, b) => a.created_at - b.created_at);
       setPmEvents(allEvents);
     };
     void fetchPmEvents();
-  }, [tasks.length, taskReviewSignal]);
+  }, [tasks, taskReviewSignal]);
 
   useEffect(() => {
     if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
@@ -311,7 +314,7 @@ export default function RoomTab({ tasks, agents, project, projectId }: RoomTabPr
 
       {/* Right: Project Status */}
       <div className="custom-scrollbar" style={{
-        width: 280,
+        width: 320,
         display: "flex",
         flexDirection: "column",
         overflow: "auto",
@@ -512,7 +515,7 @@ function ChatBubble({ item, agents }: { item: ChatItem; agents: Agent[] }) {
           )}
 
           <div style={{ whiteSpace: "pre-wrap" }}>
-            {item.content.length > 400 ? `${item.content.slice(0, 397)}...` : item.content}
+            {item.content}
           </div>
         </div>
       </div>
@@ -592,7 +595,9 @@ function StepTreeNode({ task, agents }: { task: Task; agents: Agent[] }) {
           textDecoration: isDone ? "line-through" : "none",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
-          {task.title.length > 28 ? task.title.substring(0, 28) + "..." : task.title}
+          <span title={task.title}>
+            {task.title.length > 28 ? task.title.substring(0, 28) + "..." : task.title}
+          </span>
         </span>
       </div>
       {isRunning && (

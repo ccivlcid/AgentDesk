@@ -9,8 +9,8 @@
 
 ## Current State
 
-- **Last applied migration**: `2026-03-29-005-tui-sessions`
-- **Next migration ID**: `2026-03-29-006-*`
+- **Last applied migration**: `2026-03-29-011-agent-llm-distribution`
+- **Next migration ID**: `2026-03-29-012-*`
 - **Active phase**: Phase 27 — CLI + TUI
 
 ---
@@ -31,7 +31,7 @@
 | 5 | Documentation cleanup — removed i18n docs, any-type-removal, execution-path-consistency, ORCHESTRATION-TIMELINE | Done |
 | 6 | All docs rewritten for dual-audience direction | Done |
 | 7 | shared/ type extraction (`shared/types.ts`, `ws-events.ts`, `constants.ts`) | Done |
-| 8 | DB migration `2026-03-29-005-tui-sessions` (tui_sessions, tui_messages) | Done |
+| 8 | DB migration `2026-03-29-008-agents-dedup-korean` (tui_sessions, agents dedup/korean) | Done |
 | 9 | Intent Interpreter API (`POST /api/tui/interpret`) + prompt (`tui-intent.md`) | Done |
 | 10 | Session API (`/api/tui/sessions`) — CRUD + messages | Done |
 | 11 | WebSocket session subscription (`session_message` event) | Done |

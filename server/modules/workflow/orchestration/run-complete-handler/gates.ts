@@ -67,7 +67,7 @@ export function runAfterExitGates(
   deps: RunAfterExitGatesDeps,
 ): RunAfterExitGatesResult {
   const { db, appendTaskLog, nowMs } = deps;
-  let finalExitCode = initialExitCode;
+  const finalExitCode = initialExitCode;
 
   // Generic QA gate
   if (finalExitCode === 0 && task.workflow_pack_key) {

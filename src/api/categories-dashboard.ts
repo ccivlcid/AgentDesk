@@ -58,8 +58,8 @@ export const outputsApi = makeQuadrantApi<ProjectOutput>("outputs");
 
 // ── Project Agents (팀원 직접 선택) ────────────────────────────────────────
 
-export async function fetchProjectAgents(projectId: string): Promise<{ id: string }[]> {
-  const data = await apiFetch<{ agents: { id: string }[] }>(`${BASE}/projects/${projectId}/agents`);
+export async function fetchProjectAgents(projectId: string): Promise<{ id: string; project_role: string | null }[]> {
+  const data = await apiFetch<{ agents: { id: string; project_role: string | null }[] }>(`${BASE}/projects/${projectId}/agents`);
   return data.agents;
 }
 

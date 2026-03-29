@@ -10,7 +10,7 @@ import EmojiPicker from "./EmojiPicker";
 import type { DeptForm, Translator } from "./types";
 
 export default function DepartmentFormModal({
-  locale,
+  locale: _locale,
   tr,
   department,
   departments,
@@ -49,9 +49,6 @@ export default function DepartmentFormModal({
       return {
         id: department.id,
         name: department.name,
-        name_ko: department.name_ko || "",
-        name_ja: department.name_ja || "",
-        name_zh: department.name_zh || "",
         icon: department.icon,
         color: department.color,
         description: department.description || "",
@@ -83,9 +80,9 @@ export default function DepartmentFormModal({
     try {
       const payload = {
         name: form.name.trim(),
-        name_ko: form.name_ko.trim(),
-        name_ja: form.name_ja.trim() || null,
-        name_zh: form.name_zh.trim() || null,
+        name_ko: form.name.trim(),
+        name_ja: form.name.trim() || null,
+        name_zh: form.name.trim() || null,
         icon: form.icon,
         color: form.color,
         description: form.description.trim() || null,
@@ -242,7 +239,7 @@ export default function DepartmentFormModal({
               </div>
               <div className="flex-1">
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "영문 이름", en: "Name (English)", ja: "英語名", zh: "英文名" })} <span className="text-red-400">*</span>
+                  {t({ ko: "이름", en: "Name", ja: "名前", zh: "名称" })} <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -278,52 +275,6 @@ export default function DepartmentFormModal({
               </div>
             </div>
 
-            {/* Locale names */}
-            {locale.startsWith("ko") && (
-              <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "한글 이름", en: "Korean Name", ja: "韓国語名", zh: "韩语名" })}
-                </label>
-                <input
-                  type="text"
-                  value={form.name_ko}
-                  onChange={(e) => setForm({ ...form, name_ko: e.target.value })}
-                  placeholder="개발팀"
-                  className={inputCls}
-                  style={inputStyle}
-                />
-              </div>
-            )}
-            {locale.startsWith("ja") && (
-              <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
-                </label>
-                <input
-                  type="text"
-                  value={form.name_ja}
-                  onChange={(e) => setForm({ ...form, name_ja: e.target.value })}
-                  placeholder="開発チーム"
-                  className={inputCls}
-                  style={inputStyle}
-                />
-              </div>
-            )}
-            {locale.startsWith("zh") && (
-              <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
-                </label>
-                <input
-                  type="text"
-                  value={form.name_zh}
-                  onChange={(e) => setForm({ ...form, name_zh: e.target.value })}
-                  placeholder="开发部"
-                  className={inputCls}
-                  style={inputStyle}
-                />
-              </div>
-            )}
           </div>
 
           {/* ── MISSION & INSTRUCTIONS ── */}

@@ -309,7 +309,7 @@ Supported external messenger channel types (`MessengerChannelType` in `src/types
 
 | Term             | Definition                                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-29-005-tui-sessions` → next: `2026-03-29-006-`* |
+| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-29-011-agent-llm-distribution` → next: `2026-03-29-012-`* |
 | **Append-Only**  | Never edit/delete existing migrations. DDL wrapped in try/catch                                                |
 | **Version Bump** | Patch increment on task completion (0.1.2 → 0.1.3). Files: VERSION, package.json, CHANGELOG.md                 |
 

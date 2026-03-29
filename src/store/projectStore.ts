@@ -22,6 +22,7 @@ interface ProjectStore {
   currentProjectId: string | null;
   projectAgentIds: Set<string>;
   projectAgentsLoaded: boolean;
+  projectPmAgentId: string | null;
   showProjectCreate: boolean;
   projectCreateBusy: boolean;
   editDirectiveProjectId: string | null;
@@ -33,6 +34,7 @@ interface ProjectStore {
   setCurrentProjectId: (id: string | null) => void;
   setProjectAgentIds: (a: SA<Set<string>>) => void;
   setProjectAgentsLoaded: (a: SA<boolean>) => void;
+  setProjectPmAgentId: (id: string | null) => void;
   setShowProjectCreate: (a: SA<boolean>) => void;
   setProjectCreateBusy: (a: SA<boolean>) => void;
   setEditDirectiveProjectId: (id: string | null) => void;
@@ -46,6 +48,7 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   currentProjectId: readProjectIdFromStorage(),
   projectAgentIds: new Set(),
   projectAgentsLoaded: false,
+  projectPmAgentId: null,
   showProjectCreate: false,
   projectCreateBusy: false,
   editDirectiveProjectId: null,
@@ -60,6 +63,7 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   },
   setProjectAgentIds: (a) => set((s) => ({ projectAgentIds: apply(s.projectAgentIds, a) })),
   setProjectAgentsLoaded: (a) => set((s) => ({ projectAgentsLoaded: apply(s.projectAgentsLoaded, a) })),
+  setProjectPmAgentId: (id) => set({ projectPmAgentId: id }),
   setShowProjectCreate: (a) => set((s) => ({ showProjectCreate: apply(s.showProjectCreate, a) })),
   setProjectCreateBusy: (a) => set((s) => ({ projectCreateBusy: apply(s.projectCreateBusy, a) })),
   setEditDirectiveProjectId: (id) => set({ editDirectiveProjectId: id }),

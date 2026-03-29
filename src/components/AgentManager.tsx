@@ -128,13 +128,6 @@ export default function AgentManager({
         sprite_number: agent.sprite_number ?? null,
         personality: personaText,
         persona_id: agent.persona_id || undefined,
-        kb_default_sources: (() => {
-          try {
-            return (agent as any).kb_default_sources
-              ? JSON.parse((agent as any).kb_default_sources)
-              : undefined;
-          } catch { return undefined; }
-        })(),
         enable_planning_phase: agent.enable_planning_phase ?? 1,
         specialty: agent.specialty ?? "",
         autonomy_level: agent.autonomy_level ?? "balanced",
@@ -166,9 +159,6 @@ export default function AgentManager({
         sprite_number: form.sprite_number,
         personality: form.personality.trim() || null,
         persona_id: form.persona_id || null,
-        kb_default_sources: form.kb_default_sources && form.kb_default_sources.length > 0
-          ? JSON.stringify(form.kb_default_sources)
-          : null,
         enable_planning_phase: form.enable_planning_phase ?? 1,
         specialty: form.specialty?.trim() || null,
         autonomy_level: form.autonomy_level || "balanced",

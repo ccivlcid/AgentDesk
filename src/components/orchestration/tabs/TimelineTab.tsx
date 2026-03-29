@@ -45,6 +45,16 @@ export default function TimelineTab({ tasks, agents, focusTaskId, onFocusConsume
     : clusterStatus === "EXECUTING" ? "var(--th-accent)"
     : "var(--th-text-secondary)";
 
+  const clusterBg = clusterStatus === "ALL_COMPLETE" ? "var(--th-success-bg)"
+    : clusterStatus === "HAS_FAILURES" ? "var(--th-danger-bg)"
+    : clusterStatus === "EXECUTING" ? "var(--th-accent-glow)"
+    : "var(--th-bg-surface)";
+
+  const clusterBorder = clusterStatus === "ALL_COMPLETE" ? "var(--th-success-border)"
+    : clusterStatus === "HAS_FAILURES" ? "var(--th-danger-border)"
+    : clusterStatus === "EXECUTING" ? "var(--th-accent-border)"
+    : "var(--th-border)";
+
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Auto-expand focused task (e.g. from FAILED badge click)
@@ -118,8 +128,8 @@ export default function TimelineTab({ tasks, agents, focusTaskId, onFocusConsume
           fontSize: 10,
           fontWeight: 800,
           color: clusterColor,
-          background: `${clusterColor}12`,
-          border: `1px solid ${clusterColor}30`,
+          background: clusterBg,
+          border: `1px solid ${clusterBorder}`,
           borderRadius: 8,
           padding: "3px 10px",
           letterSpacing: "0.05em",
@@ -243,12 +253,34 @@ function AgentLane({ agent, tasks, selectedTaskId, onSelectTask }: {
   );
 }
 
+function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+function fmtElapsed(ms: number): string {
+  const totalS = Math.floor(ms / 1000);
+  const h = Math.floor(totalS / 3600);
+  const m = Math.floor((totalS % 3600) / 60);
+  const s = totalS % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+const STALLED_MS = 10 * 60 * 1000; // 10 minutes
+
 function TaskCard({ task, label, isSelected, onClick }: {
   task: Task;
   label: string;
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const now = useNow(10_000);
   const progress = getTaskProgress(task);
   const isFailed = task.status === "failed" || task.execution_state === "failed";
   const isPaused = task.status === "pending";
@@ -296,6 +328,8 @@ function TaskCard({ task, label, isSelected, onClick }: {
         transition: "all 0.2s",
       }}
       onClick={onClick}
+      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "var(--th-bg-primary)"; }}
+      onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = cardBg; }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
         <span style={{ fontFamily: mono, fontSize: 10, color: isFailed ? "var(--th-danger-text)" : "var(--th-accent)", fontWeight: 800, letterSpacing: "0.05em" }}>
@@ -316,10 +350,38 @@ function TaskCard({ task, label, isSelected, onClick }: {
         {task.title}
       </div>
       {isFailed && task.execution_error_summary && (
-        <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-danger-text)", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {task.execution_error_summary.length > 90 ? `${task.execution_error_summary.slice(0, 87)}...` : task.execution_error_summary}
+        <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-danger-text)", marginBottom: 8, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {task.execution_error_summary}
         </div>
       )}
+      {/* Elapsed time (in_progress only) */}
+      {task.status === "in_progress" && task.updated_at && (() => {
+        const elapsed = now - task.updated_at;
+        const isStalled = elapsed > STALLED_MS;
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isStalled ? "var(--th-warning)" : "var(--th-text-muted)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span style={{ fontFamily: mono, fontSize: 9, color: isStalled ? "var(--th-warning)" : "var(--th-text-muted)", fontWeight: 600 }}>
+              {fmtElapsed(elapsed)}
+            </span>
+            {isStalled && (
+              <span style={{
+                fontFamily: mono, fontSize: 9, fontWeight: 800,
+                color: "var(--th-warning)",
+                background: "var(--th-warning-bg)",
+                border: "1px solid var(--th-warning-border)",
+                borderRadius: 4,
+                padding: "1px 5px",
+              }}>
+                STALLED
+              </span>
+            )}
+          </div>
+        );
+      })()}
       {/* Progress bar */}
       <div style={{ height: 4, background: "var(--th-border)", width: "100%", borderRadius: 2 }}>
         <div style={{

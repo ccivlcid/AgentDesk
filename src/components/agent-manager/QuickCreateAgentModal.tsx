@@ -40,10 +40,6 @@ export default function QuickCreateAgentModal({ onClose, onCreated }: Props) {
         sprite_number: form.sprite_number,
         personality: form.personality.trim() || null,
         persona_id: form.persona_id || null,
-        kb_default_sources:
-          form.kb_default_sources && form.kb_default_sources.length > 0
-            ? JSON.stringify(form.kb_default_sources)
-            : null,
         department_id: departmentId || null,
       };
       const created = await api.createAgent(payload);

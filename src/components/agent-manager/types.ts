@@ -1,7 +1,4 @@
 import type { Agent, AgentRole, CliProvider, Department } from "../../types";
-/** Stub type — Synapse API removed */
-type KbSourceRef = { type: "notion_page" | "obsidian_file"; id: string; label?: string };
-
 export type Translator = (ko: string, en: string, ja?: string, zh?: string) => string;
 
 export interface AgentManagerProps {
@@ -26,7 +23,6 @@ export interface FormData {
   sprite_number: number | null;
   personality: string;
   persona_id?: string;
-  kb_default_sources?: KbSourceRef[];
   enable_planning_phase?: number;
   specialty?: string;
   autonomy_level?: string;
@@ -36,9 +32,6 @@ export interface FormData {
 export interface DeptForm {
   id: string;
   name: string;
-  name_ko: string;
-  name_ja: string;
-  name_zh: string;
   icon: string;
   color: string;
   description: string;

@@ -119,9 +119,6 @@ export const DEPT_COLORS = [
 export const DEPT_BLANK: DeptForm = {
   id: "",
   name: "",
-  name_ko: "",
-  name_ja: "",
-  name_zh: "",
   icon: "🏗️",
   color: "#3b82f6",
   description: "",

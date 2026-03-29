@@ -10,10 +10,16 @@ interface LogsTabProps {
   tasks: Task[];
   agents: Agent[];
   projectId?: string;
+  initialAgentId?: string;
+  pmAgentId?: string;
 }
 
-export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
+export default function LogsTab({ tasks, agents, projectId, initialAgentId, pmAgentId }: LogsTabProps) {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialAgentId) setSelectedAgentId(initialAgentId);
+  }, [initialAgentId]);
   const [events, setEvents] = useState<TaskExecutionEvent[]>([]);
   const [taskLogs, setTaskLogs] = useState<TaskLog[]>([]);
   const [reportContent, setReportContent] = useState<string | null>(null);
@@ -57,6 +63,77 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
   // Compute error counts per agent for badges
   const agentErrorCounts = useAgentErrorCounts(tasks, agents);
 
+  // ALL AGENTS mode — fetch all tasks' logs in parallel
+  const [allAgentsLogs, setAllAgentsLogs] = useState<(ClassifiedLogEntry & { agentName: string })[]>([]);
+
+  useEffect(() => {
+    if (selectedAgentId !== "__all__" || tasks.length === 0) { setAllAgentsLogs([]); return; }
+    const fetchAll = async () => {
+      const results = await Promise.allSettled(
+        tasks.map(async (task) => {
+          const agent = agents.find((a) => a.id === task.assigned_agent_id);
+          const [eventsRes, taskRes] = await Promise.allSettled([
+            getTaskExecutionEvents(task.id, 50),
+            getTask(task.id),
+          ]);
+          const evts = eventsRes.status === "fulfilled" ? eventsRes.value.events : [];
+          const logs = taskRes.status === "fulfilled" ? (taskRes.value.logs ?? []) : [];
+          return classifyLogs(evts, logs).map((e) => ({ ...e, agentName: agent?.name ?? task.id }));
+        })
+      );
+      const all = results
+        .filter((r): r is PromiseFulfilledResult<(ClassifiedLogEntry & { agentName: string })[]> => r.status === "fulfilled")
+        .flatMap((r) => r.value)
+        .sort((a, b) => a.ts - b.ts);
+      setAllAgentsLogs(all);
+    };
+    void fetchAll();
+  }, [selectedAgentId, tasks, agents]);
+
+  // PM mode — aggregate PM events from all tasks
+  const isPmMode = !!(pmAgentId && selectedAgentId === pmAgentId);
+  const [pmLogs, setPmLogs] = useState<ClassifiedLogEntry[]>([]);
+
+  useEffect(() => {
+    if (!isPmMode || tasks.length === 0) { setPmLogs([]); return; }
+    const PM_EVENT_TYPES = new Set([
+      "pm_approved", "pm_revision_requested", "pm_parse_failed",
+      "pm_escalated", "pm_retry", "pm_reassigned",
+    ]);
+    const fetchPmLogs = async () => {
+      const results = await Promise.allSettled(
+        tasks.map((task) => getTaskExecutionEvents(task.id, 100).then((res) => ({ task, events: res.events })))
+      );
+      const entries: ClassifiedLogEntry[] = [];
+      for (const r of results) {
+        if (r.status !== "fulfilled") continue;
+        const { task, events: taskEvents } = r.value;
+        const pmEvents = taskEvents.filter((e) => PM_EVENT_TYPES.has(e.event_type));
+        for (const evt of pmEvents) {
+          let level: LogLevel = "INFO";
+          if (evt.event_type === "pm_revision_requested" || evt.event_type === "pm_escalated") level = "WARN";
+          if (evt.event_type === "pm_parse_failed") level = "ERROR";
+          const meta = evt.metadata_json ? tryParseJson(evt.metadata_json) : null;
+          const feedback = meta?.feedback ?? meta?.reason ?? null;
+          const taskPrefix = `[${task.title.length > 25 ? task.title.slice(0, 25) + "\u2026" : task.title}]`;
+          const action = evt.event_type === "pm_approved" ? "\uC2B9\uC778"
+            : evt.event_type === "pm_revision_requested" ? "\uC218\uC815 \uC694\uCCAD"
+            : evt.event_type === "pm_escalated" ? "\uC5D0\uC2A4\uCEC8\uB808\uC774\uC158"
+            : evt.event_type === "pm_reassigned" ? "\uC7AC\uBC30\uC815"
+            : evt.event_type === "pm_retry" ? "\uC7AC\uC2DC\uB3C4"
+            : evt.event_type;
+          const msg = feedback
+            ? `${taskPrefix} ${action} \u2014 ${String(feedback)}`
+            : `${taskPrefix} ${action}`;
+          entries.push({ key: `pm-${evt.id}`, ts: evt.created_at, level, message: msg });
+        }
+      }
+      entries.sort((a, b) => a.ts - b.ts);
+      setPmLogs(entries);
+    };
+    void fetchPmLogs();
+  }, [isPmMode, tasks]);
+
   // Classify log entries into levels for filtering
   const classifiedLogs = classifyLogs(events, taskLogs);
   const filteredLogs = filterByLevel(classifiedLogs, levelFilter);
@@ -73,6 +150,29 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
       ...searchedLogs.filter((l) => l.level !== "ERROR"),
     ]
     : searchedLogs;
+
+  const filteredAllLogs = filterByLevel(allAgentsLogs, levelFilter);
+  const searchedAllLogs = searchQuery.trim()
+    ? filteredAllLogs.filter((l) => l.message.toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredAllLogs;
+  const displayAllLogs = errorFirstMode
+    ? [
+      ...searchedAllLogs.filter((l) => l.level === "ERROR"),
+      ...searchedAllLogs.filter((l) => l.level !== "ERROR"),
+    ]
+    : searchedAllLogs;
+  const isAllMode = selectedAgentId === "__all__";
+  const activeDisplayLogs = isAllMode ? displayAllLogs : displayLogs;
+
+  const finalDisplayLogs = isPmMode
+    ? (() => {
+        const filtered = filterByLevel(pmLogs, levelFilter);
+        const searched = searchQuery.trim() ? filtered.filter((l) => l.message.toLowerCase().includes(searchQuery.toLowerCase())) : filtered;
+        return errorFirstMode
+          ? [...searched.filter((l) => l.level === "ERROR"), ...searched.filter((l) => l.level !== "ERROR")]
+          : searched;
+      })()
+    : activeDisplayLogs;
 
   // Metrics — derived from task states, not result field length
   const doneTaskCount = tasks.filter((t) => t.status === "done").length;
@@ -101,6 +201,28 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
         <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", fontWeight: 800, letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 6, textTransform: "uppercase" as const }}>
           에이전트
         </span>
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "8px 10px",
+            fontFamily: mono, fontSize: 11,
+            color: isAllMode ? "var(--th-accent)" : "var(--th-text-muted)",
+            fontWeight: isAllMode ? 700 : 500,
+            cursor: "pointer",
+            background: isAllMode ? "var(--th-accent-glow)" : "transparent",
+            borderRadius: 10,
+            marginBottom: 4,
+            transition: "all 0.2s",
+          }}
+          onClick={() => setSelectedAgentId(isAllMode ? null : "__all__")}
+        >
+          <span style={{
+            width: 7, height: 7, borderRadius: 2,
+            background: isAllMode ? "var(--th-accent)" : "var(--th-border-strong)",
+            flexShrink: 0,
+          }} />
+          <span style={{ flex: 1 }}>ALL</span>
+        </div>
         {agents.map((agent) => {
           const errCnt = agentErrorCounts.get(agent.id) ?? 0;
           const isSelected = selectedAgentId === agent.id;
@@ -130,9 +252,19 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
                 boxShadow: isWorking ? "0 0 6px var(--th-green-glow)" : "none",
                 flexShrink: 0,
               }} />
-              <span style={{ flex: 1 }}>
-                {agent.name.split(" ")[0]?.toUpperCase() ?? agent.name.toUpperCase()}
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={agent.name}>
+                {agent.name.toUpperCase()}
               </span>
+              {pmAgentId && agent.id === pmAgentId && (
+                <span style={{
+                  fontFamily: mono, fontSize: 8, fontWeight: 800,
+                  color: "var(--th-accent)", background: "var(--th-accent-glow)",
+                  border: "1px solid var(--th-accent-border)",
+                  borderRadius: 4, padding: "1px 4px", flexShrink: 0,
+                }}>
+                  PM
+                </span>
+              )}
               {errCnt > 0 && (
                 <span style={{
                   fontFamily: mono,
@@ -248,88 +380,13 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
           </button>
         </div>
 
-        {/* Log content */}
-        <div
-          ref={logContainerRef}
-          className="custom-scrollbar"
-          style={{
-            flex: 1,
-            padding: 16,
-            fontFamily: mono,
-            fontSize: 11,
-            color: "var(--th-text-secondary)",
-            overflow: "auto",
-          }}
-        >
-          {!selectedAgentId && (
-            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
-              에이전트를 선택하면 실행 로그를 볼 수 있습니다.
-            </div>
-          )}
-
-          {selectedAgentId && displayLogs.length === 0 && !reportContent && (
-            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
-              로그 데이터 대기 중...
-            </div>
-          )}
-
-          {/* Pinned errors block */}
-          {errorFirstMode && displayLogs.some((l) => l.level === "ERROR") && (
-            <div style={{
-              border: "1px solid var(--th-danger-border)",
-              background: "var(--th-danger-bg)",
-              borderRadius: 14,
-              padding: "12px 16px",
-              marginBottom: 16,
-            }}>
-              <div style={{ fontWeight: 800, color: "var(--th-danger-text)", fontSize: 10, letterSpacing: "0.05em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-danger-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                주요 오류
-              </div>
-              {displayLogs.filter((l) => l.level === "ERROR").map((entry) => (
-                <LogEntryRow key={entry.key} entry={entry} />
-              ))}
-            </div>
-          )}
-
-          {/* Task report from file */}
-          {reportContent && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 800, color: "var(--th-accent)", fontSize: 10, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
-                PM 리뷰 보고서
-              </div>
-              <div style={{
-                background: "var(--th-bg-surface)",
-                border: "1px solid var(--th-border)",
-                borderRadius: 14,
-                padding: "14px 18px",
-                whiteSpace: "pre-wrap",
-                fontSize: 11,
-                color: "var(--th-text-secondary)",
-                lineHeight: 1.6,
-                maxHeight: 200,
-                overflowY: "auto",
-              }}>
-                {reportContent.length > 1000 ? `${reportContent.slice(0, 997)}...` : reportContent}
-              </div>
-            </div>
-          )}
-
-          {/* Main log stream (skip errors if already pinned) */}
-          {displayLogs
-            .filter((l) => !(errorFirstMode && l.level === "ERROR"))
-            .map((entry) => (
-              <LogEntryRow key={entry.key} entry={entry} />
-            ))}
-        </div>
-
         {/* Search bar */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
           padding: "8px 16px",
-          borderTop: "1px solid var(--th-border)",
+          borderBottom: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
         }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -364,6 +421,106 @@ export default function LogsTab({ tasks, agents, projectId }: LogsTabProps) {
             </button>
           )}
         </div>
+
+        {/* Log content */}
+        <div
+          ref={logContainerRef}
+          className="custom-scrollbar"
+          style={{
+            flex: 1,
+            padding: 16,
+            fontFamily: mono,
+            fontSize: 11,
+            color: "var(--th-text-secondary)",
+            overflow: "auto",
+          }}
+        >
+          {selectedAgentId === null && (
+            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
+              에이전트를 선택하면 실행 로그를 볼 수 있습니다.
+            </div>
+          )}
+
+          {selectedAgentId && finalDisplayLogs.length === 0 && !reportContent && !isPmMode && (
+            <div style={{ color: "var(--th-text-muted)", textAlign: "center", padding: 32, fontSize: 12 }}>
+              로그 데이터 대기 중...
+            </div>
+          )}
+
+          {isPmMode && (
+            <div style={{
+              border: "1px solid var(--th-accent-border)",
+              background: "var(--th-accent-glow)",
+              borderRadius: 12,
+              padding: "10px 14px",
+              marginBottom: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: mono,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "var(--th-accent)" }}>PM 활동 로그</div>
+                <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>
+                  전체 태스크 검토 이력 · 승인 / 수정 요청 / 재배정
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pinned errors block */}
+          {errorFirstMode && finalDisplayLogs.some((l) => l.level === "ERROR") && (
+            <div style={{
+              border: "1px solid var(--th-danger-border)",
+              background: "var(--th-danger-bg)",
+              borderRadius: 14,
+              padding: "12px 16px",
+              marginBottom: 16,
+            }}>
+              <div style={{ fontWeight: 800, color: "var(--th-danger-text)", fontSize: 10, letterSpacing: "0.05em", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--th-danger-text)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                주요 오류
+              </div>
+              {finalDisplayLogs.filter((l) => l.level === "ERROR").map((entry) => (
+                <LogEntryRow key={entry.key} entry={entry} agentLabel={isAllMode ? (entry as ClassifiedLogEntry & { agentName: string }).agentName : undefined} />
+              ))}
+            </div>
+          )}
+
+          {/* Task report from file */}
+          {!isPmMode && reportContent && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 800, color: "var(--th-accent)", fontSize: 10, letterSpacing: "0.1em", marginBottom: 8, textTransform: "uppercase" as const }}>
+                PM 리뷰 보고서
+              </div>
+              <div style={{
+                background: "var(--th-bg-surface)",
+                border: "1px solid var(--th-border)",
+                borderRadius: 14,
+                padding: "14px 18px",
+                whiteSpace: "pre-wrap",
+                fontSize: 11,
+                color: "var(--th-text-secondary)",
+                lineHeight: 1.6,
+                maxHeight: 200,
+                overflowY: "auto",
+              }}>
+                {reportContent}
+              </div>
+            </div>
+          )}
+
+          {/* Main log stream (skip errors if already pinned) */}
+          {finalDisplayLogs
+            .filter((l) => !(errorFirstMode && l.level === "ERROR"))
+            .map((entry) => (
+              <LogEntryRow key={entry.key} entry={entry} agentLabel={isAllMode ? (entry as ClassifiedLogEntry & { agentName: string }).agentName : undefined} />
+            ))}
+        </div>
+
       </div>
     </div>
   );
@@ -454,7 +611,7 @@ const LEVEL_COLORS: Record<string, { text: string; bg: string }> = {
   DEBUG: { text: "var(--th-text-muted)", bg: "var(--th-bg-surface)" },
 };
 
-function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
+function LogEntryRow({ entry, agentLabel }: { entry: ClassifiedLogEntry; agentLabel?: string }) {
   const ts = new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const levelStyle = LEVEL_COLORS[entry.level] ?? { text: "var(--th-text-secondary)", bg: "transparent" };
   const isError = entry.level === "ERROR";
@@ -479,6 +636,20 @@ function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
       }}>
         {entry.level}
       </span>
+      {agentLabel !== undefined && (
+        <span style={{
+          fontSize: 9, fontWeight: 700,
+          color: "var(--th-text-muted)",
+          background: "var(--th-bg-surface)",
+          border: "1px solid var(--th-border)",
+          borderRadius: 4,
+          padding: "1px 5px",
+          flexShrink: 0,
+          whiteSpace: "nowrap" as const,
+        }}>
+          {agentLabel.split(" ")[0]?.toUpperCase() ?? agentLabel.toUpperCase()}
+        </span>
+      )}
       {entry.fromState && entry.toState ? (
         <span style={{ color: "var(--th-text-secondary)", flexShrink: 0 }}>
           {entry.fromState}
@@ -492,11 +663,10 @@ function LogEntryRow({ entry }: { entry: ClassifiedLogEntry }) {
         color: isError ? "var(--th-danger-text)" : "var(--th-text-secondary)",
         fontWeight: isError ? 600 : 400,
         flex: 1,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
+        wordBreak: "break-word",
+        whiteSpace: "pre-wrap",
       }}>
-        {entry.message.length > 150 ? `${entry.message.slice(0, 147)}...` : entry.message}
+        {entry.message}
       </span>
     </div>
   );

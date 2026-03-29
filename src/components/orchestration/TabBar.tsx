@@ -20,6 +20,8 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const orchWindow = document.querySelector("[data-orch-window]");
+      if (!orchWindow || !orchWindow.contains(document.activeElement)) return;
       const idx = parseInt(e.key);
       if (idx >= 0 && idx <= 3) {
         onTabChange(TABS[idx].id);
@@ -85,6 +87,9 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
               {tab.icon(isActive ? "var(--th-text-primary)" : "var(--th-text-muted)")}
             </span>
             <span style={{ textTransform: "uppercase" as const }}>{tab.label}</span>
+            <span style={{ fontSize: 9, color: isActive ? "var(--th-text-muted)" : "var(--th-text-muted)", opacity: 0.5, fontWeight: 600 }}>
+              {TABS.indexOf(tab)}
+            </span>
           </button>
         );
       })}

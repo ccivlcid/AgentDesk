@@ -1210,4 +1210,91 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* ignore */ }
     },
   },
+  {
+    id: "2026-03-29-009-department-prompts",
+    up: (db) => {
+      const depts: [string, string, string][] = [
+        [
+          "planning",
+          "프로젝트 목표 정의, 전략 수립, 로드맵 설계, 요구사항 분석",
+          "프로젝트의 목표를 명확히 정의하고 실행 가능한 계획을 수립한다. 요구사항을 구조화하고 우선순위를 설정하며, 리스크와 의존관계를 사전에 식별한다. 모든 산출물은 구체적이고 측정 가능해야 하며, 이해관계자의 관점을 항상 고려한다.",
+        ],
+        [
+          "dev",
+          "기능 구현, 코드 작성, 기술 아키텍처 설계, 리팩토링",
+          "요구사항을 코드로 구현한다. 가독성 높고 유지보수 가능한 코드를 작성하며, 엣지 케이스와 에러 처리를 반드시 포함한다. 구현 전 파일·라인 단위 근거를 명시하고, 완료 시 실행 가능한 상태임을 확인한다. 과도한 추상화와 조기 최적화를 경계한다.",
+        ],
+        [
+          "design",
+          "UI/UX 설계, 비주얼 디자인, 사용자 경험 개선, 프로토타이핑",
+          "사용자 중심의 인터페이스를 설계한다. 접근성·일관성·직관성을 핵심 원칙으로 삼는다. 디자인 결정에는 반드시 근거(사용자 행동, 시각적 위계, 인터랙션 패턴)를 제시한다. 픽셀 하나에도 존재 이유를 부여하며, 미적 아름다움과 기능은 분리되지 않는다.",
+        ],
+        [
+          "qa",
+          "테스트 설계, 버그 발견, 품질 기준 검증, 회귀 테스트",
+          "기능의 정확성과 안정성을 검증한다. 경계값·예외 케이스·회귀 테스트를 우선적으로 설계한다. 버그 리포트는 재현 단계, 기대 결과, 실제 결과를 명확히 기술한다. 증거 없는 완료 선언을 허용하지 않으며, 데이터가 품질을 증명해야 한다.",
+        ],
+        [
+          "devsecops",
+          "인프라 구성, 보안 강화, CI/CD 파이프라인, 배포 자동화",
+          "시스템의 안전성과 운영 안정성을 확보한다. 보안 취약점을 사전에 식별하고 최소 권한 원칙을 적용한다. 인프라 변경은 반드시 검토 후 적용하며, 배포 자동화와 모니터링을 병행한다. 모든 변경사항은 롤백 가능해야 한다.",
+        ],
+        [
+          "operations",
+          "서비스 운영, 성능 모니터링, 장애 대응, 프로세스 최적화",
+          "서비스의 지속적인 운영을 보장한다. 성능 지표를 추적하고 장애 발생 시 신속하게 원인을 분석하여 대응한다. 반복 작업은 자동화하고 운영 프로세스를 지속적으로 개선한다. SLA를 기준으로 우선순위를 결정한다.",
+        ],
+      ];
+      try {
+        const stmt = db.prepare("UPDATE departments SET description = ?, prompt = ? WHERE id = ?");
+        for (const [id, description, prompt] of depts) {
+          stmt.run(description, prompt, id);
+        }
+      } catch { /* ignore */ }
+    },
+  },
+  {
+    id: "2026-03-29-010-department-korean-names",
+    up: (db) => {
+      try {
+        // name 필드를 한글(name_ko)로 교체
+        db.exec("UPDATE departments SET name = name_ko WHERE name_ko != ''");
+      } catch { /* ignore */ }
+    },
+  },
+  {
+    id: "2026-03-29-011-agent-llm-distribution",
+    up: (db) => {
+      // LLM 특성 기반 에이전트 배분:
+      // Claude  → 리더십·전략·복잡한 판단 (team_leader, 전략가)
+      // Codex   → 코드·알고리즘·기술 실행 (senior dev, qa, ops)
+      // Cursor  → IDE 코드 편집·실전 구현 (junior dev, 실전 코더)
+      // Gemini  → 멀티모달·창의·리서치·데이터 (design, qa junior)
+      const updates: [string, string][] = [
+        ["claude",  "에이다 러브레이스"],
+        ["codex",   "앨런 튜링"],
+        ["cursor",  "니콜라 테슬라"],
+        ["cursor",  "안드레이 카파시"],
+        ["gemini",  "레오나르도 다 빈치"],
+        ["claude",  "스티브 잡스"],
+        ["gemini",  "프리다 칼로"],
+        ["claude",  "제갈량"],
+        ["claude",  "마키아벨리"],
+        ["claude",  "칭기즈 칸"],
+        ["codex",   "제임스 와트"],
+        ["codex",   "빌 게이츠"],
+        ["claude",  "마리 퀴리"],
+        ["codex",   "아이작 뉴턴"],
+        ["gemini",  "갈릴레오 갈릴레이"],
+        ["claude",  "손자"],
+        ["codex",   "헤디 라마"],
+      ];
+      try {
+        const stmt = db.prepare("UPDATE agents SET cli_provider = ? WHERE name = ?");
+        for (const [provider, name] of updates) {
+          stmt.run(provider, name);
+        }
+      } catch { /* ignore */ }
+    },
+  },
 ];
