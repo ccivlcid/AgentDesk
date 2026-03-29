@@ -1,28 +1,23 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import AppWindow from "../windows/AppWindow";
 import { useI18n } from "../../i18n";
 import { useTaskStore } from "../../store/taskStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore, type PendingClarification } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
-import StageRail from "./StageRail";
-import MetricsHeader from "./MetricsHeader";
-import TabBar from "./TabBar";
-import TimelineTab from "./tabs/TimelineTab";
-import LogsTab from "./tabs/LogsTab";
-import AgentsTab from "./tabs/AgentsTab";
-import RoomTab from "./tabs/RoomTab";
+import TopBar from "./TopBar";
+import ConstellationCanvas from "./ConstellationCanvas";
+import Sidebar from "./Sidebar";
+import LiveActivityPanel from "./LiveActivityPanel";
+import RoomModal from "./RoomModal";
 
 const mono = "var(--th-font-mono)";
 
-export type OrchestraTab = "timeline" | "logs" | "agents" | "room";
-
 export default function OrchestrationWindow() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<OrchestraTab>("timeline");
-  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
-  const [logsInitialAgentId, setLogsInitialAgentId] = useState<string | null>(null);
-  const prevStageRef = useRef<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [filterAgentId, setFilterAgentId] = useState<string | null>(null);
+  const [roomOpen, setRoomOpen] = useState(false);
 
   const { tasks } = useTaskStore();
   const { agents, departments } = useAgentStore();
@@ -41,42 +36,28 @@ export default function OrchestrationWindow() {
   );
 
   const projectAgents = useMemo(() => {
-    // Merge task-assigned agents AND project_agents (includes PM who never gets tasks)
     const assignedIds = new Set(projectTasks.map((t) => t.assigned_agent_id).filter(Boolean));
     const allIds = new Set([...projectAgentIds, ...assignedIds]);
     if (allIds.size > 0) return agents.filter((a) => allIds.has(a.id));
     return [];
   }, [agents, projectTasks, projectAgentIds]);
 
-  // Resolve PM: prefer project_role="pm", fall back to global team_leader role
   const pmAgentId = projectPmAgentId ?? projectAgents.find((a) => a.role === "team_leader")?.id ?? null;
 
-  // Auto-switch tabs based on kickoff stage
-  useEffect(() => {
-    const prev = prevStageRef.current;
-    prevStageRef.current = kickoffStage;
-
-    if (!kickoffStage || kickoffStage === "idle") return;
-
-    // When meeting starts, jump to room tab so user sees the live meeting
-    if (kickoffStage === "meeting" && prev !== "meeting") {
-      setActiveTab("room");
-      return;
-    }
-
-    // When planning/assigning starts (tasks being created), switch to timeline
-    if ((kickoffStage === "planning" || kickoffStage === "assigning") && prev === "meeting") {
-      setActiveTab("timeline");
-      return;
-    }
-  }, [kickoffStage]);
-
-  // Auto-switch to room tab when clarification arrives for this project
+  // Auto-open Room when clarification arrives
   useEffect(() => {
     if (pendingClarification && pendingClarification.projectId === currentProjectId) {
-      setActiveTab("room");
+      setRoomOpen(true);
     }
   }, [pendingClarification, currentProjectId]);
+
+  const handleDoubleClickAgent = useCallback((agentId: string) => {
+    setFilterAgentId((prev) => prev === agentId ? null : agentId);
+  }, []);
+
+  const handleFilterLogs = useCallback((agentId: string) => {
+    setFilterAgentId((prev) => prev === agentId ? null : agentId);
+  }, []);
 
   const titleIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -100,88 +81,56 @@ export default function OrchestrationWindow() {
         fontFamily: mono,
         overflow: "hidden",
         outline: "none",
+        position: "relative",
       }}>
-        {/* Metrics Header */}
-        <MetricsHeader
-          tasks={projectTasks}
-          agents={projectAgents}
-          project={currentProject}
-          onFailedClick={() => {
-            const failed = projectTasks.find((t) => t.status === "failed" || t.execution_state === "failed");
-            if (failed) setFocusTaskId(failed.id);
-            setActiveTab("timeline");
-          }}
-        />
+        <TopBar project={currentProject} tasks={projectTasks} />
 
-        {/* Tab Bar (top, settings-style) */}
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Main content: Stage Rail + Tab Content */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          {/* Stage Rail (left sidebar) */}
-          <StageRail stage={kickoffStage ?? "idle"} tasks={projectTasks} />
+          <div style={{ flex: "0 0 65%", position: "relative", overflow: "hidden", background: "var(--th-bg-primary)" }}>
+            <ConstellationCanvas
+              agents={projectAgents}
+              tasks={projectTasks}
+              departments={departments}
+              pmAgentId={pmAgentId}
+              selectedAgentId={selectedAgentId}
+              onSelectAgent={setSelectedAgentId}
+              onDoubleClickAgent={handleDoubleClickAgent}
+            />
+          </div>
 
-          {/* Tab Content */}
-          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            <div className={activeTab !== "room" ? "custom-scrollbar" : undefined} style={{
-              flex: 1,
-              overflow: activeTab === "room" ? "hidden" : "auto",
-              padding: activeTab === "room" ? "12px 16px" : "20px 24px",
-              display: "flex",
-              flexDirection: "column",
-            }}>
-              <div style={{
-                background: activeTab === "room" ? "transparent" : "var(--th-bg-elevated)",
-                backdropFilter: activeTab === "room" ? "none" : "var(--th-glass-blur)",
-                border: activeTab === "room" ? "none" : "1px solid var(--th-border)",
-                borderRadius: activeTab === "room" ? 0 : 20,
-                padding: activeTab === "room" ? 0 : "24px 28px",
-                boxShadow: activeTab === "room" ? "none" : "var(--th-shadow-sm)",
-                flex: 1,
-                minHeight: 0,
-                display: "flex",
-                flexDirection: "column",
-              }}>
-              {activeTab === "timeline" && (
-                <TimelineTab
-                  tasks={projectTasks}
-                  agents={projectAgents}
-                  focusTaskId={focusTaskId}
-                  onFocusConsumed={() => setFocusTaskId(null)}
-                />
-              )}
-              {activeTab === "logs" && (
-                <LogsTab
-                  tasks={projectTasks}
-                  agents={projectAgents}
-                  projectId={currentProjectId ?? undefined}
-                  initialAgentId={logsInitialAgentId ?? undefined}
-                  pmAgentId={pmAgentId ?? undefined}
-                />
-              )}
-              {activeTab === "agents" && (
-                <AgentsTab
-                  agents={projectAgents}
-                  tasks={projectTasks}
-                  departments={departments}
-                  projectId={currentProjectId ?? undefined}
-                  pmAgentId={pmAgentId ?? undefined}
-                  onSwitchToLogs={(agentId) => { setLogsInitialAgentId(agentId); setActiveTab("logs"); }}
-                />
-              )}
-              {activeTab === "room" && (
-                <RoomTab
-                  tasks={projectTasks}
-                  agents={projectAgents}
-                  project={currentProject}
-                  projectId={currentProjectId ?? undefined}
-                  pmAgentId={pmAgentId ?? undefined}
-                />
-              )}
-              </div>
-            </div>
+          <div style={{ flex: "0 0 35%", borderLeft: "1px solid var(--th-border)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <Sidebar
+              agents={projectAgents}
+              tasks={projectTasks}
+              departments={departments}
+              projectId={currentProjectId ?? undefined}
+              pmAgentId={pmAgentId}
+              selectedAgentId={selectedAgentId}
+              kickoffStage={kickoffStage ?? "idle"}
+              onSelectAgent={setSelectedAgentId}
+              onFilterLogs={handleFilterLogs}
+            />
           </div>
         </div>
+
+        <LiveActivityPanel
+          tasks={projectTasks}
+          agents={projectAgents}
+          projectId={currentProjectId ?? undefined}
+          filterAgentId={filterAgentId}
+          onOpenRoom={() => setRoomOpen(true)}
+        />
+
+        {/* Room Modal */}
+        {roomOpen && (
+          <RoomModal
+            tasks={projectTasks}
+            agents={projectAgents}
+            projectId={currentProjectId ?? undefined}
+            pmAgentId={pmAgentId}
+            onClose={() => setRoomOpen(false)}
+          />
+        )}
       </div>
     </AppWindow>
   );
