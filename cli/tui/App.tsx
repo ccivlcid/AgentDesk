@@ -228,6 +228,7 @@ export function App(): React.ReactElement {
               core_goal: goal,
               project_path: process.cwd(),
             });
+            session.setProjectId(project.id);
             addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
             await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
             addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
@@ -296,6 +297,7 @@ export function App(): React.ReactElement {
           core_goal: goal,
           project_path: action.params["path"] ?? process.cwd(),
         });
+        session.setProjectId(project.id);
         addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
         await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
         addMessage(sysMsg("Kickoff started. Agents are mobilising..."));

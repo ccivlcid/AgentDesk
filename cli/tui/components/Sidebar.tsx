@@ -3,7 +3,7 @@ import { Box, Text } from "ink";
 
 interface SidebarProps {
   project: { name: string | null; path: string | null; branch?: string | null };
-  agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
+  agents: Array<{ id: string; name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
   tasks: Array<{ id: string; title: string; status: string }>;
   pipelineStage: string | null;
   tokens: number;
@@ -57,7 +57,7 @@ export const Sidebar = React.memo(function Sidebar({ project, agents, tasks, pip
       {agents.length === 0 ? (
         <Text dimColor>  (none)</Text>
       ) : (
-        agents.map((a, i) => {
+        agents.map((a) => {
           // Green only if: api_model set OR cli_provider is actually installed+authenticated
           const cliReady = !!a.cli_provider && readyCli.has(a.cli_provider);
           const hasLlm = !!a.api_model || cliReady;
@@ -65,7 +65,7 @@ export const Sidebar = React.memo(function Sidebar({ project, agents, tasks, pip
           const model = label ? (label.length > 20 ? label.slice(0, 19) + "~" : label) : null;
           const llmColor = hasLlm ? "green" : "red";
           return (
-            <Box key={i} flexDirection="column">
+            <Box key={a.id} flexDirection="column">
               <Text>
                 <Text color={a.status === "working" || a.status === "running" ? "green" : "gray"}>
                   {"  "}{AGENT_INDICATOR[a.status] ?? "o"}

@@ -3,7 +3,7 @@ import { api } from "../../lib/api.js";
 
 interface SidebarState {
   project: { name: string | null; path: string | null; branch: string | null };
-  agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
+  agents: Array<{ id: string; name: string; status: string; api_model?: string | null; cli_provider?: string | null; currentTask?: string }>;
   tasks: Array<{ id: string; title: string; status: string }>;
   pipelineStage: string | null;
   tokens: number;
@@ -35,10 +35,28 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
 
   const refresh = useCallback(async () => {
     try {
-      const agentData = await api.get<{ agents: Array<{ name: string; status: string; api_model?: string | null; cli_provider?: string | null }> }>("/api/agents");
+      const currentProjectId = projectIdRef.current;
+
+      // Fetch all agents (with full info)
+      const allAgentData = await api.get<{ agents: Array<{ id: string; name: string; status: string; api_model?: string | null; cli_provider?: string | null }> }>("/api/agents");
+      let agents = allAgentData.agents ?? [];
+
+      // If project active, filter to project-assigned agents only
+      if (currentProjectId) {
+        try {
+          const projAgents = await api.get<{ agents: Array<{ id: string }> }>(
+            `/api/projects/${currentProjectId}/agents`
+          );
+          const assignedIds = new Set((projAgents.agents ?? []).map((a) => a.id));
+          if (assignedIds.size > 0) {
+            agents = agents.filter((a) => assignedIds.has(a.id));
+          }
+        } catch {
+          // fallback: show all agents
+        }
+      }
 
       let project: SidebarState["project"] = { name: null, path: null, branch: null };
-      const currentProjectId = projectIdRef.current;
       if (currentProjectId) {
         try {
           const p = await api.get<{ name: string; project_path: string }>(
@@ -92,7 +110,7 @@ export function useSidebar(projectId: string | null): UseSidebarReturn {
       setState((prev) => ({
         ...prev,
         project,
-        agents: agentData.agents ?? [],
+        agents,
         tasks,
         tokens,
         cost,
