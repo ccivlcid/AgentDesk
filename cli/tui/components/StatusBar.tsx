@@ -11,6 +11,7 @@ interface Props {
   agentCount: number;
   mode: "plan" | "build" | "yolo";
   leaderMode?: boolean;
+  showHints?: boolean;
 }
 
 export function StatusBar(props: Props): React.ReactElement {
@@ -24,6 +25,7 @@ export function StatusBar(props: Props): React.ReactElement {
     agentCount,
     mode,
     leaderMode,
+    showHints,
   } = props;
 
   const modeColor = mode === "plan" ? "blue" : mode === "yolo" ? "red" : "green";
@@ -54,13 +56,15 @@ export function StatusBar(props: Props): React.ReactElement {
           {mode.charAt(0).toUpperCase() + mode.slice(1)}
         </Text>
       </Box>
-      <Box>
-        {leaderMode ? (
-          <Text color="yellow" bold>[Ctrl+X ...] waiting for key</Text>
-        ) : (
-          <Text dimColor>Tab: mode  esc: interrupt  Ctrl+X: leader  Ctrl+P: commands</Text>
-        )}
-      </Box>
+      {(leaderMode || showHints) && (
+        <Box>
+          {leaderMode ? (
+            <Text color="yellow" bold>[Ctrl+X ...] waiting for key</Text>
+          ) : (
+            <Text dimColor>Tab: mode  esc: interrupt  Ctrl+X: leader  ?: toggle hints</Text>
+          )}
+        </Box>
+      )}
     </Box>
   );
 }

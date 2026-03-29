@@ -38,11 +38,26 @@ Given the user's message in any language, classify the intent and extract parame
 7. **clarification** — User is answering a PM question
    Extract: { answer: string }
 
-8. **unknown** — Cannot classify; pass directly to PM as additional directive
+8. **pm_chat** — PM needs to ask for more info or share a plan before execution
+   Extract: { message: string, needs_confirmation: boolean, pending_action?: { type: "kickoff" | "add_tasks", params: object, description: string } }
+   Use when:
+     - Information is insufficient for execution (e.g., missing project path, unclear goal)
+     - Plan mode: share execution plan before proceeding, set needs_confirmation=true
+     - Build mode: only when critical info is missing, 1 round max
+   Examples:
+     - "기존 프로젝트에 추가인가요, 새 프로젝트인가요?"
+     - "다음 작업을 추가합니다: T-1 Stripe SDK, T-2 웹훅 핸들러. 시작할까요?"
+
+9. **unknown** — Cannot classify; pass directly to PM as additional directive
+
+## Mode Behavior
+- **YOLO**: Execute immediately. Never use pm_chat.
+- **Build**: Execute immediately. Use pm_chat only when critical info is missing (1 round max).
+- **Plan**: Always use pm_chat to share plan before kickoff/add_tasks. Set needs_confirmation=true with pending_action.
 
 ## Output Format (JSON only, no markdown)
 {
-  "intent": "kickoff|add_tasks|status_query|task_query|agent_query|mode_change|clarification|unknown",
+  "intent": "kickoff|add_tasks|status_query|task_query|agent_query|mode_change|clarification|pm_chat|unknown",
   "params": { ... },
   "response": "PM의 자연어 응답",
   "confirmation": "확인 필요 시 질문 (Plan 모드에서만, 아니면 null)"

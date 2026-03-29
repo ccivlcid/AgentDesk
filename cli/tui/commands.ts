@@ -635,6 +635,40 @@ export async function handleSlashCommand(
       }
       return true;
     }
+    case "kickoff": {
+      // /kickoff [goal...] — create project (if needed) + start kickoff
+      const projectId = extras.projectId;
+      const goalText = args.join(" ") || null;
+
+      if (projectId) {
+        // Active project exists — kickoff directly
+        try {
+          await api.post(`/api/projects/${projectId}/kickoff`, { yolo: false });
+          addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          addMessage(sysMsg(`Kickoff failed: ${msg}`));
+        }
+      } else if (goalText) {
+        // No active project — create one from goal text
+        try {
+          const project = await api.post<{ id: string; name: string }>("/api/projects", {
+            name: goalText.slice(0, 60),
+            core_goal: goalText,
+            project_path: process.cwd(),
+          });
+          extras.setProjectId(project.id);
+          addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
+          await api.post(`/api/projects/${project.id}/kickoff`, { yolo: false });
+          addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
+        } catch {
+          addMessage(sysMsg("Failed to create/kickoff project."));
+        }
+      } else {
+        addMessage(sysMsg("Usage: /kickoff <goal>\n  Or set a project first with /import, then /kickoff"));
+      }
+      return true;
+    }
     case "new": {
       try {
         const session = await api.post<{ id: string }>("/api/tui/sessions", { mode: "build" });

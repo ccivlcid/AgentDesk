@@ -9,7 +9,7 @@ import { useSession } from "./hooks/useSession.js";
 import { useWebSocket } from "./hooks/useWebSocket.js";
 import { useSidebar } from "./hooks/useSidebar.js";
 import { useLeaderKey } from "./hooks/useLeaderKey.js";
-import { interpret } from "./hooks/useInterpret.js";
+import { interpret, type InterpretResult } from "./hooks/useInterpret.js";
 import { handleSlashCommand } from "./commands.js";
 import { api } from "../lib/api.js";
 import { loadCliSettings, saveCliSettings } from "../lib/settings.js";
@@ -33,6 +33,12 @@ export interface ChatMessage {
     summary?: string;
     lines?: string[];
   }>;
+}
+
+export interface PendingAction {
+  type: "kickoff" | "add_tasks";
+  params: Record<string, unknown>;
+  description: string;
 }
 
 function sysMsg(content: string): ChatMessage {
@@ -64,6 +70,10 @@ export function App(): React.ReactElement {
 
   const [sessionStart] = useState(Date.now());
   const [sessionMinutes, setSessionMinutes] = useState(0);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [showHints, setShowHints] = useState(false);
 
   const sidebar = useSidebar(session.projectId);
 
@@ -102,10 +112,22 @@ export function App(): React.ReactElement {
     },
   });
 
-  // Tab: mode toggle
-  useInput((_input, key) => {
+  // Tab: mode toggle, PageUp/PageDown: scroll, ?: hints toggle
+  useInput((input, key) => {
     if (key.tab) {
       setMode((prev) => (prev === "plan" ? "build" : "plan"));
+      return;
+    }
+    if (key.pageUp) {
+      setScrollOffset((prev) => Math.min(prev + 10, Math.max(0, messages.length - 5)));
+      return;
+    }
+    if (key.pageDown) {
+      setScrollOffset((prev) => Math.max(0, prev - 10));
+      return;
+    }
+    if (input === "?") {
+      setShowHints((prev) => !prev);
     }
   });
 
@@ -174,62 +196,127 @@ export function App(): React.ReactElement {
     }
 
     // Natural language -- interpret intent then act
-    const result = await interpret(text, session.id ?? "", session.projectId);
+    setIsProcessing(true);
+    try {
+      // Build recent messages for conversation context
+      const recentMsgs = messages.slice(-12).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-    switch (result.intent) {
-      case "kickoff": {
-        const goal = (result.params["goal"] as string | undefined) ?? text;
-        try {
-          const project = await api.post<{ id: string; name: string }>("/api/projects", {
-            name: goal.slice(0, 60),
-            core_goal: goal,
-          });
-          addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
-          await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
-          addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
-        } catch {
-          addMessage(sysMsg("Failed to create/kickoff project."));
-        }
-        break;
-      }
-      case "add_tasks": {
-        const directive = (result.params["directive"] as string | undefined) ?? text;
-        const projectId = (result.params["project_id"] as string | undefined) ?? session.projectId;
-        if (!projectId) {
-          addMessage(sysMsg("No active project. Start with a kickoff first."));
+      const result = await interpret(text, session.id ?? "", session.projectId, recentMsgs);
+
+      switch (result.intent) {
+        case "pm_chat": {
+          const msg = result.params["message"] as string | undefined;
+          if (msg) {
+            addMessage({
+              id: `pm-${Date.now()}`,
+              role: "pm",
+              content: msg,
+              timestamp: Date.now(),
+            });
+          }
+          const needsConfirm = result.params["needs_confirmation"] as boolean | undefined;
+          const action = result.params["pending_action"] as PendingAction | undefined;
+          if (needsConfirm && action) {
+            setPendingAction(action);
+          }
           break;
         }
-        try {
-          await api.post(`/api/projects/${projectId}/add-tasks`, {
-            additional_directive: directive,
+        case "kickoff": {
+          const goal = (result.params["goal"] as string | undefined) ?? text;
+          try {
+            const project = await api.post<{ id: string; name: string }>("/api/projects", {
+              name: goal.slice(0, 60),
+              core_goal: goal,
+            });
+            addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
+            await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
+            addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
+          } catch {
+            addMessage(sysMsg("Failed to create/kickoff project."));
+          }
+          break;
+        }
+        case "add_tasks": {
+          const directive = (result.params["directive"] as string | undefined) ?? text;
+          const projectId = (result.params["project_id"] as string | undefined) ?? session.projectId;
+          if (!projectId) {
+            addMessage(sysMsg("No active project. Start with a kickoff first."));
+            break;
+          }
+          try {
+            await api.post(`/api/projects/${projectId}/add-tasks`, {
+              additional_directive: directive,
+            });
+            addMessage(sysMsg("Tasks added and agents assigned."));
+          } catch {
+            addMessage(sysMsg("Failed to add tasks."));
+          }
+          break;
+        }
+        case "status_query":
+          await handleSlashCommand("/status", addMessage, setMode, exit, {
+            clearMessages,
+            setSessionId: session.setSessionId,
+            setProjectId: session.setProjectId,
+            projectId: session.projectId,
           });
-          addMessage(sysMsg("Tasks added and agents assigned."));
-        } catch {
-          addMessage(sysMsg("Failed to add tasks."));
+          break;
+        case "mode_change": {
+          const newMode = result.params["mode"] as "plan" | "build" | "yolo" | undefined;
+          if (newMode && ["plan", "build", "yolo"].includes(newMode)) {
+            setMode(newMode);
+            addMessage(sysMsg(`Switched to ${newMode} mode.`));
+          }
+          break;
         }
-        break;
+        default:
+          if (result.response) {
+            addMessage(sysMsg(result.response));
+          }
+          break;
       }
-      case "status_query":
-        await handleSlashCommand("/status", addMessage, setMode, exit, {
-          clearMessages,
-          setSessionId: session.setSessionId,
-          setProjectId: session.setProjectId,
-          projectId: session.projectId,
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirm = async (confirmed: boolean) => {
+    const action = pendingAction;
+    setPendingAction(null);
+    if (!confirmed || !action) {
+      addMessage(sysMsg("Cancelled."));
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      if (action.type === "kickoff") {
+        const goal = (action.params["goal"] as string | undefined) ?? action.description;
+        const project = await api.post<{ id: string; name: string }>("/api/projects", {
+          name: goal.slice(0, 60),
+          core_goal: goal,
+          project_path: action.params["path"] ?? process.cwd(),
         });
-        break;
-      case "mode_change": {
-        const newMode = result.params["mode"] as "plan" | "build" | "yolo" | undefined;
-        if (newMode && ["plan", "build", "yolo"].includes(newMode)) {
-          setMode(newMode);
-          addMessage(sysMsg(`Switched to ${newMode} mode.`));
+        addMessage(sysMsg(`Project created: ${project.name} (${project.id.slice(0, 8)})`));
+        await api.post(`/api/projects/${project.id}/kickoff`, { yolo: mode === "yolo" });
+        addMessage(sysMsg("Kickoff started. Agents are mobilising..."));
+      } else if (action.type === "add_tasks") {
+        const projectId = (action.params["project_id"] as string | undefined) ?? session.projectId;
+        if (!projectId) {
+          addMessage(sysMsg("No active project."));
+          return;
         }
-        break;
+        await api.post(`/api/projects/${projectId}/add-tasks`, {
+          additional_directive: action.params["directive"] ?? action.description,
+        });
+        addMessage(sysMsg("Tasks added and agents assigned."));
       }
-      default:
-        if (result.response) {
-          addMessage(sysMsg(result.response));
-        }
-        break;
+    } catch {
+      addMessage(sysMsg(`Failed to execute ${action.type}.`));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -264,9 +351,9 @@ export function App(): React.ReactElement {
       <Box flexDirection="row" flexGrow={1} overflow="hidden">
         <Box flexDirection="column" flexGrow={1} overflow="hidden">
           <Box flexDirection="column" flexGrow={1} overflowY="hidden">
-            <ChatArea messages={visibleMessages} showDetails={showDetails} scrollOffset={scrollOffset} totalMessages={messages.length} />
+            <ChatArea messages={visibleMessages} showDetails={showDetails} scrollOffset={scrollOffset} totalMessages={messages.length} isProcessing={isProcessing} />
           </Box>
-          <InputBar onSend={handleSend} mode={mode} projectId={session.projectId} />
+          <InputBar onSend={handleSend} mode={mode} projectId={session.projectId} pendingAction={pendingAction} onConfirm={handleConfirm} />
         </Box>
         <Sidebar
           project={sidebar.project}
@@ -288,6 +375,7 @@ export function App(): React.ReactElement {
         agentCount={sidebar.agents.length}
         mode={mode}
         leaderMode={leaderMode}
+        showHints={showHints}
       />
     </Box>
   );

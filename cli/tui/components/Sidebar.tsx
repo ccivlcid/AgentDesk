@@ -40,13 +40,13 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, r
   const formatTokens = (t: number) => (t >= 1000 ? `${Math.round(t / 1000)}k` : `${t}`);
 
   return (
-    <Box flexDirection="column" width={28} borderStyle="single" paddingX={1}>
+    <Box flexDirection="column" width={36} borderStyle="single" paddingX={1}>
       {/* Project */}
       <Text bold color="cyan">Project</Text>
       <Text>  {project.name ?? "(none)"}</Text>
       {project.path && (
         <Text dimColor>
-          {"  "}{project.path.length > 24 ? "..." + project.path.slice(-21) : project.path}
+          {"  "}{project.path.length > 30 ? "..." + project.path.slice(-27) : project.path}
         </Text>
       )}
       {project.branch && <Text dimColor>  {project.branch}</Text>}
@@ -62,7 +62,7 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, r
           const cliReady = !!a.cli_provider && readyCli.has(a.cli_provider);
           const hasLlm = !!a.api_model || cliReady;
           const label = a.api_model ?? (cliReady ? a.cli_provider : null) ?? null;
-          const model = label ? (label.length > 14 ? label.slice(0, 13) + "~" : label) : null;
+          const model = label ? (label.length > 20 ? label.slice(0, 19) + "~" : label) : null;
           const llmColor = hasLlm ? "green" : "red";
           return (
             <Box key={i} flexDirection="column">
@@ -70,7 +70,7 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, r
                 <Text color={a.status === "working" || a.status === "running" ? "green" : "gray"}>
                   {"  "}{AGENT_INDICATOR[a.status] ?? "o"}
                 </Text>
-                <Text> {a.name.length > 14 ? a.name.slice(0, 13) + "~" : a.name}</Text>
+                <Text> {a.name.length > 20 ? a.name.slice(0, 19) + "~" : a.name}</Text>
                 <Text color={llmColor}> ●</Text>
               </Text>
               {model && <Text dimColor>    {model}</Text>}
@@ -95,7 +95,7 @@ export function Sidebar({ project, agents, tasks, pipelineStage, tokens, cost, r
                 : t.status === "failed"
                   ? "red"
                   : undefined;
-          const label = t.title.length > 20 ? t.title.slice(0, 19) + "~" : t.title;
+          const label = t.title.length > 28 ? t.title.slice(0, 27) + "~" : t.title;
           return (
             <Text key={i}>
               <Text color={color}>  {icon}</Text>

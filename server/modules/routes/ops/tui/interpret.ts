@@ -45,14 +45,31 @@ function buildSystemPrompt(
     mode: string;
     agentList: string;
     activeTaskCount: number;
+    recentMessages?: Array<{ role: string; content: string }>;
+    cwd?: string;
   },
 ): string {
-  return template
+  let prompt = template
     .replace("{{projectName}}", vars.projectName)
     .replace("{{projectId}}", vars.projectId)
     .replace("{{mode}}", vars.mode)
     .replace("{{agentList}}", vars.agentList)
     .replace("{{activeTaskCount}}", String(vars.activeTaskCount));
+
+  // Inject recent conversation context
+  if (vars.recentMessages && vars.recentMessages.length > 0) {
+    const history = vars.recentMessages
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n");
+    prompt += `\n\n## Recent Conversation\n${history}`;
+  }
+
+  // Inject working directory
+  if (vars.cwd) {
+    prompt += `\n\n## Working Directory\n${vars.cwd}`;
+  }
+
+  return prompt;
 }
 
 export function registerTuiInterpretRoute(ctx: RuntimeContext): void {
@@ -60,13 +77,19 @@ export function registerTuiInterpretRoute(ctx: RuntimeContext): void {
 
   // POST /api/tui/interpret
   app.post("/api/tui/interpret", async (req, res) => {
-    const body = req.body as { text?: string; session_id?: string; project_id?: string };
+    const body = req.body as {
+      text?: string;
+      session_id?: string;
+      project_id?: string;
+      recent_messages?: Array<{ role: string; content: string }>;
+      cwd?: string;
+    };
 
     if (!body.text || !body.session_id) {
       return res.status(400).json({ error: "missing_required_fields" });
     }
 
-    const { text, session_id, project_id: bodyProjectId } = body;
+    const { text, session_id, project_id: bodyProjectId, recent_messages, cwd } = body;
 
     // Resolve session context
     const session = db
@@ -123,6 +146,8 @@ export function registerTuiInterpretRoute(ctx: RuntimeContext): void {
         mode: session.mode,
         agentList,
         activeTaskCount,
+        recentMessages: recent_messages,
+        cwd,
       });
     } catch (err) {
       logger.error({ err }, "[tui/interpret] failed to load prompt template");

@@ -1,6 +1,6 @@
 import { api } from "../../lib/api.js";
 
-interface InterpretResult {
+export interface InterpretResult {
   intent: string;
   params: Record<string, unknown>;
   response?: string;
@@ -11,12 +11,16 @@ export async function interpret(
   text: string,
   sessionId: string,
   projectId?: string | null,
+  recentMessages?: Array<{ role: string; content: string }>,
+  cwd?: string,
 ): Promise<InterpretResult> {
   try {
     const result = await api.post<{ ok: boolean } & InterpretResult>("/api/tui/interpret", {
       text,
       session_id: sessionId,
       project_id: projectId ?? undefined,
+      recent_messages: recentMessages?.slice(-12),
+      cwd: cwd ?? process.cwd(),
     });
     return {
       intent: result.intent ?? "unknown",
