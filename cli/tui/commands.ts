@@ -1,28 +1,7 @@
 import { api } from "../lib/api.js";
-import type { ChatMessage } from "./App.js";
+import type { ChatMessage, AddMessage, CommandExtras } from "./types.js";
+import { sysMsg } from "./types.js";
 import type { Agent, Task } from "../../shared/types.js";
-
-type AddMessage = (msg: ChatMessage) => void;
-
-interface CommandExtras {
-  clearMessages: () => void;
-  setSessionId: (id: string) => void;
-  setProjectId: (id: string | null) => void;
-  projectId: string | null;
-  showDetails?: boolean;
-  toggleDetails?: () => void;
-  resetLanguage?: () => void;
-  forkSession?: () => Promise<void>;
-}
-
-function sysMsg(content: string): ChatMessage {
-  return {
-    id: `sys-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    role: "system",
-    content,
-    timestamp: Date.now(),
-  };
-}
 
 export async function handleSlashCommand(
   input: string,
