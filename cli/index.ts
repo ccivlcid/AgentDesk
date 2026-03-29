@@ -5,7 +5,7 @@
 
 // ── TUI mode (no args) ─────────────────────────────────────────
 if (process.argv.length <= 2) {
-  const { startTui } = await import("./tui/index.js");
+  const { startTui } = await import("./tui/index-blessed.js");
   await startTui();
 }
 
